@@ -5,8 +5,9 @@
 
 import './style.css';
 import { getInstance as getLogger } from '@/core/Logger';
-import { getInstance as getEventBus, EVENTS } from '@/core/EventBus';
+import { getInstance as getEventBus } from '@/core/EventBus';
 import { getState } from '@/core/State';
+import { getRouter } from '@/core/Router';
 
 // مقداردهی اولیه Logger
 const logger = getLogger({ level: 'DEBUG' });
@@ -18,66 +19,112 @@ const eventBus = getEventBus({ debug: false });
 // مقداردهی اولیه State
 const state = getState();
 
+// مقداردهی اولیه Router
+const router = getRouter();
+
 // تابع اصلی
 async function main() {
   try {
-    // بارگذاری state
+    // ============================================
+    // مرحله ۱: آماده‌سازی DOM
+    // ============================================
+    logger.info('🎨 آماده‌سازی DOM...');
+    
+    // ایجاد container اصلی
+    const app = document.createElement('div');
+    app.id = 'app';
+    document.body.innerHTML = '';
+    document.body.appendChild(app);
+    
+    logger.info('✅ Container آماده شد', { id: 'app' });
+
+    // ============================================
+    // مرحله ۲: بارگذاری State
+    // ============================================
     logger.info('📦 در حال بارگذاری state...');
     await state.load();
-    logger.info('✅ State بارگذاری شد', { ready: state.isReady() });
+    logger.info('✅ State بارگذاری شد');
 
-    // تست ۱: اضافه کردن یادداشت
-    logger.info('📝 تست ۱: اضافه کردن یادداشت');
-    const note = state.addNote({
-      id: 'test-note-1',
-      title: 'یادداشت تست',
-      content: 'این یک یادداشت تست است',
-      category: 'تست',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    logger.info('یادداشت اضافه شد', { id: note.id });
+    // ============================================
+    // مرحله ۳: تنظیم Container برای Router
+    // ============================================
+    router.setContainer('#app');
 
-    // تست ۲: دریافت آمار
-    logger.info('📊 تست ۲: آمار', state.getStats());
-
-    // تست ۳: subscribe به تغییرات
-    logger.info('📝 تست ۳: subscribe به تغییرات notes');
-    const unsubscribe = state.subscribe('notes', (newValue, oldValue) => {
-      logger.info('🔄 Notes تغییر کرد', {
-        oldCount: Array.isArray(oldValue) ? oldValue.length : 0,
-        newCount: Array.isArray(newValue) ? newValue.length : 0,
-      });
-    });
-
-    // اضافه کردن یادداشت دوم
-    state.addNote({
-      id: 'test-note-2',
-      title: 'یادداشت دوم',
-      content: 'این یادداشت دوم است',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    // ============================================
+    // مرحله ۴: ثبت View های تست
+    // ============================================
+    logger.info('📝 ثبت View های تست');
+    
+    router.registerView('dashboard', () => {
+      const div = document.createElement('div');
+      div.className = 'min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-8';
+      div.innerHTML = `
+        <div class="max-w-4xl mx-auto">
+          <h1 class="text-4xl font-bold text-white mb-4">📊 داشبورد</h1>
+          <p class="text-white/90 mb-8">به دانش‌یار پرو خوش آمدید!</p>
+          <div class="grid grid-cols-2 gap-4">
+            <button onclick="location.hash='#/notes'" class="bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition">
+              📚 یادداشت‌ها
+            </button>
+            <button onclick="location.hash='#/quiz'" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-bold hover:bg-purple-50 transition">
+              📝 آزمون‌ساز
+            </button>
+          </div>
+        </div>
+      `;
+      return div;
     });
 
-    // تست ۴: به‌روزرسانی تنظیمات
-    logger.info('⚙️ تست ۴: به‌روزرسانی تنظیمات');
-    state.updateSettings({ theme: 'light', language: 'fa' });
-    logger.info('تنظیمات جدید', state.getSettings());
+    router.registerView('notes', () => {
+      const div = document.createElement('div');
+      div.className = 'min-h-screen bg-slate-900 p-8';
+      div.innerHTML = `
+        <div class="max-w-4xl mx-auto">
+          <button onclick="location.hash='#/dashboard'" class="text-primary-400 mb-4 hover:underline">← بازگشت</button>
+          <h1 class="text-4xl font-bold text-white mb-4">📚 یادداشت‌ها</h1>
+          <p class="text-slate-300">صفحه یادداشت‌ها (در حال توسعه)</p>
+        </div>
+      `;
+      return div;
+    });
 
-    // تست ۵: ثبت جلسه مطالعه
-    logger.info('📚 تست ۵: ثبت جلسه مطالعه');
-    state.logStudySession('pomodoro', { duration: 25 });
-    logger.info('آمار به‌روز شده', state.getStats());
+    router.registerView('quiz', () => {
+      const div = document.createElement('div');
+      div.className = 'min-h-screen bg-slate-900 p-8';
+      div.innerHTML = `
+        <div class="max-w-4xl mx-auto">
+          <button onclick="location.hash='#/dashboard'" class="text-primary-400 mb-4 hover:underline">← بازگشت</button>
+          <h1 class="text-4xl font-bold text-white mb-4">📝 آزمون‌ساز</h1>
+          <p class="text-slate-300">صفحه آزمون‌ساز (در حال توسعه)</p>
+        </div>
+      `;
+      return div;
+    });
 
-    // cleanup
-    unsubscribe();
+    // ============================================
+    // مرحله ۵: ثبت Middleware
+    // ============================================
+    router.beforeEach((to, from) => {
+      logger.debug('قبل از navigation', { to: to.name, from: from?.name });
+    });
 
-    logger.info('✅ همه تست‌های State موفق بودند!');
+    router.afterEach((to, from) => {
+      logger.debug('بعد از navigation', { to: to.name, from: from?.name });
+    });
+
+    // ============================================
+    // مرحله ۶: شروع Router
+    // ============================================
+    logger.info('🚦 شروع Router...');
+    await router.start();
+
+    logger.info('✅ Router با موفقیت راه‌اندازی شد!');
     console.log('');
-    console.log('🎉 State با موفقیت تست شد!');
-    console.log('📦 در تب Console همه عملیات را می‌بینید');
+    console.log('🎉 Router تست شد!');
+    console.log('📦 روی دکمه‌ها کلیک کن تا navigation را ببینی');
+    console.log('🔗 URL را تغییر بده (مثلاً #/notes)');
   } catch (error) {
-    logger.error('خطا در تست State', error);
+    logger.error('خطا در تست Router', error);
   }
 }
 
