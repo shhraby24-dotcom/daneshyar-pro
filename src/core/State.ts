@@ -1,27 +1,10 @@
-/**
- * ============================================================
- * دانش‌یار پرو - سیستم مدیریت وضعیت (State Management)
- * ============================================================
- *
- * مدیریت وضعیت مرکزی برنامه با قابلیت reactive و auto-persist
- *
- * ✅ Reactive state با سیستم listener
- * ✅ Auto-persist با debounce هوشمند
- * ✅ IndexedDB برای داده‌های حجیم
- * ✅ متدهای اختصاصی برای هر نوع داده
- * ✅ Event integration با EventBus
- * ✅ Stats calculation خودکار
- * ✅ Study streak tracking
- *
- * @module core/State
- * @version 1.0.0-beta.1
- */
-
 import { getInstance as getLogger } from '@/core/Logger';
 import { getInstance as getEventBus, EVENTS } from '@/core/EventBus';
+import { getStorage, LS_KEYS } from '@/core/Storage';
 
 const logger = getLogger().module('State');
 const eventBus = getEventBus();
+const storage = getStorage();
 
 // ============================================================
 // Types و Interfaces
@@ -221,41 +204,6 @@ const LS_KEYS = {
 } as const;
 
 // ============================================================
-// Storage Helper (موقت - بعداً Storage.ts جایگزین می‌شود)
-// ============================================================
-
-/**
- * Storage helper ساده
- * TODO: با Storage.ts واقعی جایگزین شود
- */
-const storageHelper = {
-  getLocal<T>(key: string, defaultValue: T | null = null): T | null {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
-    } catch {
-      return defaultValue;
-    }
-  },
-
-  setLocal<T>(key: string, value: T): void {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      logger.error('خطا در ذخیره localStorage', { key, error });
-    }
-  },
-
-  removeLocal(key: string): void {
-    try {
-      localStorage.removeItem(key);
-    } catch {
-      // نادیده گرفتن خطا
-    }
-  },
-};
-
-// ============================================================
 // کلاس اصلی StateManager
 // ============================================================
 
@@ -288,7 +236,7 @@ export class StateManager {
       logger.group('بارگذاری state');
 
       // بارگذاری تنظیمات از localStorage
-      const savedSettings = storageHelper.getLocal<Partial<Settings>>(
+      const savedSettings = storage.getLocal<Partial<Settings>>(
         LS_KEYS.SETTINGS,
         null
       );
@@ -298,7 +246,7 @@ export class StateManager {
       }
 
       // بارگذاری theme از localStorage
-      const savedTheme = storageHelper.getLocal<'light' | 'dark' | 'auto'>(
+      const savedTheme = storage.getLocal<'light' | 'dark' | 'auto'>(
         LS_KEYS.THEME,
         null
       );
@@ -307,7 +255,7 @@ export class StateManager {
       }
 
       // بررسی firstRun
-      const onboardingDone = storageHelper.getLocal<boolean>(
+      const onboardingDone = storage.getLocal<boolean>(
         LS_KEYS.ONBOARDING,
         false
       );
@@ -315,13 +263,13 @@ export class StateManager {
 
       // بارگذاری داده‌ها از localStorage
       // TODO: بعداً از IndexedDB استفاده شود
-      const notesData = storageHelper.getLocal<Note[]>(LS_KEYS.NOTES, []);
+      const notesData = storage.getLocal<Note[]>(LS_KEYS.NOTES, []);
       if (notesData && notesData.length > 0) {
         this._state.notes = notesData;
         logger.info('notes بارگذاری شد', { count: notesData.length });
       }
 
-      const flashcardsData = storageHelper.getLocal<Flashcard[]>(
+      const flashcardsData = storage.getLocal<Flashcard[]>(
         LS_KEYS.FLASHCARDS,
         []
       );
@@ -330,7 +278,7 @@ export class StateManager {
         logger.info('flashcards بارگذاری شد', { count: flashcardsData.length });
       }
 
-      const quizData = storageHelper.getLocal<QuizResult[]>(
+      const quizData = storage.getLocal<QuizResult[]>(
         LS_KEYS.QUIZ_HISTORY,
         []
       );
@@ -339,7 +287,7 @@ export class StateManager {
         logger.info('quizHistory بارگذاری شد', { count: quizData.length });
       }
 
-      const sessionsData = storageHelper.getLocal<StudySession[]>(
+      const sessionsData = storage.getLocal<StudySession[]>(
         LS_KEYS.STUDY_SESSIONS,
         []
       );
@@ -663,11 +611,11 @@ export class StateManager {
 
     // ذخیره تنظیمات در localStorage
     try {
-      storageHelper.setLocal(LS_KEYS.SETTINGS, this._state.settings);
+      storage.setLocal(LS_KEYS.SETTINGS, this._state.settings);
 
       // ذخیره theme به صورت جداگانه
       if (updates.theme !== undefined) {
-        storageHelper.setLocal(LS_KEYS.THEME, updates.theme);
+        storage.setLocal(LS_KEYS.THEME, updates.theme);
       }
     } catch (error) {
       logger.error('خطا در ذخیره تنظیمات', error);
@@ -842,7 +790,7 @@ export class StateManager {
     try {
       const lsKey = LS_KEYS[key.toUpperCase() as keyof typeof LS_KEYS];
       if (lsKey) {
-        storageHelper.setLocal(lsKey, this._state[key]);
+        storage.setLocal(lsKey, this._state[key]);
         logger.debug(`${key} persist شد`, {
           count: Array.isArray(this._state[key])
             ? (this._state[key] as unknown[]).length
@@ -864,7 +812,7 @@ export class StateManager {
 
     await Promise.all(promises);
 
-    storageHelper.setLocal(LS_KEYS.LAST_SYNC, new Date().toISOString());
+    storage.setLocal(LS_KEYS.LAST_SYNC, new Date().toISOString());  // ✅ درست
     logger.info('persist کامل شد');
   }
 
@@ -881,7 +829,7 @@ export class StateManager {
 
     // پاک کردن localStorage
     Object.values(LS_KEYS).forEach((key) => {
-      storageHelper.removeLocal(key);
+      storage.removeLocal(key);
     });
 
     // ریست state در حافظه
@@ -900,7 +848,7 @@ export class StateManager {
    */
   markOnboardingComplete(): void {
     this._state.app.firstRun = false;
-    storageHelper.setLocal(LS_KEYS.ONBOARDING, true);
+    storage.setLocal(LS_KEYS.ONBOARDING, true);
   }
 
   /**
