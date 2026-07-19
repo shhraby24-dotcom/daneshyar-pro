@@ -6,57 +6,80 @@
 import './style.css';
 import { getInstance as getLogger } from '@/core/Logger';
 import { getInstance as getEventBus, EVENTS } from '@/core/EventBus';
+import { getState } from '@/core/State';
 
 // مقداردهی اولیه Logger
 const logger = getLogger({ level: 'DEBUG' });
 logger.info('🚀 دانش‌یار پرو در حال راه‌اندازی...');
 
 // مقداردهی اولیه EventBus
-const eventBus = getEventBus({ debug: true });
+const eventBus = getEventBus({ debug: false });
 
-// تست ۱: ثبت listener ساده
-logger.info('📝 تست ۱: ثبت listener ساده');
-const subId1 = eventBus.on(EVENTS.NOTE_CREATED, (data) => {
-  logger.info('📌 یادداشت جدید دریافت شد', data);
-});
+// مقداردهی اولیه State
+const state = getState();
 
-// تست ۲: ثبت listener با wildcard
-logger.info('📝 تست ۲: ثبت listener با wildcard');
-eventBus.on('note:*', (data, event) => {
-  logger.info(`🌟 رویداد ${event.name} دریافت شد (wildcard)`);
-});
+// تابع اصلی
+async function main() {
+  try {
+    // بارگذاری state
+    logger.info('📦 در حال بارگذاری state...');
+    await state.load();
+    logger.info('✅ State بارگذاری شد', { ready: state.isReady() });
 
-// تست ۳: انتشار رویداد
-logger.info('📝 تست ۳: انتشار رویداد');
-eventBus.emit(EVENTS.NOTE_CREATED, {
-  id: '123',
-  title: 'یادداشت تست',
-  content: 'محتوای تست',
-});
+    // تست ۱: اضافه کردن یادداشت
+    logger.info('📝 تست ۱: اضافه کردن یادداشت');
+    const note = state.addNote({
+      id: 'test-note-1',
+      title: 'یادداشت تست',
+      content: 'این یک یادداشت تست است',
+      category: 'تست',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    logger.info('یادداشت اضافه شد', { id: note.id });
 
-// تست ۴: once
-logger.info('📝 تست ۴: once');
-eventBus.once(EVENTS.QUIZ_STARTED, () => {
-  logger.info('🎯 آزمون شروع شد (فقط یک بار)');
-});
+    // تست ۲: دریافت آمار
+    logger.info('📊 تست ۲: آمار', state.getStats());
 
-eventBus.emit(EVENTS.QUIZ_STARTED, { quizId: 'q1' });
-eventBus.emit(EVENTS.QUIZ_STARTED, { quizId: 'q2' }); // این بار فراخوانی نمی‌شود
+    // تست ۳: subscribe به تغییرات
+    logger.info('📝 تست ۳: subscribe به تغییرات notes');
+    const unsubscribe = state.subscribe('notes', (newValue, oldValue) => {
+      logger.info('🔄 Notes تغییر کرد', {
+        oldCount: Array.isArray(oldValue) ? oldValue.length : 0,
+        newCount: Array.isArray(newValue) ? newValue.length : 0,
+      });
+    });
 
-// تست ۵: ماژول‌های مختلف
-logger.info('📝 تست ۵: ماژول‌های مختلف');
-const notesBus = eventBus.module('NotesFeature');
-const quizBus = eventBus.module('QuizFeature');
+    // اضافه کردن یادداشت دوم
+    state.addNote({
+      id: 'test-note-2',
+      title: 'یادداشت دوم',
+      content: 'این یادداشت دوم است',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
 
-notesBus.emit(EVENTS.NOTE_UPDATED, { id: '123' });
-quizBus.emit(EVENTS.QUIZ_COMPLETED, { score: 95 });
+    // تست ۴: به‌روزرسانی تنظیمات
+    logger.info('⚙️ تست ۴: به‌روزرسانی تنظیمات');
+    state.updateSettings({ theme: 'light', language: 'fa' });
+    logger.info('تنظیمات جدید', state.getSettings());
 
-// تست ۶: آمار
-logger.info('📊 آمار EventBus:', eventBus.getStats());
+    // تست ۵: ثبت جلسه مطالعه
+    logger.info('📚 تست ۵: ثبت جلسه مطالعه');
+    state.logStudySession('pomodoro', { duration: 25 });
+    logger.info('آمار به‌روز شده', state.getStats());
 
-// تست ۷: تاریخچه
-logger.info('📜 تاریخچه ۳ رویداد آخر:', eventBus.getHistory({ limit: 3 }));
+    // cleanup
+    unsubscribe();
 
-logger.info('✅ EventBus با موفقیت تست شد!');
-console.log('');
-console.log('🎉 همه تست‌ها در تب Console قابل مشاهده هستند');
+    logger.info('✅ همه تست‌های State موفق بودند!');
+    console.log('');
+    console.log('🎉 State با موفقیت تست شد!');
+    console.log('📦 در تب Console همه عملیات را می‌بینید');
+  } catch (error) {
+    logger.error('خطا در تست State', error);
+  }
+}
+
+// اجرای برنامه
+main();
