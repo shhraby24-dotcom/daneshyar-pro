@@ -273,7 +273,5 @@ async function testErrors(): Promise<void> {
   console.log('');
   console.log('🎉 Errors.ts با موفقیت تست شد!');
 }
-// اجرای تست Errors (موقت)
-testErrors();
 
 bootstrap();
