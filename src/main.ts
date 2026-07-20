@@ -1,88 +1,181 @@
 /**
+ * ============================================================
  * دانش‌یار پرو - نقطه شروع برنامه
+ * ============================================================
+ *
+ * این فایل مسئول راه‌اندازی اولیه برنامه است:
+ * 1. مقداردهی Logger
+ * 2. مقداردهی EventBus
+ * 3. مقداردهی Storage
+ * 4. بارگذاری State
+ * 5. راه‌اندازی Router
+ * 6. رندر Layout
+ *
  * @module main
+ * @version 1.0.0-beta.1
  */
 
 import './style.css';
 import { getInstance as getLogger } from '@/core/Logger';
-import { getStorage, LS_KEYS } from '@/core/Storage';
+import { getInstance as getEventBus } from '@/core/EventBus';
+import { getStorage } from '@/core/Storage';
 import { getState } from '@/core/State';
+import { getRouter } from '@/core/Router';
 
-// مقداردهی اولیه Logger
-const logger = getLogger({ level: 'DEBUG' });
+// ============================================================
+// مقداردهی اولیه ماژول‌های Core
+// ============================================================
+
+const logger = getLogger({
+  level: 'DEBUG',
+  showTimestamp: true,
+  persistToStorage: false,
+});
+
+const eventBus = getEventBus({ debug: false });
+const storage = getStorage();
+const state = getState();
+const router = getRouter();
+
 logger.info('🚀 دانش‌یار پرو در حال راه‌اندازی...');
 
-// مقداردهی اولیه Storage
-const storage = getStorage();
+// ============================================================
+// تابع اصلی Bootstrap
+// ============================================================
 
-// مقداردهی اولیه State
-const state = getState();
-
-// تابع اصلی
-async function main() {
+async function bootstrap(): Promise<void> {
   try {
-    // ============================================
-    // تست ۱: Storage - ذخیره و خواندن
-    // ============================================
-    logger.info('📦 تست ۱: Storage - ذخیره و خواندن');
+    // مرحله ۱: آماده‌سازی DOM
+    logger.info('📦 مرحله ۱: آماده‌سازی DOM');
+    const app = document.createElement('div');
+    app.id = 'app';
+    document.body.innerHTML = '';
+    document.body.appendChild(app);
 
-    const testSettings = {
-      theme: 'dark',
-      language: 'fa',
-      fontSize: 16,
-    };
-
-    storage.setLocal(LS_KEYS.SETTINGS, testSettings);
-    const loadedSettings = storage.getLocal(LS_KEYS.SETTINGS);
-    logger.info('تنظیمات ذخیره و خوانده شد', { loadedSettings });
-
-    // ============================================
-    // تست ۲: Storage - آمار
-    // ============================================
-    logger.info('📊 تست ۲: آمار Storage');
-    const stats = storage.getStats();
-    logger.info('آمار Storage', stats);
-
-    // ============================================
-    // تست ۳: State با Storage واقعی
-    // ============================================
-    logger.info('🔄 تست ۳: State با Storage واقعی');
+    // مرحله ۲: بارگذاری State
+    logger.info('📦 مرحله ۲: بارگذاری State');
     await state.load();
-    logger.info('State بارگذاری شد', { ready: state.isReady() });
+    logger.info('✅ State بارگذاری شد', { ready: state.isReady() });
 
-    // اضافه کردن یک یادداشت
-    state.addNote({
-      id: 'test-' + Date.now(),
-      title: 'یادداشت تست Storage',
-      content: 'این یادداشت با Storage واقعی ذخیره می‌شود',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+    // مرحله ۳: تنظیم Container برای Router
+    logger.info('📦 مرحله ۳: تنظیم Router');
+    router.setContainer('#app');
 
-    logger.info('✅ یادداشت اضافه شد', { count: state.getNotes().length });
+    // مرحله ۴: ثبت View ها
+    // TODO: بعد از انتقال View ها، اینجا ثبت می‌شوند
+    logger.info('📦 مرحله ۴: ثبت View ها');
+    registerViews();
 
-    // ============================================
-    // تست ۴: بررسی persist
-    // ============================================
-    logger.info('💾 تست ۴: بررسی persist');
-    await state.persistAll();
-    logger.info('Persist کامل شد');
+    // مرحله ۵: شروع Router
+    logger.info('📦 مرحله ۵: شروع Router');
+    await router.start();
 
-    // بررسی localStorage
-    const savedNotes = storage.getLocal(LS_KEYS.NOTES);
-    logger.info('یادداشت‌ها در localStorage', {
-      count: Array.isArray(savedNotes) ? savedNotes.length : 0,
-    });
+    // مرحله ۶: آماده!
+    logger.info('✅ دانش‌یار پرو آماده است!');
+    logger.info('📊 آمار Storage', storage.getStats());
 
-    logger.info('✅ همه تست‌های Storage موفق بودند!');
-    console.log('');
-    console.log('🎉 Storage با موفقیت تست شد!');
-    console.log('📦 داده‌ها در localStorage ذخیره شده‌اند');
-    console.log('🔄 صفحه را refresh کن - داده‌ها باید باقی بمانند');
+    // نمایش پیام خوش‌آمدگویی موقت
+    showWelcomeScreen();
+
   } catch (error) {
-    logger.error('خطا در تست Storage', error);
+    logger.error('❌ خطا در راه‌اندازی برنامه', error);
+    showFatalError(error);
   }
 }
 
+// ============================================================
+// ثبت View ها (موقت - بعداً با View های واقعی جایگزین می‌شود)
+// ============================================================
+
+function registerViews(): void {
+  // Dashboard - موقت
+  router.registerView('dashboard', () => {
+    const div = document.createElement('div');
+    div.className = 'min-h-screen bg-slate-900 flex items-center justify-center p-8';
+    div.innerHTML = `
+      <div class="text-center max-w-lg">
+        <div class="text-7xl mb-6">🎓</div>
+        <h1 class="text-4xl font-black bg-gradient-to-r from-primary-400 via-accent-400 to-primary-400 bg-clip-text text-transparent mb-4">
+          دانش‌یار پرو
+        </h1>
+        <p class="text-slate-400 text-lg mb-8">
+          اپلیکیشن هوشمند مطالعه و یادگیری
+        </p>
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 mb-6">
+          <p class="text-slate-300 text-sm mb-4">
+            ✅ زیرساخت حرفه‌ای آماده است
+          </p>
+          <div class="grid grid-cols-2 gap-3 text-xs text-slate-400">
+            <div class="bg-slate-900 rounded-lg p-3">⚡ Vite + TypeScript</div>
+            <div class="bg-slate-900 rounded-lg p-3">🎨 Tailwind CSS v4</div>
+            <div class="bg-slate-900 rounded-lg p-3">📦 Logger + EventBus</div>
+            <div class="bg-slate-900 rounded-lg p-3">🗂️ State + Storage</div>
+            <div class="bg-slate-900 rounded-lg p-3">🧭 Router</div>
+            <div class="bg-slate-900 rounded-lg p-3">🔜 Views (به‌زودی)</div>
+          </div>
+        </div>
+        <div class="text-xs text-slate-500">
+          نسخه ۱.۰.۰-beta.1 | هفته ۱ از ماه ۱
+        </div>
+      </div>
+    `;
+    return div;
+  });
+
+  // 404 - صفحه خطا
+  router.setNotFound((params) => {
+    const div = document.createElement('div');
+    div.className = 'min-h-screen bg-slate-900 flex items-center justify-center p-8';
+    div.innerHTML = `
+      <div class="text-center">
+        <div class="text-7xl mb-4">🔍</div>
+        <h1 class="text-3xl font-bold text-white mb-2">صفحه یافت نشد</h1>
+        <p class="text-slate-400 mb-6">مسیر "${params.route}" وجود ندارد</p>
+        <button onclick="location.hash = '#/dashboard'"
+                class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg transition">
+          بازگشت به داشبورد
+        </button>
+      </div>
+    `;
+    return div;
+  });
+}
+
+// ============================================================
+// صفحه خوش‌آمدگویی موقت
+// ============================================================
+
+function showWelcomeScreen(): void {
+  // فعلاً Router خودش dashboard را نمایش می‌دهد
+  // بعداً با Layout واقعی جایگزین می‌شود
+}
+
+// ============================================================
+// صفحه خطای بحرانی
+// ============================================================
+
+function showFatalError(error: unknown): void {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const app = document.getElementById('app');
+  if (app) {
+    app.innerHTML = `
+      <div class="min-h-screen bg-slate-900 flex items-center justify-center p-8">
+        <div class="bg-red-900/20 border border-red-700 rounded-xl p-8 max-w-lg text-center">
+          <div class="text-5xl mb-4">💀</div>
+          <h2 class="text-xl font-bold text-red-400 mb-2">خطای بحرانی</h2>
+          <p class="text-slate-300 mb-4">${errorMessage}</p>
+          <button onclick="location.reload()"
+                  class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg transition">
+            تلاش مجدد
+          </button>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// ============================================================
 // اجرای برنامه
-main();
+// ============================================================
+
+bootstrap();
