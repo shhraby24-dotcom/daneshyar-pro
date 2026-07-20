@@ -178,4 +178,102 @@ function showFatalError(error: unknown): void {
 // اجرای برنامه
 // ============================================================
 
+// ============================================================
+// تست Errors (موقت - بعداً حذف می‌شود)
+// ============================================================
+
+async function testErrors(): Promise<void> {
+  const errorHandler = getErrorHandler();
+
+  logger.info('🧪 تست سیستم Errors');
+
+  // تست ۱: AppError ساده
+  logger.info('📝 تست ۱: AppError ساده');
+  const err1 = new AppError('یک خطای تست', {
+    code: ERROR_CODES.UNKNOWN,
+    severity: ERROR_SEVERITY.LOW,
+  });
+  logger.info('AppError ساخته شد', {
+    code: err1.code,
+    severity: err1.severity,
+    userMessage: err1.getUserMessage(),
+  });
+
+  // تست ۲: ValidationError
+  logger.info('📝 تست ۲: ValidationError');
+  const err2 = new ValidationError('عنوان نمی‌تواند خالی باشد', {
+    fields: { title: 'عنوان الزامی است' },
+  });
+  logger.info('ValidationError ساخته شد', {
+    fields: err2.fields,
+    userMessage: err2.getUserMessage(),
+  });
+
+  // تست ۳: createValidationError
+  logger.info('📝 تست ۳: createValidationError');
+  const err3 = createValidationError({
+    title: 'عنوان الزامی است',
+    content: 'محتوا باید حداقل ۱۰ کاراکتر باشد',
+  });
+  logger.info('createValidationError', {
+    fields: err3.fields,
+    userMessage: err3.getUserMessage(),
+  });
+
+  // تست ۴: NetworkError
+  logger.info('📝 تست ۴: NetworkError');
+  const err4 = new NetworkError('خطا در اتصال به سرور', {
+    status: 500,
+    url: 'https://api.example.com',
+  });
+  logger.info('NetworkError ساخته شد', {
+    status: err4.status,
+    url: err4.url,
+    userMessage: err4.getUserMessage(),
+  });
+
+  // تست ۵: execute با retry
+  logger.info('📝 تست ۵: execute با retry');
+  let attemptCount = 0;
+  try {
+    await errorHandler.execute(
+      async () => {
+        attemptCount++;
+        if (attemptCount < 3) {
+          throw new Error(`تلاش ${attemptCount} شکست خورد`);
+        }
+        return 'موفق!';
+      },
+      { retryCount: 3, retryDelay: 500, operationName: 'تست retry' }
+    );
+    logger.info('✅ execute با retry موفق شد', { attempts: attemptCount });
+  } catch {
+    logger.error('❌ execute شکست خورد');
+  }
+
+  // تست ۶: آمار خطاها
+  logger.info('📝 تست ۶: آمار خطاها');
+  const stats = errorHandler.getStats();
+  logger.info('آمار خطاها', stats);
+
+  // تست ۷: toJSON
+  logger.info('📝 تست ۷: toJSON');
+  const json = err1.toJSON();
+  logger.info('toJSON', json);
+
+  // تست ۸: cause chain
+  logger.info('📝 تست ۸: cause chain');
+  const rootCause = new Error('علت ریشه‌ای');
+  const midError = new AppError('خطای میانی', { cause: rootCause });
+  const topError = new AppError('خطای بالایی', { cause: midError });
+  const chain = topError.getCauseChain();
+  logger.info('cause chain', { length: chain.length });
+
+  logger.info('✅ همه تست‌های Errors موفق بودند!');
+  console.log('');
+  console.log('🎉 Errors.ts با موفقیت تست شد!');
+}
+// اجرای تست Errors (موقت)
+testErrors();
+
 bootstrap();
