@@ -232,10 +232,12 @@ export class Router {
     this._viewFactories.set(name, factory);
 
     // ثبت اطلاعات route
+    const defaultConfig = DEFAULT_ROUTES[name] ?? { title: name };
     const routeConfig: RouteConfig = {
-      ...(DEFAULT_ROUTES[name] || {}),
+      ...defaultConfig,
       ...options,
       name,
+      title: options.title ?? defaultConfig.title ?? name,
     };
     this._routes.set(name, routeConfig);
 
@@ -436,10 +438,12 @@ export class Router {
     }
 
     // جدا کردن path و query
-    const [path, query = ''] = hash.split('?');
+    const parts = hash.split('?');
+    const path = parts[0] ?? '';
+    const query = parts[1] ?? '';
 
     // حذف / از ابتدا
-    const routeName = path.startsWith('/') ? path.slice(1) : path;
+    const routeName: string = path.startsWith('/') ? path.slice(1) : path;
 
     // parse query string
     const params: Record<string, unknown> = {};
@@ -470,11 +474,11 @@ export class Router {
 
     // اگر / دارد، بخش اول را بگیر
     if (route.includes('/')) {
-      return route.split('/')[0].split('?')[0];
+      return (route.split('/')[0] ?? '').split('?')[0] ?? this._defaultRoute;
     }
 
     // حذف query string
-    return route.split('?')[0];
+    return route.split('?')[0] ?? this._defaultRoute;
   }
 
   /**
@@ -579,7 +583,7 @@ export class Router {
   /**
    * رندر view خطا
    */
-  private _renderError(routeName: string, error: unknown): void {
+  private _renderError(_routeName: string, error: unknown): void {
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (this._container) {
       this._container.innerHTML = `

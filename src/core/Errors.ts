@@ -431,7 +431,6 @@ export class AIServiceError extends AppError {
  * کلاس ErrorHandler مرکزی
  */
 export class ErrorHandler {
-  private isDev: boolean = true;
   private showToUser: boolean = true;
   private _errorListeners: ErrorListener[] = [];
   private _stats: ErrorStats = {
@@ -519,15 +518,17 @@ export class ErrorHandler {
   private _updateStats(error: AppError): void {
     this._stats.total++;
 
-    if (!this._stats.byCategory[error.category]) {
-      this._stats.byCategory[error.category] = 0;
+    const catKey = error.category;
+    if (!this._stats.byCategory[catKey]) {
+      this._stats.byCategory[catKey] = 0;
     }
-    this._stats.byCategory[error.category]++;
+    this._stats.byCategory[catKey] = (this._stats.byCategory[catKey] ?? 0) + 1;
 
-    if (!this._stats.bySeverity[error.severity]) {
-      this._stats.bySeverity[error.severity] = 0;
+    const sevKey = error.severity;
+    if (!this._stats.bySeverity[sevKey]) {
+      this._stats.bySeverity[sevKey] = 0;
     }
-    this._stats.bySeverity[error.severity]++;
+    this._stats.bySeverity[sevKey] = (this._stats.bySeverity[sevKey] ?? 0) + 1;
 
     this._stats.lastError = {
       code: error.code,
@@ -725,9 +726,6 @@ export class ErrorHandler {
   /**
    * تنظیم حالت توسعه
    */
-  setDevMode(isDev: boolean): void {
-    this.isDev = isDev;
-  }
 }
 
 // ============================================================

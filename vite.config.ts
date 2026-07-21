@@ -31,14 +31,6 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
-    minify: 'terser',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // جدا کردن کتابخانه‌ها برای cache بهتر
-          vendor: ['typescript'],
-        },
-      },
-    },
+    minify: 'esbuild',
   },
 })

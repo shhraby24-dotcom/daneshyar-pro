@@ -1,6 +1,6 @@
 import { getInstance as getLogger } from '@/core/Logger';
 import { getInstance as getEventBus, EVENTS } from '@/core/EventBus';
-import { getStorage, LS_KEYS } from '@/core/Storage';
+import { getStorage } from '@/core/Storage';
 
 const logger = getLogger().module('State');
 const eventBus = getEventBus();
@@ -428,12 +428,13 @@ export class StateManager {
       return null;
     }
 
-    this._state.notes[index] = { ...this._state.notes[index], ...updates };
+    const updatedNote: Note = { ...this._state.notes[index], ...updates } as Note;
+    this._state.notes[index] = updatedNote;
     this._notifyListeners('notes', this._state.notes);
     this._schedulePersist('notes');
 
-    eventBus.emit(EVENTS.NOTE_UPDATED, this._state.notes[index]);
-    return this._state.notes[index];
+    eventBus.emit(EVENTS.NOTE_UPDATED, updatedNote);
+    return updatedNote;
   }
 
   /**
@@ -515,15 +516,16 @@ export class StateManager {
     const index = this._state.flashcards.findIndex((f) => f.id === id);
     if (index === -1) return null;
 
-    this._state.flashcards[index] = {
-      ...this._state.flashcards[index],
-      ...updates,
-    };
+    const updatedCard: Flashcard = {
+     ...this._state.flashcards[index],
+     ...updates,
+    } as Flashcard;
+    this._state.flashcards[index] = updatedCard;
     this._notifyListeners('flashcards', this._state.flashcards);
     this._schedulePersist('flashcards');
 
-    eventBus.emit(EVENTS.FLASHCARD_REVIEWED, this._state.flashcards[index]);
-    return this._state.flashcards[index];
+    eventBus.emit(EVENTS.FLASHCARD_REVIEWED, updatedCard);
+    return updatedCard;
   }
 
   /**
