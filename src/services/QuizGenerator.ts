@@ -16,6 +16,7 @@
  */
 
 import { getInstance as getLogger } from '@/core/Logger';
+import { getSummarizer } from '@/services/Summarizer';
 
 const logger = getLogger().module('QuizGenerator');
 
@@ -402,33 +403,12 @@ export class QuizGenerator {
    * استخراج کلیدواژه‌ها (موقت - بعداً با Summarizer.ts جایگزین می‌شود)
    * TODO: با Summarizer.extractKeywords جایگزین شود
    */
+    /**
+   * استخراج کلیدواژه‌ها (با استفاده از Summarizer)
+   */
   private _extractKeywords(text: string, count: number): string[] {
-    // کلمات توقف فارسی
-    const stopWords = new Set([
-      'و', 'در', 'به', 'از', 'که', 'این', 'را', 'با', 'است', 'برای',
-      'آن', 'یک', 'خود', 'تا', 'بر', 'هم', 'یا', 'اما', 'اگر', 'چه',
-      'هر', 'ما', 'شما', 'آنها', 'او', 'من', 'تو', 'بود', 'شد', 'شده',
-      'می', 'ها', 'های', 'ای', 'آیا', 'نیز', 'بسیار', 'بیش', 'کم',
-      'بین', 'پس', 'قبل', 'بعد', 'زیر', 'بالا', 'روی', 'کنار',
-    ]);
-
-    // استخراج کلمات
-    const words = text
-      .replace(/[^\u0600-\u06FF\u0750-\u077Fa-zA-Z0-9\s]/g, ' ')
-      .split(/\s+/)
-      .filter((w) => w.length >= 3 && !stopWords.has(w));
-
-    // شمارش تکرار
-    const freq: Record<string, number> = {};
-    words.forEach((w) => {
-      freq[w] = (freq[w] || 0) + 1;
-    });
-
-    // مرتب‌سازی بر اساس تکرار
-    return Object.entries(freq)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, count)
-      .map(([word]) => word);
+    const summarizer = getSummarizer();
+    return summarizer.extractKeywords(text, count);
   }
 
   /**
