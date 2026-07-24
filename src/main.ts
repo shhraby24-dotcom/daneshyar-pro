@@ -157,4 +157,98 @@ function showFatalError(error: unknown): void {
 // اجرای برنامه
 // ============================================================
 
+// ============================================================
+// تست SRS (موقت - بعداً حذف می‌شود)
+// ============================================================
+
+import { getSRS } from '@/services/SRS';
+
+async function testSRS(): Promise<void> {
+  const srs = getSRS();
+
+  logger.info('🧪 تست SRS');
+
+  // تست ۱: ایجاد فلش‌کارت
+  logger.info('📝 تست ۱: ایجاد فلش‌کارت');
+  const card = srs.createCard({
+    front: 'پایتخت ایران کجاست؟',
+    back: 'تهران',
+    topic: 'جغرافیا',
+    conceptType: 'fact',
+  });
+  logger.info('فلش‌کارت ساخته شد', {
+    id: card.id,
+    front: card.front,
+    ease: card.ease,
+    interval: card.interval,
+  });
+
+  // تست ۲: schedule با کیفیت‌های مختلف
+  logger.info('📝 تست ۲: schedule با کیفیت‌های مختلف');
+  let currentCard = card;
+
+  // پاسخ عالی (quality = 5)
+  currentCard = srs.schedule(currentCard, 5);
+  logger.info('پاسخ عالی', {
+    interval: currentCard.interval,
+    ease: currentCard.ease.toFixed(2),
+    nextReview: currentCard.nextReview,
+  });
+
+  // پاسخ خوب (quality = 4)
+  currentCard = srs.schedule(currentCard, 4);
+  logger.info('پاسخ خوب', {
+    interval: currentCard.interval,
+    ease: currentCard.ease.toFixed(2),
+  });
+
+  // پاسخ سخت (quality = 2) → reset
+  currentCard = srs.schedule(currentCard, 2);
+  logger.info('پاسخ سخت (reset)', {
+    interval: currentCard.interval,
+    lapses: currentCard.lapses,
+  });
+
+  // تست ۳: آمار
+  logger.info('📝 تست ۳: آمار');
+  const cards = [currentCard];
+  const stats = srs.getStats(cards);
+  logger.info('آمار SRS', {
+    total: stats.total,
+    due: stats.due,
+    new: stats.new,
+    retentionRate: stats.retentionRate,
+    maturity: stats.maturity,
+  });
+
+  // تست ۴: تحلیل کارایی
+  logger.info('📝 تست ۴: تحلیل کارایی');
+  const efficiency = srs.analyzeEfficiency(cards);
+  logger.info('تحلیل کارایی', {
+    dailyBurden: efficiency.dailyBurden,
+    efficiency: efficiency.efficiency,
+    recommendations: efficiency.recommendations,
+  });
+
+  // تست ۵: پیش‌بینی زمان بهینه
+  logger.info('📝 تست ۵: پیش‌بینی زمان بهینه');
+  const prediction = srs.predictOptimalTime(currentCard);
+  logger.info('پیش‌بینی', prediction);
+
+  // تست ۶: ریست کارت
+  logger.info('📝 تست ۶: ریست کارت');
+  const resetCard = srs.resetCard(currentCard);
+  logger.info('کارت ریست شد', {
+    interval: resetCard.interval,
+    repetitions: resetCard.repetitions,
+    ease: resetCard.ease,
+  });
+
+  logger.info('✅ همه تست‌های SRS موفق بودند!');
+  console.log('');
+  console.log('🎉 SRS.ts با موفقیت تست شد!');
+}
+// اجرای تست SRS (موقت)
+testSRS();
+
 bootstrap();
