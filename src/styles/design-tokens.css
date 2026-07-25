@@ -1,0 +1,184 @@
+/**
+ * ============================================================
+ * دانش‌یار پرو - سیستم توکن‌های طراحی (Design Tokens)
+ * ============================================================
+ *
+ * منبع حقیقت واحد برای تمام رنگ‌ها، سایه‌ها، فاصله‌ها و تایپوگرافی.
+ *
+ * معماری:
+ *   1. متغیرهای زنده (--app-*) در :root (تاریک) و .light (روشن) تعریف می‌شوند
+ *   2. با @theme inline به کلاس‌های Tailwind پل می‌شوند
+ *   3. نتیجه: bg-slate-900 و text-slate-100 با تغییر تم، خودکار عوض می‌شوند
+ *      بدون هیچ !important
+ *
+ * تغییر تم: فقط کلاس .light را به <html> اضافه/حذف کن.
+ *
+ * @module styles/design-tokens
+ * @version 1.0.0-beta.1
+ */
+
+/* ============================================================
+   🌙 تم تاریک (پیش‌فرض)
+   ============================================================ */
+:root {
+  color-scheme: dark;
+
+  /* ── مقیاس خاکستری (slate) - پرکاربردترین توکن در Viewها ── */
+  --app-slate-50:  #f8fafc;
+  --app-slate-100: #f1f5f9;
+  --app-slate-200: #e2e8f0;
+  --app-slate-300: #cbd5e1;
+  --app-slate-400: #94a3b8;
+  --app-slate-500: #64748b;
+  --app-slate-600: #475569;
+  --app-slate-700: #334155;
+  --app-slate-800: #1e293b;
+  --app-slate-900: #0f172a;
+
+  /* ── رنگ برند اصلی (Indigo) ── */
+  --app-primary-50:  #eef2ff;
+  --app-primary-100: #e0e7ff;
+  --app-primary-200: #c7d2fe;
+  --app-primary-300: #a5b4fc;
+  --app-primary-400: #818cf8;
+  --app-primary-500: #6366f1;
+  --app-primary-600: #4f46e5;
+  --app-primary-700: #4338ca;
+
+  /* ── رنگ تأکیدی (Amber) ── */
+  --app-accent-300: #fcd34d;
+  --app-accent-400: #fbbf24;
+  --app-accent-500: #f59e0b;
+  --app-accent-600: #d97706;
+
+  /* ── رنگ‌های معنایی ── */
+  --app-success: #10b981;
+  --app-error:   #ef4444;
+  --app-warning: #f59e0b;
+  --app-info:    #3b82f6;
+
+  /* ── توکن‌های معنایی (برای کامپوننت‌های سفارشی) ── */
+  --app-surface:         #0f172a;                 /* پس‌زمینه صفحه */
+  --app-surface-raised:  #1e293b;                 /* کارت، مودال */
+  --app-surface-overlay: #334155;                 /* هاور، لایه سوم */
+  --app-ink:             #f1f5f9;                 /* متن اصلی */
+  --app-ink-soft:        #cbd5e1;                 /* متن ثانویه */
+  --app-ink-faint:       #94a3b8;                 /* متن کم‌رنگ */
+  --app-line:            #334155;                 /* حاشیه پیش‌فرض */
+  --app-line-strong:     #475569;                 /* حاشیه پررنگ */
+
+  /* ── سایه‌ها ── */
+  --app-shadow-sm:   0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --app-shadow-md:   0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --app-shadow-lg:   0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  --app-shadow-xl:   0 20px 25px -5px rgba(0, 0, 0, 0.4);
+  --app-glow-primary: 0 0 20px rgba(99, 102, 241, 0.3);
+  --app-glow-accent:  0 0 20px rgba(245, 158, 11, 0.3);
+
+  /* ── تایپوگرافی ── */
+  --app-font-sans: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+  --app-font-mono: 'Courier New', ui-monospace, monospace;
+}
+
+/* ============================================================
+   ☀️ تم روشن
+   مکانیزم واحد: کلاس .light روی <html>
+   (مقادیر slate برای پس‌زمینه/متن/حاشیه به‌صورت دستی تنظیم شده‌اند)
+   ============================================================ */
+.light,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* ── مقیاس خاکستری معکوس‌شده ──
+     ۶۰۰-۹۰۰ → پس‌زمینه (روشن)
+     ۱۰۰-۵۰۰ → متن و حاشیه (تیره) */
+  --app-slate-50:  #1e293b;
+  --app-slate-100: #0f172a;   /* متن اصلی */
+  --app-slate-200: #1e293b;   /* متن پررنگ */
+  --app-slate-300: #334155;   /* متن بدنه */
+  --app-slate-400: #64748b;   /* متن ثانویه */
+  --app-slate-500: #94a3b8;   /* متن کم‌رنگ */
+  --app-slate-600: #cbd5e1;   /* حاشیه پررنگ */
+  --app-slate-700: #e2e8f0;   /* حاشیه */
+  --app-slate-800: #ffffff;   /* پس‌زمینه کارت */
+  --app-slate-900: #f8fafc;   /* پس‌زمینه صفحه */
+
+  /* ── توکن‌های معنایی روشن ── */
+  --app-surface:         #f8fafc;
+  --app-surface-raised:  #ffffff;
+  --app-surface-overlay: #f1f5f9;
+  --app-ink:             #0f172a;
+  --app-ink-soft:        #334155;
+  --app-ink-faint:       #64748b;
+  --app-line:            #e2e8f0;
+  --app-line-strong:     #cbd5e1;
+
+  /* ── سایه‌های ملایم‌تر برای پس‌زمینه روشن ── */
+  --app-shadow-sm:   0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --app-shadow-md:   0 4px 12px rgba(15, 23, 42, 0.08);
+  --app-shadow-lg:   0 10px 25px rgba(15, 23, 42, 0.10);
+  --app-shadow-xl:   0 20px 40px rgba(15, 23, 42, 0.15);
+  --app-glow-primary: 0 0 15px rgba(99, 102, 241, 0.15);
+  --app-glow-accent:  0 0 15px rgba(245, 158, 11, 0.15);
+}
+
+/* ============================================================
+   🔌 پل به Tailwind v4
+   با @theme inline، کلاس‌های Tailwind به متغیرهای زنده بالا وصل
+   می‌شوند. یعنی bg-slate-900 با تغییر تم، خودکار به‌روز می‌شود.
+   ============================================================ */
+@theme inline {
+  /* ── مقیاس خاکستری قابل تم‌شدن ── */
+  --color-slate-50:  var(--app-slate-50);
+  --color-slate-100: var(--app-slate-100);
+  --color-slate-200: var(--app-slate-200);
+  --color-slate-300: var(--app-slate-300);
+  --color-slate-400: var(--app-slate-400);
+  --color-slate-500: var(--app-slate-500);
+  --color-slate-600: var(--app-slate-600);
+  --color-slate-700: var(--app-slate-700);
+  --color-slate-800: var(--app-slate-800);
+  --color-slate-900: var(--app-slate-900);
+
+  /* ── رنگ برند ── */
+  --color-primary-50:  var(--app-primary-50);
+  --color-primary-100: var(--app-primary-100);
+  --color-primary-200: var(--app-primary-200);
+  --color-primary-300: var(--app-primary-300);
+  --color-primary-400: var(--app-primary-400);
+  --color-primary-500: var(--app-primary-500);
+  --color-primary-600: var(--app-primary-600);
+  --color-primary-700: var(--app-primary-700);
+
+  /* ── رنگ تأکیدی ── */
+  --color-accent-300: var(--app-accent-300);
+  --color-accent-400: var(--app-accent-400);
+  --color-accent-500: var(--app-accent-500);
+  --color-accent-600: var(--app-accent-600);
+
+  /* ── رنگ‌های معنایی ── */
+  --color-success: var(--app-success);
+  --color-error:   var(--app-error);
+  --color-warning: var(--app-warning);
+  --color-info:    var(--app-info);
+
+  /* ── توکن‌های معنایی سطح بالا ── */
+  --color-surface:         var(--app-surface);
+  --color-surface-raised:  var(--app-surface-raised);
+  --color-surface-overlay: var(--app-surface-overlay);
+  --color-ink:             var(--app-ink);
+  --color-ink-soft:        var(--app-ink-soft);
+  --color-ink-faint:       var(--app-ink-faint);
+  --color-line:            var(--app-line);
+  --color-line-strong:     var(--app-line-strong);
+
+  /* ── سایه‌ها ── */
+  --shadow-sm:   var(--app-shadow-sm);
+  --shadow-md:   var(--app-shadow-md);
+  --shadow-lg:   var(--app-shadow-lg);
+  --shadow-xl:   var(--app-shadow-xl);
+
+  /* ── تایپوگرافی ── */
+  --font-sans: var(--app-font-sans);
+  --font-mono: var(--app-font-mono);
+}
