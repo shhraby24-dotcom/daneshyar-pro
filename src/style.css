@@ -1,2 +1,5 @@
 @import "tailwindcss";
 @import "./styles/design-tokens.css";
+@import "tailwindcss";
+@import "./styles/design-tokens.css";
+@import "./styles/main.css";
