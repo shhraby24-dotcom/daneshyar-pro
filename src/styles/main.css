@@ -295,6 +295,36 @@ body {
 .toast-close:hover {
   color: var(--app-ink);
 }
+/* ── نوار پیشرفت و عنوان Toast (نسخه جدید) ── */
+.toast {
+  position: relative;
+  overflow: hidden;
+}
+.toast-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.toast-progress-bar {
+  position: absolute;
+  bottom: 0;
+  inset-inline-start: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--app-primary-500);
+  transform-origin: 100% 50%;
+  animation-name: toastProgress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  pointer-events: none;
+}
+.toast.success .toast-progress-bar { background: var(--app-success); }
+.toast.error   .toast-progress-bar { background: var(--app-error); }
+.toast.warning .toast-progress-bar { background: var(--app-warning); }
+.toast.info    .toast-progress-bar { background: var(--app-info); }
+@keyframes toastProgress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
 
 /* ============================================================
    8. MODAL - پنجره‌های شناور
