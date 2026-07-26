@@ -494,6 +494,49 @@ body {
   flex-shrink: 0;
   opacity: 0.7;
 }
+/* ============================================================
+   20. NAVIGATION - ناوبری Sidebar (نشانگر فعال زنده)
+   ============================================================ */
+.nav-item {
+  position: relative;
+  transition: all 0.2s ease;
+}
+.nav-icon {
+  transition: transform 0.2s ease;
+}
+.nav-item:hover .nav-icon {
+  transform: scale(1.15);
+}
+/* آیتم فعال: پس‌زمینه ملایم + نوار رنگی درخشان در لبه */
+.nav-active {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--app-ink);
+}
+.nav-active::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 55%;
+  border-radius: 9999px;
+  background: var(--app-primary-500);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+}
+.nav-active:hover {
+  background: rgba(99, 102, 241, 0.18);
+}
+/* نشان "به‌زودی" */
+.soon-badge {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--app-accent-500);
+  font-weight: 600;
+  white-space: nowrap;
+}
 
 /* ============================================================
    10. INPUTS - ورودی‌ها

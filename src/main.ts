@@ -14,6 +14,7 @@ import { getStorage } from '@/core/Storage';
 import { getState } from '@/core/State';
 import { getRouter } from '@/core/Router';
 import { getErrorHandler } from '@/core/Errors';
+import { getLayout } from '@/ui/Layout';
 
 // ============================================================
 // مقداردهی اولیه ماژول‌های Core
@@ -52,8 +53,12 @@ async function bootstrap(): Promise<void> {
     logger.info('✅ State بارگذاری شد', { ready: state.isReady() });
 
     // مرحله ۳: تنظیم Container برای Router
-    logger.info('📦 مرحله ۳: تنظیم Router');
-    router.setContainer('#app');
+    logger.info('📦 مرحله ۳: رندر Layout');
+    const layoutEl = getLayout().render();
+    app.appendChild(layoutEl);
+
+    logger.info('📦 مرحله ۴: تنظیم Router');
+    router.setContainer('#main-content');
 
     // مرحله ۴: ثبت View ها
     logger.info('📦 مرحله ۴: ثبت View ها');
