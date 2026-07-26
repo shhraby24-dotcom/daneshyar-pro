@@ -82,6 +82,41 @@ async function bootstrap(): Promise<void> {
 // ثبت View ها (موقت - بعداً با View های واقعی جایگزین می‌شود)
 // ============================================================
 
+// ============================================================
+// Placeholder برای View هایی که هنوز منتقل نشده‌اند
+// ============================================================
+
+function createComingSoonView(title: string, icon: string, description: string) {
+  return () => {
+    const div = document.createElement('div');
+    div.className = 'min-h-[70vh] flex items-center justify-center p-8 fade-in';
+    div.innerHTML = `
+      <div class="text-center max-w-md">
+        <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-primary-500/10 border border-primary-500/30 flex items-center justify-center text-5xl pulse-ring">
+          ${icon}
+        </div>
+        <h1 class="text-3xl font-black text-slate-100 mb-3">${title}</h1>
+        <p class="text-slate-400 text-lg leading-relaxed mb-2">${description}</p>
+        <p class="text-slate-500 text-sm mb-8">این بخش به‌زودی تکمیل می‌شود 🚧</p>
+        <button onclick="location.hash = '#/dashboard'" class="btn btn-primary">
+          ← بازگشت به داشبورد
+        </button>
+      </div>
+    `;
+    return div;
+  };
+}
+
+  // ── View های placeholder (تا وقتی View اصلی ساخته شود) ──
+  router.registerView('summarizer', createComingSoonView('خلاصه‌ساز', '✨', 'متن‌های طولانی را به خلاصه‌های مفید تبدیل کن.'));
+  router.registerView('quiz', createComingSoonView('آزمون‌ساز', '📝', 'از هر متنی، آزمون هوشمند بساز.'));
+  router.registerView('flashcards', createComingSoonView('فلش‌کارت', '🃏', 'با تکرار با فاصله، ماندگار یاد بگیر.'));
+  router.registerView('notes', createComingSoonView('یادداشت‌ها', '📚', 'یادداشت‌هایت را دسته‌بندی و مدیریت کن.'));
+  router.registerView('translator', createComingSoonView('مترجم', '🌐', 'ترجمه هوشمند متن‌های تخصصی.'));
+  router.registerView('calculator', createComingSoonView('ماشین‌حساب', '🧮', 'محاسبات سریع علمی.'));
+  router.registerView('pomodoro', createComingSoonView('پومودورو', '⏱️', 'با تکنیک پومودورو، متمرکز کار کن.'));
+  router.registerView('settings', createComingSoonView('تنظیمات', '⚙️', 'برنامه را شخصی‌سازی کن.'));
+  
 function registerViews(): void {
   router.registerView('dashboard', () => {
     const div = document.createElement('div');

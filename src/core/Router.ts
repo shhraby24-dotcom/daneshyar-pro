@@ -571,7 +571,7 @@ export class Router {
             <h1 class="text-3xl font-bold mb-2">صفحه یافت نشد</h1>
             <p class="text-slate-400 mb-6">مسیر "${routeName}" وجود ندارد</p>
             <button onclick="location.hash = '#/dashboard'" 
-                    class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg transition">
+                    class="bg-primary-600 hover:bg-primary-700 text-slate-100 px-6 py-3 rounded-lg transition">
               بازگشت به داشبورد
             </button>
           </div>
@@ -593,7 +593,7 @@ export class Router {
             <h2 class="text-xl font-bold text-red-400 mb-2">خطا در بارگذاری صفحه</h2>
             <p class="text-slate-300 mb-4">${errorMessage || 'خطای ناشناخته'}</p>
             <button onclick="location.reload()" 
-                    class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg transition">
+                    class="bg-primary-600 hover:bg-primary-700 text-slate-100 px-6 py-2 rounded-lg transition">
               تلاش مجدد
             </button>
           </div>

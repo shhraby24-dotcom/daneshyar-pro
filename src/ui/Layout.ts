@@ -107,6 +107,10 @@ export class Layout {
    * رندر کامل layout
    */
   render(): HTMLElement {
+    // ⭐ خواندن مجدد تم از state
+    // (سازنده ممکن است قبل از state.load() اجرا شده باشد)
+    this._currentTheme = this._readInitialTheme();
+
     const container = document.createElement('div');
     container.className = 'min-h-screen flex';
 
@@ -386,8 +390,7 @@ export class Layout {
 
   private _readInitialTheme(): 'dark' | 'light' {
     try {
-      const s = this._state as unknown as { settings?: { theme?: string } };
-      const theme = s.settings?.theme;
+      const theme = this._state.getSettings().theme;
       if (theme === 'light' || theme === 'dark') return theme;
     } catch {
       /* ignore */
