@@ -494,6 +494,18 @@ body {
   flex-shrink: 0;
   opacity: 0.7;
 }
+/* ── ارتقاهای دکمه (آیکون زنده + دکمه مربعی) ── */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+.btn:hover .btn-icon {
+  transform: scale(1.12);
+}
+.btn.btn-square {
+  padding: 0;
+}
 /* ============================================================
    20. NAVIGATION - ناوبری Sidebar (نشانگر فعال زنده)
    ============================================================ */
