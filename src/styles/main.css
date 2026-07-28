@@ -854,3 +854,42 @@ a:focus:not(:focus-visible) {
     color: #000000 !important;
   }
 }
+/* ============================================================
+   21. FLASHCARD - چرخش سه‌بعدی کارت‌های یادگیری
+   ============================================================ */
+.flashcard-3d {
+  perspective: 1200px;
+}
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  /* چرخش با کمی overshoot برای حس رضایت‌بخش */
+  transition: transform 0.65s cubic-bezier(0.34, 1.2, 0.4, 1);
+}
+.flashcard-inner.flipped {
+  transform: rotateY(180deg);
+}
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.flashcard-back {
+  transform: rotateY(180deg);
+}
+
+/* ============================================================
+   22. EMPTY STATE - شناور بودن آیکون
+   ============================================================ */
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.empty-state-icon {
+  animation: floatY 3s ease-in-out infinite;
+}
