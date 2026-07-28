@@ -14,5 +14,8 @@
     "tailwindcss": "^4.3.3",
     "typescript": "~5.8.3",
     "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "dexie": "^4.4.4"
   }
 }
