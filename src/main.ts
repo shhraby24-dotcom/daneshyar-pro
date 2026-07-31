@@ -16,6 +16,7 @@ import { getRouter } from '@/core/Router';
 import { getErrorHandler } from '@/core/Errors';
 import { getLayout } from '@/ui/Layout';
 import { createDashboardView } from '@/ui/views/DashboardView';
+import { createNotesView } from '@/ui/views/NotesView';
 
 // ============================================================
 // مقداردهی اولیه ماژول‌های Core
@@ -112,7 +113,7 @@ function createComingSoonView(title: string, icon: string, description: string) 
   router.registerView('summarizer', createComingSoonView('خلاصه‌ساز', '✨', 'متن‌های طولانی را به خلاصه‌های مفید تبدیل کن.'));
   router.registerView('quiz', createComingSoonView('آزمون‌ساز', '📝', 'از هر متنی، آزمون هوشمند بساز.'));
   router.registerView('flashcards', createComingSoonView('فلش‌کارت', '🃏', 'با تکرار با فاصله، ماندگار یاد بگیر.'));
-  router.registerView('notes', createComingSoonView('یادداشت‌ها', '📚', 'یادداشت‌هایت را دسته‌بندی و مدیریت کن.'));
+  router.registerView('notes', createNotesView);
   router.registerView('translator', createComingSoonView('مترجم', '🌐', 'ترجمه هوشمند متن‌های تخصصی.'));
   router.registerView('calculator', createComingSoonView('ماشین‌حساب', '🧮', 'محاسبات سریع علمی.'));
   router.registerView('pomodoro', createComingSoonView('پومودورو', '⏱️', 'با تکنیک پومودورو، متمرکز کار کن.'));
@@ -676,4 +677,104 @@ export function createSearchInput(options: SearchInputOptions = {}): HTMLDivElem
   return wrapper;
 }
 
+
+
+// ============================================================
+// تست Dashboard - کاشت داده دمو (موقت)
+// ============================================================
+
+import { getDatabase } from '@/core/Database';
+
+async function seedDemoData(): Promise<void> {
+  const db = getDatabase();
+  await db.init();
+
+  const existing = await db.getNotes();
+  if (existing.length > 0) {
+    logger.info('⏭️ داده دمو از قبل وجود دارد');
+    return;
+  }
+
+  logger.info('🌱 در حال کاشت داده دمو...');
+  const now = Date.now();
+  const DAY = 86400000;
+
+  // یادداشت‌ها
+  const noteSamples = [
+    { title: 'جزوه ریاضی — مشتق', content: 'مشتق تابع y=x^n برابر است با y\'=nx^(n-1). برای توابع مرکب از قاعده زنجیره‌ای استفاده می‌کنیم.' },
+    { title: 'خلاصه فصل ۳ فیزیک', content: 'قانون دوم نیوتن: F=ma. نیروی خالص وارد بر جسم برابر است با جرم ضرب در شتاب.' },
+    { title: 'لغات انگلیسی — درس ۵', content: 'abundant: فراوان، benevolent: خیرخواه، candid: صریح و صادق.' },
+    { title: 'تاریخ — انقلاب مشروطه', content: 'انقلاب مشروطه در سال ۱۲۸۵ شمسی آغاز شد و منجر به تأسیس مجلس شورای ملی گردید.' },
+    { title: 'شیمی — جدول تناوبی', content: 'عناصر در جدول تناوبی بر اساس عدد اتمی مرتب شده‌اند.' },
+  ];
+  for (let i = 0; i < noteSamples.length; i++) {
+    const s = noteSamples[i];
+    if (!s) continue;
+    await db.addNote({
+      id: `demo-note-${i}`,
+      title: s.title,
+      content: s.content,
+      createdAt: new Date(now - i * DAY).toISOString(),
+      updatedAt: new Date(now - i * DAY).toISOString(),
+    });
+  }
+
+  // فلش‌کارت‌ها (۴ تا آماده مرور، بقیه بعداً)
+  const cardSamples = [
+    { front: 'مشتق x² چیست؟', back: '2x' },
+    { front: 'قانون دوم نیوتن؟', back: 'F = ma' },
+    { front: 'پایتخت فرانسه؟', back: 'پاریس' },
+    { front: 'H₂O چیست؟', back: 'آب' },
+    { front: 'جذر ۱۴۴؟', back: '۱۲' },
+    { front: 'بزرگ‌ترین سیاره؟', back: 'مشتری' },
+  ];
+  for (let i = 0; i < cardSamples.length; i++) {
+    const s = cardSamples[i];
+    if (!s) continue;
+    const dueOffset = i < 4 ? -3600000 : (i - 3) * DAY;
+    await db.addFlashcard({
+      id: `demo-card-${i}`,
+      front: s.front,
+      back: s.back,
+      deck: 'دمو',
+      createdAt: new Date(now - 7 * DAY).toISOString(),
+      nextReview: new Date(now + dueOffset).toISOString(),
+      interval: 1,
+      easeFactor: 2.5,
+      repetitions: 1,
+    });
+  }
+
+  // نتایج آزمون
+  for (let i = 0; i < 3; i++) {
+    await db.addQuizResult({
+      id: `demo-quiz-${i}`,
+      title: `آزمون ریاضی ${i + 1}`,
+      date: new Date(now - (i + 1) * 2 * DAY).toISOString(),
+      totalQuestions: 10,
+      correct: 7 + i,
+      wrong: 3 - i,
+      unanswered: 0,
+      percentage: 70 + i * 10,
+      timeSpent: 300 + i * 60,
+    });
+  }
+
+  // جلسات مطالعه (۲۵ روز اخیر، با چند روز خالی برای واقع‌گرایی)
+  for (let d = 0; d < 25; d++) {
+    if (d >= 6 && (d % 5 === 2 || d % 7 === 4)) continue;
+    await db.logStudySession('demo', {
+      date: new Date(now - d * DAY).toISOString(),
+      duration: 25 + (d % 3) * 10,
+    });
+  }
+
+  logger.info('✅ داده دمو کاشته شد! صفحه را رفرش کن');
+}
+
 bootstrap();
+
+// کاشت داده دمو (فقط یک بار)
+setTimeout(() => {
+  seedDemoData().catch((e) => logger.error('خطا در کاشت دمو', e));
+}, 500);
