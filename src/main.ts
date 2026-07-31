@@ -15,6 +15,7 @@ import { getState } from '@/core/State';
 import { getRouter } from '@/core/Router';
 import { getErrorHandler } from '@/core/Errors';
 import { getLayout } from '@/ui/Layout';
+import { createDashboardView } from '@/ui/views/DashboardView';
 
 // ============================================================
 // مقداردهی اولیه ماژول‌های Core
@@ -118,38 +119,7 @@ function createComingSoonView(title: string, icon: string, description: string) 
   router.registerView('settings', createComingSoonView('تنظیمات', '⚙️', 'برنامه را شخصی‌سازی کن.'));
   
 function registerViews(): void {
-  router.registerView('dashboard', () => {
-    const div = document.createElement('div');
-    div.className = 'min-h-screen bg-slate-900 flex items-center justify-center p-8';
-    div.innerHTML = `
-      <div class="text-center max-w-lg">
-        <div class="text-7xl mb-6">🎓</div>
-        <h1 class="text-4xl font-black bg-gradient-to-r from-primary-400 via-accent-400 to-primary-400 bg-clip-text text-transparent mb-4">
-          دانش‌یار پرو
-        </h1>
-        <p class="text-slate-400 text-lg mb-8">
-          اپلیکیشن هوشمند مطالعه و یادگیری
-        </p>
-        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 mb-6">
-          <p class="text-slate-300 text-sm mb-4">
-            ✅ زیرساخت حرفه‌ای آماده است
-          </p>
-          <div class="grid grid-cols-2 gap-3 text-xs text-slate-400">
-            <div class="bg-slate-900 rounded-lg p-3">⚡ Vite + TypeScript</div>
-            <div class="bg-slate-900 rounded-lg p-3">🎨 Tailwind CSS v4</div>
-            <div class="bg-slate-900 rounded-lg p-3">📦 Logger + EventBus</div>
-            <div class="bg-slate-900 rounded-lg p-3">🗂️ State + Storage</div>
-            <div class="bg-slate-900 rounded-lg p-3">🧭 Router + Errors</div>
-            <div class="bg-slate-900 rounded-lg p-3">🔜 Views (به‌زودی)</div>
-          </div>
-        </div>
-        <div class="text-xs text-slate-500">
-          نسخه ۱.۰.۰-beta.1 | هفته ۱ از ماه ۱
-        </div>
-      </div>
-    `;
-    return div;
-  });
+  router.registerView('dashboard', createDashboardView);
 
   router.setNotFound((params) => {
     const div = document.createElement('div');
