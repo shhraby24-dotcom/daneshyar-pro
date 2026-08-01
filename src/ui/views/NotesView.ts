@@ -418,7 +418,7 @@ function createNoteCard(note: DbNote, query: string, callbacks: NoteCallbacks): 
 
   // اکشن‌های hover
   const actions = document.createElement('div');
-  actions.className = 'absolute top-2 end-2 flex gap-1 rounded-lg bg-slate-800/90 p-1 opacity-0 shadow-lg transition-opacity group-hover:opacity-100';
+  actions.className = 'absolute top-2 end-2 flex gap-1 rounded-lg bg-slate-800/90 p-1 shadow-lg transition-opacity lg:opacity-0 lg:group-hover:opacity-100';
   actions.appendChild(makeActionBtn('✏️', 'ویرایش', () => callbacks.onEdit(note.id)));
   actions.appendChild(makeActionBtn(note.pinned ? '📌' : '📍', note.pinned ? 'حذف پین' : 'پین کردن', () => callbacks.onPin(note.id)));
   actions.appendChild(makeActionBtn('🗑️', 'حذف', () => callbacks.onDelete(note.id), true));

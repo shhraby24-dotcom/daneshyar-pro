@@ -2,10 +2,26 @@
 <html lang="fa" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="دانش‌یار پرو - اپلیکیشن هوشمند مطالعه و یادگیری" />
-    <meta name="theme-color" content="#6366f1" />
+
+    <!-- ⭐ viewport استاندارد اپ موبایل: viewport-fit=cover برای safe-area -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+
+    <!-- رنگ نوار وضعیت گوشی، هماهنگ با تم -->
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
+
+    <!-- رفتار اپ‌طور روی iOS (تمام‌صفحه، status bar شفاف) -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="دانش‌یار" />
+
+    <!-- جلوگیری از تشخیص خودکار شماره/تاریخ توسط iOS -->
+    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no" />
+
     <title>دانش‌یار پرو | اپلیکیشن هوشمند مطالعه</title>
   </head>
   <body>
