@@ -1159,3 +1159,7 @@ button:not(:disabled):not(.no-press):is(.rounded-full, .btn-square, [class*="rou
   border-color: var(--app-error);
   animation: pulseRing 1.2s infinite;
 }
+/* ============================================================
+   33. QUIZ - استایل‌های آزمون
+   ============================================================ */
+.quiz-option:active { transform: scale(0.98); }
