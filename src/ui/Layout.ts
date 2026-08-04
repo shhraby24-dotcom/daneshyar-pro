@@ -158,9 +158,9 @@ export class Layout {
                     class="lg:hidden min-w-11 min-h-11 flex items-center justify-center rounded-lg hover:bg-slate-800 transition">
               <span class="text-xl">☰</span>
             </button>
-            <div class="flex-1 max-w-xl">
-              <div class="relative">
-                <input id="global-search" type="text" placeholder="جستجو..."
+            <div id="global-search-wrap" class="flex-1 max-w-xl">
+           <div class="relative">
+             <input id="global-search" type="text" placeholder="جستجو..."
                        class="w-full bg-slate-800/80 border border-slate-700 rounded-xl py-2.5 ps-10 pe-4 text-base focus:outline-none focus:border-primary-500 transition" />
                 <span class="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">🔍</span>
               </div>
@@ -193,6 +193,8 @@ export class Layout {
 
     this._bindEvents(container);
     this._applyTheme(this._currentTheme);
+    const sr = document.getElementById('global-search-wrap');
+    if (sr) sr.classList.toggle('hidden', (this._router.getCurrentRoute()?.name ?? 'dashboard') !== 'dashboard');
     return container;
   }
 
@@ -467,6 +469,9 @@ export class Layout {
     });
     const moreBtn = document.getElementById('more-btn');
     if (moreBtn) moreBtn.classList.toggle('active', !inBottom && inMore);
+  // جستجوی سراسری فقط در داشبورد
+    const searchWrap = document.getElementById('global-search-wrap');
+    if (searchWrap) searchWrap.classList.toggle('hidden', routeName !== 'dashboard');
   }
 
   private _applyTheme(theme: 'dark' | 'light'): void {

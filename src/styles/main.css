@@ -1139,3 +1139,23 @@ button:not(:disabled):not(.no-press):is(.rounded-full, .btn-square, [class*="rou
   padding: 6px 14px;
   font-size: 13px;
 }
+/* ============================================================
+   32. MIC BUTTON - تایپ صوتی
+   ============================================================ */
+.mic-btn {
+  flex-shrink: 0;
+  width: 44px; height: 44px;
+  border-radius: 9999px;
+  border: 1px solid var(--app-line-strong);
+  background: var(--app-surface-overlay);
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-ios);
+  margin-top: 26px;
+}
+.mic-btn:active { transform: scale(0.9); }
+.mic-btn.recording {
+  background: var(--app-error);
+  border-color: var(--app-error);
+  animation: pulseRing 1.2s infinite;
+}
