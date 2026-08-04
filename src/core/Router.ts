@@ -627,20 +627,21 @@ export class Router {
    * مدیریت تغییر hash
    */
   private _handleHashChange(): void {
-    const { name, params } = this._parseHashUrl();
+      const { name, params } = this._parseHashUrl();
 
-    // جلوگیری از navigation تکراری
-    if (
-      this._currentRoute &&
-      this._currentRoute.name === name &&
-      JSON.stringify(this._currentRoute.params) === JSON.stringify(params)
-    ) {
-      return;
+      // جلوگیری از navigation تکراری
+      if (
+        this._currentRoute &&
+        this._currentRoute.name === name &&
+        JSON.stringify(this._currentRoute.params) === JSON.stringify(params)
+      ) {
+        return;
+      }
+
+      // ⭐ replace: true → history entry جدید نمی‌سازد (Back درست کار می‌کند)
+      // ⭐ بدون silent → Layout و listener ها خبردار می‌شوند (nav sync می‌شود)
+      this.navigate(name, params, { replace: true });
     }
-
-    this.navigate(name, params, { silent: true });
-  }
-
   /**
    * راه‌اندازی اولیه بر اساس URL فعلی
    */

@@ -1,17 +1,20 @@
 /**
  * ============================================================
- * دانش‌یار پرو - Layout اصلی (Mobile-First)
+ * دانش‌یار پرو - Layout اصلی (Mobile-First, v3)
  * ============================================================
  * دسکتاپ: Sidebar + Topbar
  * موبایل: Topbar شفاف + Bottom Navigation + Bottom Sheet «بیشتر»
+ *
  * ✅ Bottom Navigation با پیلِ فعال (ناحیه شست)
- * ✅ Bottom Sheet به سبک launcher اپل
+ * ✅ Bottom Sheet به سبک launcher اپل + بستن با swipe down
+ * ✅ بستن sheet: swipe down / کلیک پس‌زمینه / کلیک فضای خالی / ESC (دسکتاپ)
  * ✅ Topbar شفاف که با اسکرول blur می‌گیرد
  * ✅ safe-area (notch / home indicator)
  * ✅ اهداف لمسی ≥ ۴۴px
- * ✅ همه‌ی قابلیت‌های قبلی حفظ شده (تم، میان‌برها، export/import)
+ * ✅ ورودی جستجو ۱۶px (ضد زوم iOS)
+ * ✅ همه‌ی قابلیت‌های قبلی: تم، Ctrl+K، Ctrl+1-9، export/import، تاریخ زنده
  * @module ui/Layout
- * @version 2.0.0-mobile
+ * @version 3.0.0-mobile
  */
 
 import { getRouter } from '@/core/Router';
@@ -81,6 +84,8 @@ export class Layout {
   private _currentTheme: 'dark' | 'light';
   private _keydownHandler: ((e: KeyboardEvent) => void) | null = null;
   private _scrollHandler: (() => void) | null = null;
+  private _touchStartY = 0;
+  private _touchCurrentY = 0;
 
   constructor() {
     this._currentTheme = this._readInitialTheme();
@@ -94,11 +99,11 @@ export class Layout {
       }
     });
 
+    // ⭐ حالا که Router موقع Back هم event می‌فرستد (fix شد)،
+    // همین یک listener برای sync ناوبری کافی است (بدون popstate جداگانه)
     this._eventBus.on('router:navigated', (data: unknown) => {
       const to = (data as { to?: { name?: string } })?.to;
-      if (to?.name) {
-        this._updateActiveNav(to.name);
-      }
+      if (to?.name) this._updateActiveNav(to.name);
       this._closeSidebarOnMobile();
       this._closeSheet();
     });
@@ -122,7 +127,7 @@ export class Layout {
 
     container.innerHTML = `
       <!-- ── Sidebar (فقط دسکتاپ) ── -->
-      <aside id="sidebar" class="fixed inset-y-0 right-0 z-40 w-64 bg-slate-800 border-e border-slate-700 transform transition-transform duration-300 translate-x-full lg:translate-x-0 lg:static">
+      <aside id="sidebar" class="fixed inset-y-0 right-0 z-[60] w-64 bg-slate-800 border-e border-slate-700 transform transition-transform duration-300 translate-x-full lg:translate-x-0 lg:static">
         <div class="flex flex-col h-full">
           <div class="p-6 border-b border-slate-700">
             <div class="flex items-center gap-3">
@@ -147,7 +152,6 @@ export class Layout {
 
       <!-- ── Main ── -->
       <div class="flex-1 flex flex-col min-w-0">
-        <!-- Topbar شفاف -->
         <header id="topbar" class="sticky top-0 z-30">
           <div class="flex items-center justify-between px-4 py-3 gap-3">
             <button id="mobile-menu-btn" aria-label="باز کردن منو" aria-expanded="false"
@@ -175,7 +179,7 @@ export class Layout {
       </div>
 
       <!-- ── Overlay سایدبار ── -->
-      <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+      <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-50 hidden lg:hidden"></div>
 
       <!-- ── Bottom Navigation (موبایل) ── -->
       <nav id="bottom-nav" class="bottom-nav" aria-label="ناوبری پایین">${this._renderBottomNav()}</nav>
@@ -271,9 +275,19 @@ export class Layout {
       });
     });
 
-    // منوی «بیشتر»
+    // ── Sheet: باز کردن ──
     container.querySelector<HTMLElement>('#more-btn')?.addEventListener('click', () => this._toggleSheet());
+
+    // ── Sheet: بستن (چهار راه لمسی/دسکتاپ) ──
+    // ۱) کلیک روی پس‌زمینه تیره
     container.querySelector<HTMLElement>('#sheet-overlay')?.addEventListener('click', () => this._closeSheet());
+    // ۲) کلیک روی فضای خالی خود sheet (هر جا که آیتم نیست)
+    container.querySelector<HTMLElement>('#bottom-sheet')?.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.bottom-sheet-item')) this._closeSheet();
+    });
+    // ۳) swipe down (امضای iOS)
+    this._bindSheetSwipe(container);
 
     // آیتم‌های sheet
     container.querySelectorAll<HTMLElement>('.sheet-nav-item').forEach((btn) => {
@@ -319,9 +333,15 @@ export class Layout {
       main.addEventListener('scroll', this._scrollHandler, { passive: true });
     }
 
-    // میان‌برهای کیبورد
+    // میان‌برهای کیبورد (ESC برای sheet فقط در دسکتاپ معنا دارد)
     if (this._keydownHandler) document.removeEventListener('keydown', this._keydownHandler);
     this._keydownHandler = (e: KeyboardEvent) => {
+      // ESC → بستن sheet (bonus دسکتاپ)
+      if (e.key === 'Escape' && this._isSheetOpen) {
+        e.preventDefault();
+        this._closeSheet();
+        return;
+      }
       const isMod = e.ctrlKey || e.metaKey;
       if (!isMod) return;
       if (e.key === 'k' || e.key === 'K') {
@@ -339,6 +359,36 @@ export class Layout {
       }
     };
     document.addEventListener('keydown', this._keydownHandler);
+  }
+
+  /**
+   * ⭐ swipe down برای بستن sheet (امضای iOS)
+   * sheet دنبال انگشت می‌آید و اگر بیش از ۱۰۰px کشیده شد، بسته می‌شود
+   */
+  private _bindSheetSwipe(container: HTMLElement): void {
+    const sheet = container.querySelector<HTMLElement>('#bottom-sheet');
+    if (!sheet) return;
+
+    sheet.addEventListener('touchstart', (e) => {
+      this._touchStartY = e.touches[0]?.clientY ?? 0;
+      this._touchCurrentY = this._touchStartY;
+    }, { passive: true });
+
+    sheet.addEventListener('touchmove', (e) => {
+      this._touchCurrentY = e.touches[0]?.clientY ?? 0;
+      const deltaY = this._touchCurrentY - this._touchStartY;
+      if (deltaY > 0) {
+        sheet.style.transition = 'none';
+        sheet.style.transform = `translateY(${deltaY}px)`;
+      }
+    }, { passive: true });
+
+    sheet.addEventListener('touchend', () => {
+      const deltaY = this._touchCurrentY - this._touchStartY;
+      sheet.style.transition = '';
+      sheet.style.transform = '';
+      if (deltaY > 100) this._closeSheet();
+    });
   }
 
   private _navigateTo(item: NavItem): void {

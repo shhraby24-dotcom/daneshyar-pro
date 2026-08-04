@@ -685,12 +685,25 @@ export async function createNotesView(_params: Record<string, unknown> = {}): Pr
     content.appendChild(createFormGroup({ label: 'عنوان', input: titleInput, required: true }));
 
     // دسته‌بندی
-    const categorySelect = createSelect({
-      id: 'note-category',
-      options: CATEGORIES.map((c) => ({ value: c, label: c })),
-      value: existing?.category ?? CATEGORIES[0] ?? 'سایر',
+// Category — انتخابگر لمسی چیپی (به جای select بومی که روی گوشی می‌ریزد)
+    let selectedCategory = existing?.category ?? CATEGORIES[0] ?? 'سایر';
+    const catWrap = document.createElement('div');
+    catWrap.className = 'flex flex-wrap gap-2';
+    CATEGORIES.forEach((c) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'cat-chip' + (c === selectedCategory ? ' active' : '');
+      chip.textContent = c;
+      chip.addEventListener('click', () => {
+        selectedCategory = c;
+        catWrap.querySelectorAll<HTMLElement>('.cat-chip').forEach((el) => {
+          el.classList.toggle('active', el === chip);
+        });
+        catWrap.dispatchEvent(new Event('change'));
+      });
+      catWrap.appendChild(chip);
     });
-    content.appendChild(createFormGroup({ label: 'دسته‌بندی', input: categorySelect }));
+    content.appendChild(createFormGroup({ label: 'دسته‌بندی', input: catWrap }));
 
     // تگ‌ها
     const tagsInput = createInput({
@@ -749,7 +762,10 @@ export async function createNotesView(_params: Record<string, unknown> = {}): Pr
       const draft = loadDraft();
       if (draft && (draft.title || draft.content)) {
         titleInput.value = draft.title;
-        categorySelect.value = draft.category;
+        selectedCategory = draft.category ?? CATEGORIES[0] ?? 'سایر';
+        catWrap.querySelectorAll<HTMLElement>('.cat-chip').forEach((el) => {
+          el.classList.toggle('active', el.textContent === selectedCategory);
+        });
         tagsInput.value = draft.tags;
         contentTextarea.value = draft.content;
         updateTagsPreview();
@@ -764,7 +780,7 @@ export async function createNotesView(_params: Record<string, unknown> = {}): Pr
           saveDraft({
             title: titleInput.value,
             content: contentTextarea.value,
-            category: categorySelect.value,
+            category: selectedCategory,
             tags: tagsInput.value,
           });
         }, 800);
@@ -772,7 +788,7 @@ export async function createNotesView(_params: Record<string, unknown> = {}): Pr
       titleInput.addEventListener('input', scheduleDraftSave);
       contentTextarea.addEventListener('input', scheduleDraftSave);
       tagsInput.addEventListener('input', scheduleDraftSave);
-      categorySelect.addEventListener('change', scheduleDraftSave);
+      catWrap.addEventListener('change', scheduleDraftSave);
     }
 
     getModal().open({
@@ -790,7 +806,7 @@ export async function createNotesView(_params: Record<string, unknown> = {}): Pr
           type: 'primary',
           onClick: async () => {
             const title = titleInput.value.trim();
-            const category = categorySelect.value;
+            const category = selectedCategory;
             const noteContent = contentTextarea.value.trim();
             const tags = parseTags(tagsInput.value);
 
