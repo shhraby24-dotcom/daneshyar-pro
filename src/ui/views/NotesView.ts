@@ -371,7 +371,7 @@ function createNoteCard(note: DbNote, query: string, callbacks: NoteCallbacks): 
 
   // عنوان
   const title = document.createElement('h3');
-  title.className = 'mb-2 font-bold text-slate-100 line-clamp-1';
+  title.className = 'mb-2 font-bold text-slate-100 line-clamp-1 pe-28 lg:pe-0';
   title.textContent = note.title || 'بدون عنوان';
   card.appendChild(title);
 
@@ -550,9 +550,20 @@ export async function createNotesView(_params: Record<string, unknown> = {}): Pr
     },
   });
 
+  // روی موبایل دکمه‌ی هدر پنهان می‌شود (FAB جای آن را می‌گیرد)
+  newBtn.classList.add('lg-only');
   header.appendChild(titleWrap);
   header.appendChild(newBtn);
   container.appendChild(header);
+
+  // ── FAB: دکمه‌ی شناور «یادداشت جدید» (ناحیه‌ی شست، فقط موبایل/تبلت) ──
+  const fab = document.createElement('button');
+  fab.type = 'button';
+  fab.className = 'fab below-lg-only scale-in';
+  fab.setAttribute('aria-label', 'یادداشت جدید');
+  fab.textContent = '+';
+  fab.addEventListener('click', () => openNoteEditor(null));
+  container.appendChild(fab);
 
   // ── نوار فرمان ──
   const commandBar = document.createElement('div');

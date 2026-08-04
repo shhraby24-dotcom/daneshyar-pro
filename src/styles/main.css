@@ -1111,3 +1111,13 @@ button:not(:disabled):not(.no-press):is(.rounded-full, .btn-square, [class*="rou
   color: #ffffff;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
+/* ============================================================
+   30. RESPONSIVE VISIBILITY - کنترل نمایش موبایل/دسکتاپ
+   (unlayered تا بر .btn و .fab اولویت داشته باشد)
+   ============================================================ */
+@media (max-width: 1023.98px) {
+  .lg-only { display: none !important; }
+}
+@media (min-width: 1024px) {
+  .below-lg-only { display: none !important; }
+}
