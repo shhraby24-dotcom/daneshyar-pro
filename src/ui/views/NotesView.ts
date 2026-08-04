@@ -21,7 +21,7 @@
 import { getInstance as getLogger } from '@/core/Logger';
 import { getDatabase, type DbNote } from '@/core/Database';
 import { createButton, BUTTON_VARIANTS, BUTTON_SIZES } from '@/ui/components/Button';
-import { createInput, createTextarea, createSelect, createFormGroup, createSearchInput } from '@/ui/components/Input';
+import { createInput, createTextarea, createFormGroup, createSearchInput } from '@/ui/components/Input';
 import { getModal } from '@/ui/components/Modal';
 import { getToast } from '@/ui/components/Toast';
 import { createEmptyState } from '@/ui/components/Card';
@@ -111,6 +111,35 @@ function parseTags(input: string): string[] {
     .map((t) => t.trim())
     .filter(Boolean)
     .filter((t, i, arr) => arr.indexOf(t) === i);
+}
+interface ChipOption {
+  value: string;
+  label: string;
+}
+
+/** ردیف چیپ افقی و اسکرول‌شونده (بدون پاپ‌آپ بومی — هرگز از صفحه بیرون نمی‌زند) */
+function createChipRow(
+  options: ChipOption[],
+  getValue: () => string,
+  onChange: (value: string) => void
+): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'chip-row';
+  options.forEach((opt) => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'cat-chip' + (opt.value === getValue() ? ' active' : '');
+    chip.textContent = opt.label;
+    chip.addEventListener('click', () => {
+      if (opt.value === getValue()) return;
+      onChange(opt.value);
+      row.querySelectorAll<HTMLElement>('.cat-chip').forEach((el) => {
+        el.classList.toggle('active', el === chip);
+      });
+    });
+    row.appendChild(chip);
+  });
+  return row;
 }
 
 // ============================================================
@@ -565,12 +594,11 @@ export async function createNotesView(_params: Record<string, unknown> = {}): Pr
   fab.addEventListener('click', () => openNoteEditor(null));
   container.appendChild(fab);
 
-  // ── نوار فرمان ──
+  // ── نوار فرمان (جستجو + فیلتر + مرتب‌سازی — همه لمسی، بدون پاپ‌آپ بومی) ──
   const commandBar = document.createElement('div');
-  commandBar.className = 'flex flex-col gap-3 sm:flex-row sm:items-center';
+  commandBar.className = 'space-y-3';
 
   const searchWrap = document.createElement('div');
-  searchWrap.className = 'flex-1';
   searchWrap.appendChild(
     createSearchInput({
       placeholder: 'جستجو در عنوان، محتوا و تگ‌ها...',
@@ -582,32 +610,34 @@ export async function createNotesView(_params: Record<string, unknown> = {}): Pr
   );
   commandBar.appendChild(searchWrap);
 
-  const catSelect = createSelect({
-    options: [{ value: 'all', label: 'همه دسته‌ها' }, ...CATEGORIES.map((c) => ({ value: c, label: c }))],
-    value: 'all',
-    onChange: (e) => {
-      filter.category = (e.target as HTMLSelectElement).value;
-      render();
-    },
-  });
-  catSelect.className += ' sm:w-44';
-  commandBar.appendChild(catSelect);
+  // فیلتر دسته‌بندی — چیپ‌های افقی اسکرول‌شونده
+  commandBar.appendChild(
+    createChipRow(
+      [{ value: 'all', label: 'همه دسته‌ها' }, ...CATEGORIES.map((c) => ({ value: c, label: c }))],
+      () => filter.category,
+      (v) => {
+        filter.category = v;
+        render();
+      }
+    )
+  );
 
-  const sortSelect = createSelect({
-    options: [
-      { value: 'newest', label: 'جدیدترین' },
-      { value: 'oldest', label: 'قدیمی‌ترین' },
-      { value: 'title', label: 'عنوان (الفبا)' },
-      { value: 'words', label: 'تعداد کلمات' },
-    ],
-    value: 'newest',
-    onChange: (e) => {
-      filter.sort = (e.target as HTMLSelectElement).value;
-      render();
-    },
-  });
-  sortSelect.className += ' sm:w-36';
-  commandBar.appendChild(sortSelect);
+  // مرتب‌سازی — چیپ‌های افقی اسکرول‌شونده
+  commandBar.appendChild(
+    createChipRow(
+      [
+        { value: 'newest', label: 'جدیدترین' },
+        { value: 'oldest', label: 'قدیمی‌ترین' },
+        { value: 'title', label: 'عنوان (الفبا)' },
+        { value: 'words', label: 'تعداد کلمات' },
+      ],
+      () => filter.sort,
+      (v) => {
+        filter.sort = v;
+        render();
+      }
+    )
+  );
 
   container.appendChild(commandBar);
 

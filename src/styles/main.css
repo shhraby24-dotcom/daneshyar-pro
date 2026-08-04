@@ -1121,3 +1121,21 @@ button:not(:disabled):not(.no-press):is(.rounded-full, .btn-square, [class*="rou
 @media (min-width: 1024px) {
   .below-lg-only { display: none !important; }
 }
+/* ============================================================
+   31. CHIP ROW - ردیف چیپ افقی اسکرول‌شونده (فیلتر/مرتب‌سازی)
+   ============================================================ */
+.chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.chip-row::-webkit-scrollbar { display: none; }
+.chip-row .cat-chip {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 13px;
+}
