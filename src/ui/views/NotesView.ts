@@ -331,7 +331,7 @@ function applyFilter(notes: DbNote[], filter: NotesFilter): DbNote[] {
   let result = [...notes];
 
   if (filter.category !== 'all') {
-    result = result.filter((n) => n.category === filter.category);
+    result = result.filter((n) => (n.category || 'سایر') === filter.category);
   }
 
   const activeTag = filter.tag;
@@ -547,6 +547,12 @@ function renderGrid(container: HTMLElement, notes: DbNote[], query: string, call
 // ============================================================
 
 export async function createNotesView(_params: Record<string, unknown> = {}): Promise<HTMLElement> {
+  // باز کردن یادداشتِ منتظر از جستجوی سراسری
+  const pendingNote = sessionStorage.getItem('pendingOpenNote');
+  if (pendingNote) {
+    sessionStorage.removeItem('pendingOpenNote');
+    setTimeout(() => viewNote(pendingNote), 200);
+  }
   logger.info('رندر یادداشت‌ها');
 
   const container = document.createElement('div');
@@ -727,7 +733,7 @@ export async function createNotesView(_params: Record<string, unknown> = {}): Pr
 
     // دسته‌بندی
 // Category — انتخابگر لمسی چیپی (به جای select بومی که روی گوشی می‌ریزد)
-    let selectedCategory = existing?.category ?? CATEGORIES[0] ?? 'سایر';
+    let selectedCategory = existing?.category || 'سایر';
     const catWrap = document.createElement('div');
     catWrap.className = 'flex flex-wrap gap-2';
     CATEGORIES.forEach((c) => {
