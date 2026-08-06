@@ -21,6 +21,7 @@ import { createFlashcardsView } from '@/ui/views/FlashcardsView';
 import { createQuizView } from '@/ui/views/QuizView';
 import { createSummarizerView } from '@/ui/views/SummarizerView';
 import { createPomodoroView } from '@/ui/views/PomodoroView';
+import { createSettingsView } from '@/ui/views/SettingsView';
 
 // ============================================================
 // مقداردهی اولیه ماژول‌های Core
@@ -126,7 +127,7 @@ function createComingSoonView(title: string, icon: string, description: string) 
   router.registerView('quiz', createQuizView);
   router.registerView('summarizer', createSummarizerView);
   router.registerView('pomodoro', createPomodoroView);
-
+  router.registerView('settings', createSettingsView);
 function registerViews(): void {
   router.registerView('dashboard', createDashboardView);
 
