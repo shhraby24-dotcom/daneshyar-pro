@@ -30,7 +30,7 @@ export default defineConfig({
   // تنظیمات build برای production
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,
     minify: 'esbuild',
   },
 })

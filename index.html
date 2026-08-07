@@ -2,62 +2,22 @@
 <html lang="fa" dir="rtl">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>دانش‌یار پرو | اپلیکیشن هوشمند مطالعه</title>
+    <meta name="description" content="دانش‌یار پرو — یادداشت، فلش‌کارت، آزمون، خلاصه‌ساز و پومودورو، همه آفلاین" />
 
-    <!-- ⭐ viewport استاندارد اپ موبایل: viewport-fit=cover برای safe-area -->
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
-    />
-
-    <!-- رنگ نوار وضعیت گوشی، هماهنگ با تم -->
-    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
-
-    <!-- رفتار اپ‌طور روی iOS (تمام‌صفحه، status bar شفاف) -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>" />
+    <link rel="apple-touch-icon" href="/icons/icon.svg" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="دانش‌یار" />
-
-    <!-- جلوگیری از تشخیص خودکار شماره/تاریخ توسط iOS -->
-    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no" />
-
-    <title>دانش‌یار پرو | اپلیکیشن هوشمند مطالعه</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>" />
   </head>
   <body>
-    <div class="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
-      <div class="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full transform hover:scale-105 transition-transform duration-300">
-        <div class="text-center">
-          <div class="text-6xl mb-4">🎓</div>
-          <h1 class="text-5xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-            دانش‌یار پرو
-          </h1>
-          <p class="text-gray-600 text-lg mb-6">
-            اپلیکیشن هوشمند مطالعه و یادگیری
-          </p>
-          
-          <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-5 mb-6">
-            <div class="flex items-center justify-center gap-2 mb-2">
-              <span class="text-2xl">✅</span>
-              <p class="text-green-700 font-bold text-lg">
-                زیرساخت آماده است!
-              </p>
-            </div>
-            <div class="text-sm text-green-600 space-y-1">
-              <p>⚡ Vite + TypeScript</p>
-              <p>🎨 Tailwind CSS</p>
-              <p>📦 آماده برای انتقال کدها</p>
-            </div>
-          </div>
-
-          <div class="text-xs text-gray-400">
-            نسخه ۱.۰.۰-beta.1
-          </div>
-        </div>
-      </div>
-    </div>
-    
+    <noscript>برای استفاده از دانش‌یار پرو، جاوااسکریپت را فعال کنید.</noscript>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

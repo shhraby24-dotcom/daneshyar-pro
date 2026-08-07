@@ -1200,3 +1200,10 @@ button:not(:disabled):not(.no-press):is(.rounded-full, .btn-square, [class*="rou
 .search-empty-hint { font-size: 12px; opacity: .7; }
 .search-foot { display: flex; gap: 12px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--app-line); font-size: 11px; color: var(--app-ink-faint); flex-wrap: wrap; }
 .search-premium { margin-inline-start: auto; color: var(--app-accent-400); font-weight: 700; }
+/* ============================================================
+   35. MOBILE PERF - بهینه‌سازی لمسی و رندر
+   ============================================================ */
+html { -webkit-tap-highlight-color: transparent; }
+button, a, [role="button"] { touch-action: manipulation; }
+body { overscroll-behavior-y: none; }
+.notes-masonry > * { content-visibility: auto; contain-intrinsic-size: 140px; }
