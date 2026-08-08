@@ -1,8 +1,10 @@
 {
+  "id": "/",
   "name": "Daneshyar Pro",
   "short_name": "Daneshyar",
-  "description": "Smart study assistant with notes, flashcards, quiz generator, summarizer and pomodoro timer. Works offline.",
-  "start_url": "/",
+  "description": "Smart study assistant with notes, flashcards, quiz generator, AI summarizer and pomodoro timer. Works fully offline.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "dir": "rtl",
@@ -12,10 +14,38 @@
   "categories": ["education", "productivity"],
   "icons": [
     {
-      "src": "/icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Pomodoro",
+      "short_name": "Pomodoro",
+      "description": "Start a 25-minute focus session",
+      "url": "./#/pomodoro",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Review Flashcards",
+      "short_name": "Cards",
+      "description": "Review your due flashcards",
+      "url": "./#/flashcards",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
