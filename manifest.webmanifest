@@ -1,0 +1,21 @@
+{
+  "name": "Daneshyar Pro",
+  "short_name": "Daneshyar",
+  "description": "Smart study assistant with notes, flashcards, quiz generator, summarizer and pomodoro timer. Works offline.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "fa",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
