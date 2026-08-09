@@ -4,11 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.1.1",
+    "gh-pages": "^6.3.0",
     "happy-dom": "^20.11.1",
     "tailwindcss": "^4.3.3",
     "typescript": "~5.8.3",
@@ -16,6 +21,9 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
     "dexie": "^4.4.4"
   }
 }

@@ -1,13 +1,11 @@
 import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
-
 export default defineConfig({
+  base: '/daneshyar-pro/',   // ← این خط اضافه شود
   plugins: [
     tailwindcss(),
   ],
-  
-  // Alias های مسیر (همگام با tsconfig.json)
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -19,15 +17,11 @@ export default defineConfig({
       '@assets': path.resolve(__dirname, './src/assets'),
     },
   },
-  
-  // تنظیمات سرور توسعه
   server: {
     port: 5173,
-    open: true, // مرورگر به صورت خودکار باز می‌شود
+    open: true,
     cors: true,
   },
-  
-  // تنظیمات build برای production
   build: {
     outDir: 'dist',
     sourcemap: false,
