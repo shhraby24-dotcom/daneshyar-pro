@@ -12,6 +12,7 @@ import { signIn, signUp, isSupabaseEnabled } from '@/services/AuthService';
 import { createButton, BUTTON_VARIANTS, BUTTON_SIZES } from '@/ui/components/Button';
 import { createInput, createPasswordInput, createFormGroup } from '@/ui/components/Input';
 import { getToast } from '@/ui/components/Toast';
+import { syncAll } from '@/services/SyncService';
 
 const logger = getLogger().module('AuthView');
 
@@ -65,6 +66,11 @@ export async function createAuthView(_params: Record<string, unknown> = {}): Pro
         if (res.ok) {
           getToast().success(mode === 'login' ? 'خوش آمدی! 🎉' : 'حساب ساخته شد! ایمیل تایید را چک کن 📩');
           getRouter().navigate('dashboard');
+        if (res.ok) {
+          getToast().success(mode === 'login' ? 'خوش آمدی! 🎉' : 'حساب ساخته شد! 📩');
+          void syncAll(); // ⬅️ سینک بعد از ورود
+          getRouter().navigate('dashboard');
+        }
         } else {
           getToast().error(res.error ?? 'خطا رخ داد');
         }

@@ -489,6 +489,47 @@ export class DatabaseService {
 
     logger.info('✅ داده‌ها از پشتیبان بازیابی شد');
   }
+    // ============================================================
+  // Sync (ماه ۴ - Supabase)
+  // ============================================================
+
+  /** دریافت raw برای sync (بدون مرتب‌سازی) */
+  async getNotesRaw(): Promise<DbNote[]> { return this.db.notes.toArray(); }
+  async getFlashcardsRaw(): Promise<DbFlashcard[]> { return this.db.flashcards.toArray(); }
+  async getQuizHistoryRaw(): Promise<DbQuizResult[]> { return this.db.quizHistory.toArray(); }
+  async getStudySessionsRaw(): Promise<DbStudySession[]> { return this.db.studySessions.toArray(); }
+
+  /** افزودن/به‌روزرسانی از sync (بدون تغییر updatedAt، با syncStatus='synced') */
+  async upsertNoteFromSync(note: DbNote): Promise<void> {
+    await this.db.notes.put({ ...note, syncStatus: 'synced' });
+  }
+  async upsertFlashcardFromSync(card: DbFlashcard): Promise<void> {
+    await this.db.flashcards.put({ ...card, syncStatus: 'synced' });
+  }
+  async upsertQuizResultFromSync(result: DbQuizResult): Promise<void> {
+    await this.db.quizHistory.put({ ...result, syncStatus: 'synced' });
+  }
+  async upsertStudySessionFromSync(session: DbStudySession): Promise<void> {
+    await this.db.studySessions.put({ ...session, syncStatus: 'synced' });
+  }
+
+  /** علامت‌گذاری به‌عنوان sync شده (بدون تغییر updatedAt) */
+  async markNoteSynced(id: string): Promise<void> {
+    const e = await this.db.notes.get(id);
+    if (e) await this.db.notes.put({ ...e, syncStatus: 'synced' });
+  }
+  async markFlashcardSynced(id: string): Promise<void> {
+    const e = await this.db.flashcards.get(id);
+    if (e) await this.db.flashcards.put({ ...e, syncStatus: 'synced' });
+  }
+  async markQuizResultSynced(id: string): Promise<void> {
+    const e = await this.db.quizHistory.get(id);
+    if (e) await this.db.quizHistory.put({ ...e, syncStatus: 'synced' });
+  }
+  async markStudySessionSynced(id: string): Promise<void> {
+    const e = await this.db.studySessions.get(id);
+    if (e) await this.db.studySessions.put({ ...e, syncStatus: 'synced' });
+  }
 }
 
 // ============================================================

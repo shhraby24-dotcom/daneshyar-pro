@@ -19,6 +19,50 @@ import { getToast } from '@/ui/components/Toast';
 import { toPersianDigits } from '@/utils/dateFormatter';
 import { getCurrentUser, signOut } from '@/services/AuthService';
 import { getRouter } from '@/core/Router';
+import { syncAll, onSyncStatus, getLastSync, isSyncAvailable, type SyncUIStatus } from '@/services/SyncService';
+
+function buildSync(): HTMLElement {
+  const box = document.createElement('div');
+  box.className = 'space-y-3';
+
+  if (!isSyncAvailable()) {
+    const note = document.createElement('p');
+    note.className = 'text-sm text-slate-400';
+    note.textContent = 'سرویس ابری پیکربندی نشده است.';
+    box.appendChild(note);
+    return box;
+  }
+
+  const status = document.createElement('div');
+  status.className = 'text-sm text-slate-300';
+  box.appendChild(status);
+
+  const updateStatus = (s: SyncUIStatus): void => {
+    const last = getLastSync();
+    if (s === 'syncing') status.textContent = '⟳ در حال سینک...';
+    else if (s === 'success') status.textContent = '✅ سینک شد';
+    else if (s === 'error') status.textContent = '⚠️ خطا در سینک';
+    else if (s === 'disabled') status.textContent = 'برای سینک وارد شوید';
+    else status.textContent = last ? `آخرین سینک: ${last}` : 'هنوز سینک نشده';
+  };
+  const unsub = onSyncStatus(updateStatus);
+  updateStatus('idle');
+
+  const syncBtn = createButton({
+    label: '🔄 سینک اکنون',
+    variant: BUTTON_VARIANTS.PRIMARY,
+    onClick: () => { void syncAll(); },
+  });
+  box.appendChild(syncBtn);
+
+  // cleanup listener وقتی از DOM رفت
+  const obs = new MutationObserver(() => {
+    if (!document.body.contains(box)) { unsub(); obs.disconnect(); }
+  });
+  obs.observe(document.body, { childList: true, subtree: true });
+
+  return box;
+}
 
 function buildAccount(): HTMLElement {
   const box = document.createElement('div');
@@ -175,7 +219,8 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
     wrap.appendChild(header);
 
     wrap.appendChild(section('🎨', 'ظاهر', buildAppearance()));
-        wrap.appendChild(section('👤', 'حساب کاربری', buildAccount()));
+    wrap.appendChild(section('👤', 'حساب کاربری', buildAccount()));
+    wrap.appendChild(section('🔄', 'همگام‌سازی', buildSync()));
     wrap.appendChild(section('📝', 'یادداشت‌ها', buildNotes()));
     wrap.appendChild(section('🤖', 'هوش مصنوعی', buildAI()));
     wrap.appendChild(section('💾', 'داده‌ها و پشتیبان', buildData()));

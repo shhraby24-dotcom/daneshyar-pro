@@ -18,6 +18,7 @@ import { getLayout } from '@/ui/Layout';
 import { createDashboardView } from '@/ui/views/DashboardView';
 import { getDatabase } from '@/core/Database';
 import { createAuthView } from '@/ui/views/AuthView';
+import { syncAll } from '@/services/SyncService';
 
 const logger = getLogger({ level: 'DEBUG', showTimestamp: true, persistToStorage: false });
 getEventBus({ debug: false });
@@ -49,6 +50,7 @@ async function bootstrap(): Promise<void> {
 
     logger.info('📦 مرحله ۵: شروع Router');
     await router.start();
+    void syncAll(); // اگر session نباشد، بی‌صدا رد می‌شود
 
     logger.info('✅ دانش‌یار پرو آماده است!');
     logger.info('📊 آمار Storage', storage.getStats());
