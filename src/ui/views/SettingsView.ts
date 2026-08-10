@@ -17,6 +17,42 @@ import { createButton, BUTTON_VARIANTS, BUTTON_SIZES } from '@/ui/components/But
 import { getModal } from '@/ui/components/Modal';
 import { getToast } from '@/ui/components/Toast';
 import { toPersianDigits } from '@/utils/dateFormatter';
+import { getCurrentUser, signOut } from '@/services/AuthService';
+import { getRouter } from '@/core/Router';
+
+function buildAccount(): HTMLElement {
+  const box = document.createElement('div');
+  box.className = 'space-y-3';
+  const status = document.createElement('div');
+  status.className = 'text-sm text-slate-300';
+  const holder = document.createElement('div');
+  box.appendChild(status); box.appendChild(holder);
+
+  const refresh = (): void => {
+    status.textContent = 'در حال بررسی...';
+    holder.innerHTML = '';
+    void getCurrentUser().then((user) => {
+      holder.innerHTML = '';
+      if (user) {
+        status.textContent = `✅ وارد شده: ${user.email ?? 'کاربر'}`;
+        holder.appendChild(createButton({
+          label: '🚪 خروج',
+          variant: BUTTON_VARIANTS.GHOST,
+          onClick: async () => { await signOut(); getToast().success('خارج شدی'); refresh(); },
+        }));
+      } else {
+        status.textContent = 'وارد نشده‌ای. برای سینک بین دستگاه‌ها وارد شو.';
+        holder.appendChild(createButton({
+          label: '🔑 ورود / ثبت‌نام',
+          variant: BUTTON_VARIANTS.PRIMARY,
+          onClick: () => { getRouter().navigate('auth'); },
+        }));
+      }
+    });
+  };
+  refresh();
+  return box;
+}
 
 const logger = getLogger().module('SettingsView');
 const SETTINGS_LS = 'daneshyar_settings';
@@ -139,6 +175,7 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
     wrap.appendChild(header);
 
     wrap.appendChild(section('🎨', 'ظاهر', buildAppearance()));
+        wrap.appendChild(section('👤', 'حساب کاربری', buildAccount()));
     wrap.appendChild(section('📝', 'یادداشت‌ها', buildNotes()));
     wrap.appendChild(section('🤖', 'هوش مصنوعی', buildAI()));
     wrap.appendChild(section('💾', 'داده‌ها و پشتیبان', buildData()));

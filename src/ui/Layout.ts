@@ -61,6 +61,7 @@ const BOTTOM_NAV_ITEMS: NavItem[] = [
   { route: 'notes', icon: '📚', label: 'یادداشت' },
   { route: 'flashcards', icon: '🃏', label: 'فلش‌کارت' },
   { route: 'quiz', icon: '📝', label: 'آزمون' },
+  { route: 'auth', icon: '👤', label: 'حساب کاربری' },
 ];
 
 /** منوی «بیشتر» (Bottom Sheet) */
@@ -70,6 +71,7 @@ const MORE_ITEMS: NavItem[] = [
   { route: 'translator', icon: '🌐', label: 'مترجم', soon: true },
   { route: 'calculator', icon: '🧮', label: 'ماشین‌حساب', soon: true },
   { route: 'settings', icon: '⚙️', label: 'تنظیمات' },
+  { route: 'auth', icon: '👤', label: 'حساب کاربری' },
 ];
 
 // ============================================================

@@ -17,6 +17,7 @@ import { getErrorHandler } from '@/core/Errors';
 import { getLayout } from '@/ui/Layout';
 import { createDashboardView } from '@/ui/views/DashboardView';
 import { getDatabase } from '@/core/Database';
+import { createAuthView } from '@/ui/views/AuthView';
 
 const logger = getLogger({ level: 'DEBUG', showTimestamp: true, persistToStorage: false });
 getEventBus({ debug: false });
@@ -83,7 +84,7 @@ function registerViews(): void {
   router.registerView('summarizer', (p: ViewParams) => import('@/ui/views/SummarizerView').then((m) => m.createSummarizerView(p)));
   router.registerView('pomodoro', (p: ViewParams) => import('@/ui/views/PomodoroView').then((m) => m.createPomodoroView(p)));
   router.registerView('settings', (p: ViewParams) => import('@/ui/views/SettingsView').then((m) => m.createSettingsView(p)));
-
+  router.registerView('auth', createAuthView);
   // placeholder ها
   router.registerView('translator', createComingSoonView('مترجم', '🌐', 'ترجمه هوشمند متن‌های تخصصی.'));
   router.registerView('calculator', createComingSoonView('ماشین‌حساب', '🧮', 'محاسبات سریع علمی.'));

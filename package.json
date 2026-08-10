@@ -24,6 +24,7 @@
     "@capacitor/android": "^8.5.0",
     "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.5.0",
+    "@supabase/supabase-js": "^2.112.2",
     "dexie": "^4.4.4"
   }
 }
