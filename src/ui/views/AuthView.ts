@@ -13,6 +13,7 @@ import { createButton, BUTTON_VARIANTS, BUTTON_SIZES } from '@/ui/components/But
 import { createInput, createPasswordInput, createFormGroup } from '@/ui/components/Input';
 import { getToast } from '@/ui/components/Toast';
 import { syncAll } from '@/services/SyncService';
+import { loadSubscription } from '@/services/SubscriptionService';
 
 const logger = getLogger().module('AuthView');
 
@@ -69,6 +70,7 @@ export async function createAuthView(_params: Record<string, unknown> = {}): Pro
         if (res.ok) {
           getToast().success(mode === 'login' ? 'خوش آمدی! 🎉' : 'حساب ساخته شد! 📩');
           void syncAll(); // ⬅️ سینک بعد از ورود
+          void loadSubscription();
           getRouter().navigate('dashboard');
         }
         } else {

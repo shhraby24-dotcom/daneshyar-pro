@@ -53,6 +53,8 @@ const NAV_ITEMS: NavItem[] = [
   { route: 'calculator', icon: '🧮', label: 'ماشین‌حساب', soon: true },
   { route: 'pomodoro', icon: '⏱️', label: 'پومودورو' },
   { route: 'settings', icon: '⚙️', label: 'تنظیمات' },
+  { route: 'auth', icon: '👤', label: 'حساب کاربری' },
+  { route: 'premium', icon: '💎', label: 'پریمیوم' },
 ];
 
 /** نوار پایین موبایل (۴ اصلی + «بیشتر») */
@@ -61,7 +63,6 @@ const BOTTOM_NAV_ITEMS: NavItem[] = [
   { route: 'notes', icon: '📚', label: 'یادداشت' },
   { route: 'flashcards', icon: '🃏', label: 'فلش‌کارت' },
   { route: 'quiz', icon: '📝', label: 'آزمون' },
-  { route: 'auth', icon: '👤', label: 'حساب کاربری' },
 ];
 
 /** منوی «بیشتر» (Bottom Sheet) */
@@ -72,6 +73,7 @@ const MORE_ITEMS: NavItem[] = [
   { route: 'calculator', icon: '🧮', label: 'ماشین‌حساب', soon: true },
   { route: 'settings', icon: '⚙️', label: 'تنظیمات' },
   { route: 'auth', icon: '👤', label: 'حساب کاربری' },
+  { route: 'premium', icon: '💎', label: 'پریمیوم' },
 ];
 
 // ============================================================

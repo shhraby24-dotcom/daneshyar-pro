@@ -19,6 +19,7 @@ import { createDashboardView } from '@/ui/views/DashboardView';
 import { getDatabase } from '@/core/Database';
 import { createAuthView } from '@/ui/views/AuthView';
 import { syncAll } from '@/services/SyncService';
+import { loadSubscription } from '@/services/SubscriptionService';
 
 const logger = getLogger({ level: 'DEBUG', showTimestamp: true, persistToStorage: false });
 getEventBus({ debug: false });
@@ -51,7 +52,8 @@ async function bootstrap(): Promise<void> {
     logger.info('📦 مرحله ۵: شروع Router');
     await router.start();
     void syncAll(); // اگر session نباشد، بی‌صدا رد می‌شود
-
+    void loadSubscription();
+    
     logger.info('✅ دانش‌یار پرو آماده است!');
     logger.info('📊 آمار Storage', storage.getStats());
   } catch (error) {
@@ -90,6 +92,8 @@ function registerViews(): void {
   // placeholder ها
   router.registerView('translator', createComingSoonView('مترجم', '🌐', 'ترجمه هوشمند متن‌های تخصصی.'));
   router.registerView('calculator', createComingSoonView('ماشین‌حساب', '🧮', 'محاسبات سریع علمی.'));
+  router.registerView('premium', (p: ViewParams) => import('@/ui/views/PremiumView').then((m) => m.createPremiumView(p)));
+  router.registerView('premium', (p: ViewParams) => import('@/ui/views/PremiumView').then((m) => m.createPremiumView(p)));
 
   router.setNotFound((params) => {
     const div = document.createElement('div');
