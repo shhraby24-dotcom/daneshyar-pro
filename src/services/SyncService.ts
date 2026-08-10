@@ -2,15 +2,12 @@
  * ============================================================
  * دانش‌یار پرو - SyncService (ماه ۴)
  * ============================================================
- * همگام‌سازی LWW با Supabase:
- *   Push → رکوردهای syncStatus !== 'synced' به ریموت
- *   Delete propagation → با snapshot diff (قبل از pull)
- *   Pull → رکوردهای ریموت جدیدتر، اعمال LWW در محلی
+ * همگام‌سازی LWW با Supabase
  * @module services/SyncService
  * @version 1.0.0
  */
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_ENABLED } from '@/config/supabase';
+import { getSupabaseClient, type SupabaseClient } from '@/services/AuthService';
+import { SUPABASE_ENABLED } from '@/config/supabase';
 import { getDatabase, type DbNote, type DbFlashcard, type DbQuizResult, type DbStudySession } from '@/core/Database';
 import { getSession } from '@/services/AuthService';
 import { getInstance as getLogger } from '@/core/Logger';
@@ -31,11 +28,6 @@ export function onSyncStatus(cb: (s: SyncUIStatus) => void): () => void {
 
 function setStatus(s: SyncUIStatus): void {
   listeners.forEach((cb) => cb(s));
-}
-
-function getClient(): SupabaseClient | null {
-  if (!SUPABASE_ENABLED) return null;
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
 /** انتخاب اولین فیلد زمانی معتبر */
@@ -118,7 +110,7 @@ async function propagateDeletes(
 }
 
 export async function syncAll(): Promise<void> {
-  const client = getClient();
+  const client = getSupabaseClient();
   if (!client) { setStatus('disabled'); return; }
   const session = await getSession();
   if (!session?.user) { setStatus('disabled'); return; }

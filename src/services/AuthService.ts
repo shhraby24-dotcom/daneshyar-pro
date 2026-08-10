@@ -1,9 +1,7 @@
 /**
  * ============================================================
- * دانش‌یار پرو - AuthService
+ * دانش‌یار پرو - AuthService (singleton Supabase client)
  * ============================================================
- * ثبت‌نام/ورود/خروج + session + onAuthChange (Supabase)
- * اگر Supabase پیکربندی نشده باشد، همه‌چیز no-op می‌شود.
  * @module services/AuthService
  * @version 1.0.0
  */
@@ -15,11 +13,24 @@ const logger = getLogger().module('AuthService');
 
 let client: SupabaseClient | null = null;
 
+/** singleton — فقط یک بار ساخته می‌شود */
 function getClient(): SupabaseClient | null {
   if (!SUPABASE_ENABLED) return null;
-  if (!client) client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!client) {
+    client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true },
+    });
+  }
   return client;
 }
+
+/** برای استفاده در SyncService (همان instance) */
+export function getSupabaseClient(): SupabaseClient | null {
+  return getClient();
+}
+
+/** re-export نوع SupabaseClient برای SyncService */
+export type { SupabaseClient } from '@supabase/supabase-js';
 
 export function isSupabaseEnabled(): boolean { return SUPABASE_ENABLED; }
 
