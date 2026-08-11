@@ -22,6 +22,8 @@ import { getModal } from '@/ui/components/Modal';
 import { getToast } from '@/ui/components/Toast';
 import { createEmptyState, createSectionHeader } from '@/ui/components/Card';
 import { toPersianDigits } from '@/utils/dateFormatter';
+import { checkAIQuota } from '@/services/QuotaGate';
+import { showPaywall } from '@/ui/components/PaywallModal';
 
 const logger = getLogger().module('SummarizerView');
 const summarizer = getSummarizer();
@@ -210,7 +212,17 @@ export async function createSummarizerView(_params: Record<string, unknown> = {}
 
     const words = countWords(text);
     if (words < 50) { getToast().warning(`متن کافی نیست (حداقل ۵۰ کلمه — فعلی: ${toPersianDigits(String(words))})`); return; }
-
+    // ⬇️ QuotaGate: اگر سهمیه AI نیست، paywall نشان بده
+    if (st.useAI) {
+      const quota = checkAIQuota();
+      if (!quota.allowed) {
+        showPaywall('summarizer', () => {
+          st.useAI = false;
+          void generate(); // ادامه با آفلاین
+        });
+        return;
+      }
+    }
     const close = getModal().loading('در حال خلاصه‌سازی...');
     try {
       let res: ViewResult | null = null;

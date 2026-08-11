@@ -1,5 +1,6 @@
 /**
  * دانش‌یار پرو - مودال Paywall (نمایش در لحظه نیاز)
+ * با گزینه «ادامه آفلاین» برای حفظ ارزش اپ
  * @module ui/components/PaywallModal
  */
 import { getInstance as getLogger } from '@/core/Logger';
@@ -7,11 +8,14 @@ import { getRouter } from '@/core/Router';
 import { createButton, BUTTON_VARIANTS } from '@/ui/components/Button';
 
 const logger = getLogger().module('PaywallModal');
-
 let overlayEl: HTMLElement | null = null;
 
-/** نمایش مودال paywall با پیام متناسب با context */
-export function showPaywall(context: string): void {
+/**
+ * نمایش مودال paywall
+ * @param context - 'quiz' | 'summarizer' (برای لاگ)
+ * @param onOffline - callback برای ادامه با حالت آفلاین
+ */
+export function showPaywall(context: string, onOffline?: () => void): void {
   if (overlayEl) return;
   logger.info('نمایش paywall', { context });
 
@@ -46,6 +50,16 @@ export function showPaywall(context: string): void {
   });
   primaryBtn.classList.add('w-full');
   btnWrap.appendChild(primaryBtn);
+
+  if (onOffline) {
+    const offlineBtn = createButton({
+      label: '📟 ادامه با حالت آفلاین',
+      variant: BUTTON_VARIANTS.SECONDARY,
+      onClick: () => { hidePaywall(); onOffline(); },
+    });
+    offlineBtn.classList.add('w-full');
+    btnWrap.appendChild(offlineBtn);
+  }
 
   const ghostBtn = createButton({
     label: 'فعلاً نه، بعداً',

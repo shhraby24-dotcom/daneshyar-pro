@@ -19,6 +19,8 @@ import { getModal } from '@/ui/components/Modal';
 import { getToast } from '@/ui/components/Toast';
 import { createEmptyState, createSectionHeader } from '@/ui/components/Card';
 import { toPersianDigits } from '@/utils/dateFormatter';
+import { checkAIQuota } from '@/services/QuotaGate';
+import { showPaywall } from '@/ui/components/PaywallModal';
 
 const logger = getLogger().module('QuizView');
 const generator = getQuizGenerator();
@@ -333,6 +335,17 @@ export async function createQuizView(_params: Record<string, unknown> = {}): Pro
     if (totalWords < 100) {
       getToast().warning(`حداقل ۱۰۰ کلمه لازم است (فعلی: ${toPersianDigits(String(totalWords))})`);
       return;
+    }
+      // ⬇️ QuotaGate: اگر سهمیه AI نیست، paywall نشان بده
+    if (st.settings.useAI) {
+      const quota = checkAIQuota();
+      if (!quota.allowed) {
+        showPaywall('quiz', () => {
+          st.settings.useAI = false;
+          void startQuiz(); // ادامه با آفلاین
+        });
+        return;
+      }
     }
     const close = getModal().loading('در حال ساخت آزمون...');
     const text = sel.map((n) => `# ${n.title}\n\n${n.content}`).join('\n\n---\n\n');
