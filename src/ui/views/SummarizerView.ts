@@ -196,9 +196,16 @@ export async function createSummarizerView(_params: Record<string, unknown> = {}
     box.appendChild(mkToggle('🎓 حالت کنکوری', 'تمرکز بر تعاریف، اعداد و فرمول‌ها', () => st.forExam, (v) => { st.forExam = v; }));
 
     const quota = getRemainingQuota();
-    const aiDesc = quota > 0 ? `سهمیه امروز: ${toPersianDigits(String(quota))} (${getTier()})` : 'سهمیه تمام شد — حالت آفلاین';
-    box.appendChild(mkToggle('🤖 خلاصه‌سازی با AI', aiDesc, () => st.useAI && quota > 0, (v) => { st.useAI = v; }));
-
+    const aiDesc = quota > 0
+      ? `سهمیه امروز: ${toPersianDigits(String(quota))} (${getTier()})`
+      : 'سهمیه تمام شد — برای AI پریمیوم شو 💎';
+    box.appendChild(mkToggle('🤖 خلاصه‌سازی با AI', aiDesc, () => st.useAI, (v) => {
+      if (v && quota <= 0) {
+        showPaywall('summarizer', () => { st.useAI = false; render(); });
+        return;
+      }
+      st.useAI = v;
+    }));
     return box;
   }
 
@@ -212,6 +219,14 @@ export async function createSummarizerView(_params: Record<string, unknown> = {}
 
     const words = countWords(text);
     if (words < 50) { getToast().warning(`متن کافی نیست (حداقل ۵۰ کلمه — فعلی: ${toPersianDigits(String(words))})`); return; }
+      // ⬇️ QuotaGate برای edge case
+    if (st.useAI) {
+      const q = getRemainingQuota();
+      if (q <= 0) {
+        showPaywall('summarizer', () => { st.useAI = false; render(); });
+        return;
+      }
+    }
     // ⬇️ QuotaGate: اگر سهمیه AI نیست، paywall نشان بده
     if (st.useAI) {
       const quota = checkAIQuota();

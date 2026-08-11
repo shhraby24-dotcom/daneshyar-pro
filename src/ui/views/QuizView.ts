@@ -300,12 +300,20 @@ export async function createQuizView(_params: Record<string, unknown> = {}): Pro
     // AI toggle + quota
     const quota = getRemainingQuota();
     const tier = getTier();
-    const aiDesc = quota > 0 ? `سهمیه امروز: ${toPersianDigits(String(quota))} (${tier})` : 'سهمیه تمام شد — آفلاین';
+    const aiDesc = quota > 0
+      ? `سهمیه امروز: ${toPersianDigits(String(quota))} (${tier})`
+      : 'سهمیه تمام شد — برای AI پریمیوم شو 💎';
     setBox.appendChild(mkToggle(
       `🤖 تولید با هوش مصنوعی`,
       aiDesc,
-      () => st.settings.useAI && quota > 0,
-      (v) => { st.settings.useAI = v; },
+      () => st.settings.useAI,
+      (v) => {
+        if (v && quota <= 0) {
+          showPaywall('quiz', () => { st.settings.useAI = false; render(); });
+          return;
+        }
+        st.settings.useAI = v;
+      },
     ));
 
     wrap.appendChild(setBox);
@@ -335,6 +343,14 @@ export async function createQuizView(_params: Record<string, unknown> = {}): Pro
     if (totalWords < 100) {
       getToast().warning(`حداقل ۱۰۰ کلمه لازم است (فعلی: ${toPersianDigits(String(totalWords))})`);
       return;
+    }
+        // ⬇️ QuotaGate برای edge case
+    if (st.settings.useAI) {
+      const q = getRemainingQuota();
+      if (q <= 0) {
+        showPaywall('quiz', () => { st.settings.useAI = false; render(); });
+        return;
+      }
     }
       // ⬇️ QuotaGate: اگر سهمیه AI نیست، paywall نشان بده
     if (st.settings.useAI) {
