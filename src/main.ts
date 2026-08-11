@@ -20,6 +20,8 @@ import { getDatabase } from '@/core/Database';
 import { createAuthView } from '@/ui/views/AuthView';
 import { syncAll } from '@/services/SyncService';
 import { loadSubscription } from '@/services/SubscriptionService';
+import { startTrial, hasUsedTrial, checkTrialExpiry } from '@/services/TrialService';
+import { isPremium } from '@/services/Premium';
 
 const logger = getLogger({ level: 'DEBUG', showTimestamp: true, persistToStorage: false });
 getEventBus({ debug: false });
@@ -53,6 +55,11 @@ async function bootstrap(): Promise<void> {
     await router.start();
     void syncAll(); // اگر session نباشد، بی‌صدا رد می‌شود
     void loadSubscription();
+        // ── Trial برای کاربران جدید ──
+    checkTrialExpiry();
+    if (!hasUsedTrial() && !isPremium()) {
+      startTrial();
+    }
     
     logger.info('✅ دانش‌یار پرو آماده است!');
     logger.info('📊 آمار Storage', storage.getStats());

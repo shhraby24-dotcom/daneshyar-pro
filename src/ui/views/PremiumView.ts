@@ -9,6 +9,8 @@ import { PLANS, isPremium, tryPromo, formatToman, getPremiumPlan } from '@/servi
 import { requestPayment } from '@/services/PaymentService';
 import { createButton, BUTTON_VARIANTS } from '@/ui/components/Button';
 import { getToast } from '@/ui/components/Toast';
+import { isTrialActive, getTrialDaysLeft } from '@/services/TrialService';
+
 const logger = getLogger().module('PremiumView');
 
 const BENEFITS = [
@@ -37,7 +39,12 @@ export async function createPremiumView(_params: Record<string, unknown> = {}): 
       active.textContent = '✅ پریمیوم فعال است';
       container.appendChild(active);
     }
-
+    if (isTrialActive()) {
+      const trialBox = document.createElement('div');
+      trialBox.className = 'bg-primary-500/10 border border-primary-500/40 rounded-xl p-4 text-center';
+      trialBox.innerHTML = '<div class="text-primary-300 font-bold">🎁 دوره آزمایشی فعال</div><div class="text-sm text-slate-400 mt-1">' + getTrialDaysLeft() + ' روز مانده — بعد از آن، پلن مورد نظرت را بخر</div>';
+      container.appendChild(trialBox);
+    }
     const benefits = document.createElement('div');
     benefits.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3';
     for (const b of BENEFITS) {

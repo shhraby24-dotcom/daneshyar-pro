@@ -35,8 +35,8 @@ export function getPremiumPlan(): string | null {
   return localStorage.getItem(PLAN_LS);
 }
 
-export function activatePremium(planId: string): void {
-  const days = planId === 'yearly' ? 365 : 30;
+export function activatePremium(planId: string, customDays?: number): void {
+  const days = customDays ?? (planId === 'yearly' ? 365 : 30);
   const exp = new Date(Date.now() + days * 86400000).toISOString();
   localStorage.setItem(PREMIUM_LS, '1');
   localStorage.setItem(PLAN_LS, planId);
