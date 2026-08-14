@@ -14,12 +14,15 @@ export interface Plan {
   label: string;
   priceToman: number;
   period: string;
+  months: number;
   badge?: string;
+  highlight?: boolean;
 }
 
 export const PLANS: Plan[] = [
-  { id: 'monthly', label: 'ماهانه', priceToman: 99000, period: 'ماه' },
-  { id: 'yearly', label: 'سالانه', priceToman: 890000, period: 'سال', badge: '💎 ۲۵٪ تخفیف' },
+  { id: 'monthly', label: 'ماهانه', priceToman: 99000, period: 'ماه', months: 1 },
+  { id: 'term', label: 'ترمیک', priceToman: 320000, period: 'ترم (۴ ماه)', months: 4, badge: '📚 ویژه ترم' },
+  { id: 'yearly', label: 'سالانه', priceToman: 890000, period: 'سال', months: 12, badge: '🎁 ۳ ماه رایگان', highlight: true },
 ];
 
 export function isPremium(): boolean {
@@ -36,7 +39,8 @@ export function getPremiumPlan(): string | null {
 }
 
 export function activatePremium(planId: string, customDays?: number): void {
-  const days = customDays ?? (planId === 'yearly' ? 365 : 30);
+  const plan = PLANS.find((p) => p.id === planId);
+  const days = customDays ?? (plan ? plan.months * 30 : 30);
   const exp = new Date(Date.now() + days * 86400000).toISOString();
   localStorage.setItem(PREMIUM_LS, '1');
   localStorage.setItem(PLAN_LS, planId);
@@ -65,4 +69,16 @@ export function tryPromo(code: string): boolean {
 
 export function formatToman(n: number): string {
   return n.toLocaleString('fa-IR') + ' تومان';
+}
+/** معادل ماهانه یک پلن */
+export function monthlyEquivalent(plan: Plan): number {
+  return Math.round(plan.priceToman / plan.months);
+}
+
+/** درصد صرفه‌جویی نسبت به خرید ماهانه */
+export function savingsPercent(plan: Plan): number {
+  const monthly = PLANS.find((p) => p.id === 'monthly');
+  if (!monthly || plan.id === 'monthly') return 0;
+  const full = monthly.priceToman * plan.months;
+  return Math.round(((full - plan.priceToman) / full) * 100);
 }

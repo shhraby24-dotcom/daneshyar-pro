@@ -23,7 +23,7 @@ export async function requestPayment(plan: Plan): Promise<PaymentResult> {
   const userId = session.user.id;
 
   // ── حالت بتا: شبیه‌سازی پرداخت موفق ──
-  const days = plan.id === 'yearly' ? 365 : 30;
+  const days = plan.months * 30;
   const expiresAt = new Date(Date.now() + days * 86400000).toISOString();
   const now = new Date().toISOString();
 

@@ -5,7 +5,8 @@
 import { getInstance as getLogger } from '@/core/Logger';
 import { getRouter } from '@/core/Router';
 import { getSession } from '@/services/AuthService';
-import { PLANS, isPremium, tryPromo, formatToman, getPremiumPlan } from '@/services/Premium';
+import { PLANS, isPremium, tryPromo, formatToman, getPremiumPlan, monthlyEquivalent, savingsPercent } from '@/services/Premium';
+import { toPersianDigits } from '@/utils/dateFormatter';
 import { requestPayment } from '@/services/PaymentService';
 import { createButton, BUTTON_VARIANTS } from '@/ui/components/Button';
 import { getToast } from '@/ui/components/Toast';
@@ -46,7 +47,7 @@ export async function createPremiumView(_params: Record<string, unknown> = {}): 
       container.appendChild(trialBox);
     }
     const benefits = document.createElement('div');
-    benefits.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3';
+    benefits.className = 'grid grid-cols-1 sm:grid-cols-3 gap-3';
     for (const b of BENEFITS) {
       const card = document.createElement('div');
       card.className = 'bg-slate-800/60 border border-slate-700 rounded-xl p-4 flex gap-3 items-start';
@@ -56,18 +57,36 @@ export async function createPremiumView(_params: Record<string, unknown> = {}): 
     container.appendChild(benefits);
 
     const plansWrap = document.createElement('div');
-    plansWrap.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4';
+    plansWrap.className = 'grid grid-cols-1 sm:grid-cols-3 gap-4';
     for (const plan of PLANS) {
       const card = document.createElement('div');
-      card.className = 'bg-slate-800 border border-slate-700 rounded-2xl p-5 relative ' + (plan.badge ? 'ring-2 ring-primary-500' : '');
+      card.className = 'bg-slate-800 border border-slate-700 rounded-2xl p-5 relative flex flex-col ' + (plan.highlight ? 'ring-2 ring-primary-500' : '');
+
+      if (plan.badge) {
+        const badge = document.createElement('div');
+        badge.className = 'absolute -top-3 right-4 bg-primary-500 text-white text-xs px-3 py-1 rounded-full font-bold';
+        badge.textContent = plan.badge;
+        card.appendChild(badge);
+      }
+
       const info = document.createElement('div');
-      info.innerHTML = '<div class="text-lg font-bold text-slate-100 mb-1">' + (plan.badge ? plan.badge + ' ' : '') + plan.label + '</div><div class="text-3xl font-black text-slate-100 mb-1">' + formatToman(plan.priceToman) + '</div><div class="text-sm text-slate-500">به ازای هر ' + plan.period + '</div>';
+      const monthlyEq = monthlyEquivalent(plan);
+      const savings = savingsPercent(plan);
+      let valueHtml = '';
+      if (plan.id !== 'monthly') {
+        valueHtml = '<div class="text-xs text-green-400 mt-2">معادل ماهی ' + formatToman(monthlyEq) + '</div>';
+        if (savings > 0) valueHtml += '<div class="text-xs text-slate-500 mt-1">' + toPersianDigits(String(savings)) + '٪ صرفه‌جویی</div>';
+      }
+      info.innerHTML = '<div class="text-lg font-bold text-slate-100 mb-1">' + plan.label + '</div>'
+        + '<div class="text-3xl font-black text-slate-100 mb-1">' + formatToman(plan.priceToman) + '</div>'
+        + '<div class="text-sm text-slate-500">به ازای هر ' + plan.period + '</div>'
+        + valueHtml;
       card.appendChild(info);
 
       const isActive = isPremium() && getPremiumPlan() === plan.id;
       const buyBtn = createButton({
         label: isActive ? '✅ فعال' : 'خرید این پلن',
-        variant: BUTTON_VARIANTS.PRIMARY,
+        variant: plan.highlight ? BUTTON_VARIANTS.PRIMARY : BUTTON_VARIANTS.SECONDARY,
         onClick: async () => {
           const session = await getSession();
           if (!session?.user) {
@@ -77,12 +96,8 @@ export async function createPremiumView(_params: Record<string, unknown> = {}): 
           }
           getToast().info('در حال پردازش پرداخت...', 'بتا');
           const result = await requestPayment(plan);
-          if (result.ok) {
-            getToast().success(result.message ?? 'پریمیوم فعال شد!');
-            render();
-          } else {
-            getToast().error(result.error ?? 'خطا در پرداخت');
-          }
+          if (result.ok) { getToast().success(result.message ?? 'پریمیوم فعال شد!'); render(); }
+          else { getToast().error(result.error ?? 'خطا در پرداخت'); }
         },
       });
       buyBtn.classList.add('w-full', 'mt-4');
