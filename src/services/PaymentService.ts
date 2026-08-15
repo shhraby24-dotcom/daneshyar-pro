@@ -16,30 +16,34 @@ export interface PaymentResult {
 
 export async function requestPayment(plan: Plan): Promise<PaymentResult> {
   logger.info('درخواست پرداخت', { plan: plan.id });
+
   const client = getSupabaseClient();
   if (!client) return { ok: false, error: 'سرویس ابری فعال نیست' };
+
   const session = await getSession();
   if (!session?.user) return { ok: false, error: 'برای خرید ابتدا وارد شوید' };
-  const userId = session.user.id;
 
-  // ── حالت بتا: شبیه‌سازی پرداخت موفق ──
-  const days = plan.months * 30;
-  const expiresAt = new Date(Date.now() + days * 86400000).toISOString();
-  const now = new Date().toISOString();
+  // 🔜 برای production واقعی: ریدایرکت به درگاه زرین‌پال
+  // فعلاً برای بتا: grant از طریق Edge Function (امن، چون فقط از مسیر معتبر)
+  const { data, error } = await client.functions.invoke('smooth-responder', {
+    body: { planId: plan.id },
+  });
 
-  const { error } = await client
-    .from('subscriptions')
-    .upsert(
-      { user_id: userId, plan: plan.id, expires_at: expiresAt, updated_at: now },
-      { onConflict: 'user_id' }
-    );
-
-  if (error) {
-    logger.error('خطا در ذخیره اشتراک', error.message);
-    return { ok: false, error: 'ذخیره اشتراک ناموفق بود' };
+  if (error || !data?.ok) {
+    let msg = error ? (error.message ?? String(error)) : 'پاسخ نامعتبر از سرور';
+    // خواندن جزئیات خطا از response سرور
+    try {
+      const ctx = (error as unknown as { context?: Response }).context;
+      if (ctx && typeof ctx.json === 'function') {
+        const errData = await ctx.json();
+        if (errData && errData.error) msg = String(errData.error);
+      }
+    } catch { /* ignore */ }
+    logger.error('خطا در فعال‌سازی اشتراک', { error, data });
+    return { ok: false, error: 'خطا: ' + msg };
   }
 
   activatePremium(plan.id);
-  logger.info('✅ پرداخت شبیه‌سازی شد و پریمیوم فعال شد', { plan: plan.id });
+  logger.info('✅ پریمیوم فعال شد (از طریق Edge Function)', { plan: plan.id });
   return { ok: true, message: 'پرداخت (شبیه‌سازی بتا) موفق! پریمیوم فعال شد 💎' };
 }
