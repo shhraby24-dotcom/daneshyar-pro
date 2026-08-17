@@ -22,6 +22,8 @@ import { syncAll } from '@/services/SyncService';
 import { loadSubscription } from '@/services/SubscriptionService';
 import { startTrial, hasUsedTrial, checkTrialExpiry } from '@/services/TrialService';
 import { isPremium } from '@/services/Premium';
+import { checkAndReward } from '@/services/RewardEngine';
+import { startAutoRewardWatcher } from '@/services/AutoRewardWatcher';
 
 const logger = getLogger({ level: 'DEBUG', showTimestamp: true, persistToStorage: false });
 getEventBus({ debug: false });
@@ -55,6 +57,8 @@ async function bootstrap(): Promise<void> {
     await router.start();
     void syncAll(); // اگر session نباشد، بی‌صدا رد می‌شود
     void loadSubscription();
+    void checkAndReward(); // چک خودکار چالش‌ها در شروع اپ
+    startAutoRewardWatcher();
         // ── Trial برای کاربران جدید ──
     checkTrialExpiry();
     if (!hasUsedTrial() && !isPremium()) {
@@ -96,6 +100,7 @@ function registerViews(): void {
   router.registerView('pomodoro', (p: ViewParams) => import('@/ui/views/PomodoroView').then((m) => m.createPomodoroView(p)));
   router.registerView('settings', (p: ViewParams) => import('@/ui/views/SettingsView').then((m) => m.createSettingsView(p)));
   router.registerView('auth', createAuthView);
+  router.registerView('challenges', (p: ViewParams) => import('@/ui/views/ChallengesView').then((m) => m.createChallengesView(p)));
   // placeholder ها
   router.registerView('translator', createComingSoonView('مترجم', '🌐', 'ترجمه هوشمند متن‌های تخصصی.'));
   router.registerView('calculator', createComingSoonView('ماشین‌حساب', '🧮', 'محاسبات سریع علمی.'));

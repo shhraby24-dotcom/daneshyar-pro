@@ -23,6 +23,7 @@ import { getStreakService, type StreakStats, type HeatmapDay } from '@/services/
 import { createButton, BUTTON_VARIANTS, BUTTON_SIZES } from '@/ui/components/Button';
 import { createCard, createSectionHeader, createEmptyState } from '@/ui/components/Card';
 import { formatPersianDate, formatPersianDateShort, toPersianDigits } from '@/utils/dateFormatter';
+import { getChallengesWithStatus } from '@/services/RewardEngine';
 
 const logger = getLogger().module('DashboardView');
 
@@ -575,7 +576,76 @@ function createOnboarding(): HTMLElement {
 // ============================================================
 // View اصلی داشبورد
 // ============================================================
+// ============================================================
+// بخش ۶: چالش‌های فعال (Growth)
+// ============================================================
 
+async function createChallengesWidget(): Promise<HTMLElement | null> {
+  const activeChallenges = await getChallengesWithStatus();
+  const active = activeChallenges.filter((c) => !c.completed).slice(0, 2);
+  if (active.length === 0) return null;
+
+  const widget = document.createElement('div');
+  widget.className = 'reveal reveal-5 bg-slate-800 border border-slate-700 rounded-xl p-4';
+
+  const header = document.createElement('div');
+  header.className = 'flex items-center justify-between mb-3';
+  const title = document.createElement('div');
+  title.className = 'font-bold text-slate-100 text-base';
+  title.textContent = '🎯 چالش‌های فعال';
+  const viewAll = document.createElement('button');
+  viewAll.className = 'text-xs text-primary-400 hover:text-primary-300 font-bold';
+  viewAll.textContent = 'همه ←';
+  viewAll.addEventListener('click', () => getRouter().navigate('challenges'));
+  header.appendChild(title);
+  header.appendChild(viewAll);
+  widget.appendChild(header);
+
+  const list = document.createElement('div');
+  list.className = 'space-y-2';
+  for (const ch of active) {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'flex w-full items-center gap-3 p-3 bg-slate-900/50 rounded-lg hover:bg-slate-900 text-start transition-all';
+    
+    const icon = document.createElement('div');
+    icon.className = 'text-2xl flex-shrink-0';
+    icon.textContent = ch.icon;
+    
+    const info = document.createElement('div');
+    info.className = 'flex-1 min-w-0';
+    const t = document.createElement('div');
+    t.className = 'text-sm text-slate-200 font-medium';
+    t.textContent = ch.title;
+    const pBar = document.createElement('div');
+    pBar.className = 'mt-1.5 h-1.5 rounded-full bg-slate-700 overflow-hidden';
+    const pFill = document.createElement('div');
+    pFill.className = 'h-full bg-primary-400 transition-all';
+    pFill.style.width = `${ch.progress}%`;
+    pBar.appendChild(pFill);
+    info.appendChild(t);
+    info.appendChild(pBar);
+    
+    const reward = document.createElement('div');
+    reward.className = 'flex-shrink-0 text-center';
+    const num = document.createElement('div');
+    num.className = 'text-base font-black text-primary-400';
+    num.textContent = '+' + toPersianDigits(String(ch.rewardDays));
+    const lbl = document.createElement('div');
+    lbl.className = 'text-xs text-slate-500';
+    lbl.textContent = 'روز 💎';
+    reward.appendChild(num);
+    reward.appendChild(lbl);
+    
+    item.appendChild(icon);
+    item.appendChild(info);
+    item.appendChild(reward);
+    item.addEventListener('click', () => getRouter().navigate('challenges'));
+    list.appendChild(item);
+  }
+  widget.appendChild(list);
+  return widget;
+}
 /**
  * ساخت View داشبورد
  * (async چون داده‌ها از IndexedDB می‌آیند)
@@ -606,6 +676,9 @@ export async function createDashboardView(_params: Record<string, unknown> = {})
     container.appendChild(createJourney(streakStats, dbStats, heatmap));
     container.appendChild(createQuickActions());
     container.appendChild(createRecentNotes(allNotes.slice(0, 5)));
+    // چالش‌های فعال (async — اضافه می‌شود اگر چالشی باشد)
+    const challengesWidget = await createChallengesWidget();
+    if (challengesWidget) container.appendChild(challengesWidget);
   }
 
   return container;

@@ -52,9 +52,10 @@ const NAV_ITEMS: NavItem[] = [
   { route: 'translator', icon: '🌐', label: 'مترجم', soon: true },
   { route: 'calculator', icon: '🧮', label: 'ماشین‌حساب', soon: true },
   { route: 'pomodoro', icon: '⏱️', label: 'پومودورو' },
-  { route: 'settings', icon: '⚙️', label: 'تنظیمات' },
-  { route: 'auth', icon: '👤', label: 'حساب کاربری' },
+  { route: 'challenges', icon: '🎯', label: 'چالش‌ها' },
   { route: 'premium', icon: '💎', label: 'پریمیوم' },
+  { route: 'auth', icon: '👤', label: 'حساب کاربری' },
+  { route: 'settings', icon: '⚙️', label: 'تنظیمات' },
 ];
 
 /** نوار پایین موبایل (۴ اصلی + «بیشتر») */
@@ -71,9 +72,10 @@ const MORE_ITEMS: NavItem[] = [
   { route: 'pomodoro', icon: '⏱️', label: 'پومودورو' },
   { route: 'translator', icon: '🌐', label: 'مترجم', soon: true },
   { route: 'calculator', icon: '🧮', label: 'ماشین‌حساب', soon: true },
-  { route: 'settings', icon: '⚙️', label: 'تنظیمات' },
-  { route: 'auth', icon: '👤', label: 'حساب کاربری' },
+  { route: 'challenges', icon: '🎯', label: 'چالش‌ها' },
   { route: 'premium', icon: '💎', label: 'پریمیوم' },
+  { route: 'auth', icon: '👤', label: 'حساب کاربری' },
+  { route: 'settings', icon: '⚙️', label: 'تنظیمات' },
 ];
 
 // ============================================================
