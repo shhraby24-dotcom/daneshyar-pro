@@ -54,6 +54,7 @@ const NAV_ITEMS: NavItem[] = [
   { route: 'pomodoro', icon: '⏱️', label: 'پومودورو' },
   { route: 'challenges', icon: '🎯', label: 'چالش‌ها' },
   { route: 'premium', icon: '💎', label: 'پریمیوم' },
+  { route: 'invite', icon: '🎁', label: 'دعوت دوستان' },
   { route: 'auth', icon: '👤', label: 'حساب کاربری' },
   { route: 'settings', icon: '⚙️', label: 'تنظیمات' },
 ];
@@ -74,6 +75,7 @@ const MORE_ITEMS: NavItem[] = [
   { route: 'calculator', icon: '🧮', label: 'ماشین‌حساب', soon: true },
   { route: 'challenges', icon: '🎯', label: 'چالش‌ها' },
   { route: 'premium', icon: '💎', label: 'پریمیوم' },
+  { route: 'invite', icon: '🎁', label: 'دعوت دوستان' },
   { route: 'auth', icon: '👤', label: 'حساب کاربری' },
   { route: 'settings', icon: '⚙️', label: 'تنظیمات' },
 ];

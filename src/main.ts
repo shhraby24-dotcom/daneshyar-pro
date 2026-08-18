@@ -24,6 +24,7 @@ import { startTrial, hasUsedTrial, checkTrialExpiry } from '@/services/TrialServ
 import { isPremium } from '@/services/Premium';
 import { checkAndReward } from '@/services/RewardEngine';
 import { startAutoRewardWatcher } from '@/services/AutoRewardWatcher';
+import { savePendingRef } from '@/services/ReferralService';
 
 const logger = getLogger({ level: 'DEBUG', showTimestamp: true, persistToStorage: false });
 getEventBus({ debug: false });
@@ -37,6 +38,13 @@ type ViewParams = Record<string, unknown>;
 
 async function bootstrap(): Promise<void> {
   try {
+
+    const hashQuery = window.location.hash.split('?')[1] ?? '';
+    const refCode = new URLSearchParams(hashQuery).get('ref');
+    if (refCode) {
+      savePendingRef(refCode);
+    }
+
     logger.info('📦 مرحله ۱: آماده‌سازی DOM');
     const app = document.createElement('div');
     app.id = 'app';
@@ -102,6 +110,7 @@ function registerViews(): void {
   router.registerView('auth', createAuthView);
   router.registerView('challenges', (p: ViewParams) => import('@/ui/views/ChallengesView').then((m) => m.createChallengesView(p)));
   router.registerView('legal', (p: ViewParams) => import('@/ui/views/LegalView').then((m) => m.createLegalView(p)));
+  router.registerView('invite', (p: ViewParams) => import('@/ui/views/InviteView').then((m) => m.createInviteView(p)));
   // placeholder ها
   router.registerView('translator', createComingSoonView('مترجم', '🌐', 'ترجمه هوشمند متن‌های تخصصی.'));
   router.registerView('calculator', createComingSoonView('ماشین‌حساب', '🧮', 'محاسبات سریع علمی.'));

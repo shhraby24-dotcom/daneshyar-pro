@@ -14,6 +14,8 @@ import { createInput, createPasswordInput, createFormGroup } from '@/ui/componen
 import { getToast } from '@/ui/components/Toast';
 import { syncAll } from '@/services/SyncService';
 import { loadSubscription } from '@/services/SubscriptionService';
+import { processReferralOnSignup } from '@/services/ReferralService';
+import { toPersianDigits } from '@/utils/dateFormatter';
 
 const logger = getLogger().module('AuthView');
 
@@ -65,14 +67,19 @@ export async function createAuthView(_params: Record<string, unknown> = {}): Pro
         if (!email || !pass) { getToast().error('ایمیل و رمز را وارد کن'); return; }
         const res = mode === 'login' ? await signIn(email, pass) : await signUp(email, pass);
         if (res.ok) {
-          getToast().success(mode === 'login' ? 'خوش آمدی! 🎉' : 'حساب ساخته شد! ایمیل تایید را چک کن 📩');
-          getRouter().navigate('dashboard');
-        if (res.ok) {
           getToast().success(mode === 'login' ? 'خوش آمدی! 🎉' : 'حساب ساخته شد! 📩');
-          void syncAll(); // ⬅️ سینک بعد از ورود
+          void syncAll();
           void loadSubscription();
+          // ⬇️ پردازش دعوت (فقط برای ثبت‌نام جدید، در پس‌زمینه)
+          if (mode === 'signup') {
+            setTimeout(async () => {
+              const refResult = await processReferralOnSignup();
+              if (refResult.ok) {
+                getToast().success(`🎁 ${toPersianDigits(String(refResult.rewardDays ?? 3))} روز پریمیوم هدیه گرفتی!`);
+              }
+            }, 2000);
+          }
           getRouter().navigate('dashboard');
-        }
         } else {
           getToast().error(res.error ?? 'خطا رخ داد');
         }
