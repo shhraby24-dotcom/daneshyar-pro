@@ -67,6 +67,23 @@ export function tryPromo(code: string): boolean {
   return true;
 }
 
+/** تاریخ انقضای پریمیوم (برای نمایش در تنظیمات) */
+export function getPremiumExpiry(): string | null {
+  try {
+    return localStorage.getItem(EXPIRY_LS);
+  } catch {
+    return null;
+  }
+}
+
+/** روزهای باقی‌مانده پریمیوم */
+export function getPremiumDaysLeft(): number {
+  const exp = getPremiumExpiry();
+  if (!exp) return 0;
+  const diff = new Date(exp).getTime() - Date.now();
+  return Math.max(0, Math.ceil(diff / 86400000));
+}
+
 export function formatToman(n: number): string {
   return n.toLocaleString('fa-IR') + ' تومان';
 }

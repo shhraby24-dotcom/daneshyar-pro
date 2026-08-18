@@ -101,6 +101,7 @@ function registerViews(): void {
   router.registerView('settings', (p: ViewParams) => import('@/ui/views/SettingsView').then((m) => m.createSettingsView(p)));
   router.registerView('auth', createAuthView);
   router.registerView('challenges', (p: ViewParams) => import('@/ui/views/ChallengesView').then((m) => m.createChallengesView(p)));
+  router.registerView('legal', (p: ViewParams) => import('@/ui/views/LegalView').then((m) => m.createLegalView(p)));
   // placeholder ها
   router.registerView('translator', createComingSoonView('مترجم', '🌐', 'ترجمه هوشمند متن‌های تخصصی.'));
   router.registerView('calculator', createComingSoonView('ماشین‌حساب', '🧮', 'محاسبات سریع علمی.'));

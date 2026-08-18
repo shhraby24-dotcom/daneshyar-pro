@@ -20,6 +20,8 @@ import { toPersianDigits } from '@/utils/dateFormatter';
 import { getCurrentUser, signOut } from '@/services/AuthService';
 import { getRouter } from '@/core/Router';
 import { syncAll, onSyncStatus, getLastSync, isSyncAvailable, type SyncUIStatus } from '@/services/SyncService';
+import { getSubscriptionInfo } from '@/services/SubscriptionService';
+import { PLANS } from '@/services/Premium';
 
 function buildSync(): HTMLElement {
   const box = document.createElement('div');
@@ -218,6 +220,7 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
     header.appendChild(em); header.appendChild(t);
     wrap.appendChild(header);
 
+    wrap.appendChild(section('💎', 'اشتراک پریمیوم', buildSubscription()));
     wrap.appendChild(section('🎨', 'ظاهر', buildAppearance()));
     wrap.appendChild(section('👤', 'حساب کاربری', buildAccount()));
     wrap.appendChild(section('🔄', 'همگام‌سازی', buildSync()));
@@ -226,6 +229,89 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
     wrap.appendChild(section('💾', 'داده‌ها و پشتیبان', buildData()));
     wrap.appendChild(section('ℹ️', 'درباره', buildAbout()));
     return wrap;
+  }
+
+  // ── مدیریت اشتراک ──
+  function buildSubscription(): HTMLElement {
+    const box = document.createElement('div');
+    box.className = 'space-y-3';
+    const info = getSubscriptionInfo();
+
+    if (info.isPremium) {
+      // وضعیت پریمیوم فعال
+      const plan = PLANS.find((p) => p.id === info.planId);
+      const card = document.createElement('div');
+      card.className = 'bg-green-500/10 border border-green-500/30 rounded-xl p-4 space-y-3';
+      const status = document.createElement('div');
+      status.className = 'flex items-center gap-2';
+      status.innerHTML = `
+        <span class="text-2xl">💎</span>
+        <div>
+          <div class="font-bold text-green-300">پریمیوم فعال</div>
+          <div class="text-xs text-slate-400">پلن ${plan ? plan.label : '—'} · ${toPersianDigits(String(info.daysLeft))} روز مانده</div>
+        </div>
+      `;
+      card.appendChild(status);
+
+      const btns = document.createElement('div');
+      btns.className = 'grid grid-cols-2 gap-2';
+      btns.appendChild(createButton({
+        label: '🔄 تمدید',
+        variant: BUTTON_VARIANTS.PRIMARY,
+        size: BUTTON_SIZES.SM,
+       onClick: () => { void getRouter().navigate('premium'); },
+      }));
+      btns.appendChild(createButton({
+        label: '📋 پلن‌ها',
+        variant: BUTTON_VARIANTS.GHOST,
+        size: BUTTON_SIZES.SM,
+        onClick: () => { void getRouter().navigate('premium'); },
+      }));
+      card.appendChild(btns);
+      box.appendChild(card);
+    } else if (info.isTrial) {
+      // وضعیت Trial
+      const card = document.createElement('div');
+      card.className = 'bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 space-y-3';
+      card.innerHTML = `
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🎁</span>
+          <div>
+            <div class="font-bold text-primary-300">دوره آزمایشی فعال</div>
+            <div class="text-xs text-slate-400">${toPersianDigits(String(info.trialDaysLeft))} روز مانده</div>
+          </div>
+        </div>
+      `;
+      const buyBtn = createButton({
+        label: '💎 خرید پریمیوم',
+        variant: BUTTON_VARIANTS.PRIMARY,
+        size: BUTTON_SIZES.SM,
+        onClick: () => { void getRouter().navigate('premium'); },
+      });
+      buyBtn.classList.add('w-full');
+      card.appendChild(buyBtn);
+      box.appendChild(card);
+    } else {
+      // بدون اشتراک
+      const card = document.createElement('div');
+      card.className = 'bg-slate-900/50 border border-slate-700 rounded-xl p-4 space-y-3 text-center';
+      card.innerHTML = `
+        <div class="text-3xl">🆓</div>
+        <div class="text-sm text-slate-300">نسخه رایگان</div>
+        <div class="text-xs text-slate-500">با پریمیوم، سهمیه نامحدود AI و همگام‌سازی کامل داشته باشید</div>
+      `;
+      const upBtn = createButton({
+        label: '💎 ارتقا به پریمیوم',
+        variant: BUTTON_VARIANTS.PRIMARY,
+        size: BUTTON_SIZES.SM,
+        onClick: () => { void getRouter().navigate('premium'); },
+      });
+      upBtn.classList.add('w-full');
+      card.appendChild(upBtn);
+      box.appendChild(card);
+    }
+
+    return box;
   }
 
   // ── ظاهر: انتخابگر تم کارتی ──
@@ -361,11 +447,39 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
     return box;
   }
 
-  // ── درباره ─
+  // ── درباره ──
   function buildAbout(): HTMLElement {
     const g = document.createElement('div');
     g.className = 'ios-grouped';
     g.appendChild(row({ icon: '🎓', bg: 'bg-accent-500/20', title: 'دانش‌یار پرو', desc: `نسخه ${toPersianDigits('1.0.0-beta.1')} · دستیار مطالعه‌ی هوشمند`, control: document.createElement('span') }));
+
+    // لینک‌های قانونی
+    const legalLinks: { id: string; icon: string; label: string }[] = [
+      { id: 'terms', icon: '📜', label: 'شرایط استفاده' },
+      { id: 'privacy', icon: '🔒', label: 'حریم خصوصی' },
+      { id: 'refund', icon: '💰', label: 'سیاست بازپرداخت' },
+    ];
+    for (const link of legalLinks) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ios-list-row w-full text-start';
+      const badge = document.createElement('div');
+      badge.className = 'w-9 h-9 rounded-lg flex items-center justify-center text-lg bg-slate-700/50';
+      badge.textContent = link.icon;
+      const txt = document.createElement('div');
+      txt.className = 'flex-1 text-sm text-slate-200';
+      txt.textContent = link.label;
+      const arrow = document.createElement('span');
+      arrow.className = 'text-slate-500';
+      arrow.textContent = '←';
+      btn.appendChild(badge);
+      btn.appendChild(txt);
+      btn.appendChild(arrow);
+      btn.addEventListener('click', () => {
+        void getRouter().navigate('legal', { doc: link.id });
+      });
+      g.appendChild(btn);
+    }
     return g;
   }
 

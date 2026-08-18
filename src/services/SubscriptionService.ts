@@ -3,7 +3,7 @@
  * @module services/SubscriptionService
  */
 import { getSupabaseClient, getSession } from '@/services/AuthService';
-import { isPremium, activatePremium, deactivatePremium } from '@/services/Premium';
+import { isPremium, activatePremium, deactivatePremium, getPremiumPlan, getPremiumDaysLeft } from '@/services/Premium';
 import { getInstance as getLogger } from '@/core/Logger';
 const logger = getLogger().module('Subscription');
 
@@ -37,4 +37,24 @@ export async function loadSubscription(): Promise<Subscription | null> {
   }
   if (isPremium()) deactivatePremium();
   return null;
+}
+import { isTrialActive, getTrialDaysLeft } from '@/services/TrialService';
+
+export interface SubscriptionInfo {
+  isPremium: boolean;
+  isTrial: boolean;
+  planId: string | null;
+  daysLeft: number;
+  trialDaysLeft: number;
+}
+
+/** اطلاعات کامل اشتراک برای نمایش در UI */
+export function getSubscriptionInfo(): SubscriptionInfo {
+  return {
+    isPremium: isPremium(),
+    isTrial: isTrialActive(),
+    planId: getPremiumPlan(),
+    daysLeft: getPremiumDaysLeft(),
+    trialDaysLeft: getTrialDaysLeft(),
+  };
 }

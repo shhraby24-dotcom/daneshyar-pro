@@ -154,6 +154,13 @@ export class Layout {
               <button id="theme-toggle" aria-label="تغییر تم" class="sidebar-theme-toggle min-w-11 min-h-11 flex items-center justify-center rounded-lg hover:bg-slate-700 transition">${themeIcon}</button>
             </div>
           </div>
+          <div class="p-4 border-t border-slate-700">
+            <div class="flex flex-wrap gap-2 text-xs text-slate-500">
+              <button data-legal="terms" class="hover:text-slate-300 transition">📜 شرایط</button>
+              <button data-legal="privacy" class="hover:text-slate-300 transition">🔒 حریم خصوصی</button>
+              <button data-legal="refund" class="hover:text-slate-300 transition">💰 بازپرداخت</button>
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -369,6 +376,13 @@ export class Layout {
       }
     };
     document.addEventListener('keydown', this._keydownHandler);
+        // لینک‌های قانونی در فوتر سایدبار
+    container.querySelectorAll<HTMLElement>('[data-legal]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const doc = btn.dataset.legal ?? 'terms';
+        void this._router.navigate('legal', { doc });
+      });
+    });
   }
 
   /**
