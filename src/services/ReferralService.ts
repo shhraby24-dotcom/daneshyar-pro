@@ -26,18 +26,37 @@ export function clearPendingRef(): void {
   try { localStorage.removeItem(REFERRAL_LS); } catch { /* ignore */ }
 }
 
-/** گرفتن کد دعوت کاربر فعلی */
+/** گرفتن کد دعوت کاربر فعلی (با ساخت خودکار اگر نبود) */
 export async function getMyReferralCode(): Promise<string | null> {
   const client = getSupabaseClient();
   if (!client) return null;
   const session = await getSession();
   if (!session?.user) return null;
+
+  // تلاش اول: خواندن از دیتابیس
   const { data } = await client
     .from('profiles')
     .select('referral_code')
     .eq('user_id', session.user.id)
     .maybeSingle();
-  return (data as { referral_code?: string })?.referral_code ?? null;
+
+  const existingCode = (data as { referral_code?: string })?.referral_code;
+  if (existingCode) return existingCode;
+
+  // اگر کد نبود، از Edge Function بساز (برای کاربران قدیمی یا موارد استثنا)
+  try {
+    const { data: ensureData, error } = await client.functions.invoke('ensure-profile', {
+      body: {},
+    });
+    if (!error && ensureData?.ok && ensureData.referralCode) {
+      logger.info('کد دعوت ساخته شد (ensure-profile)');
+      return ensureData.referralCode as string;
+    }
+  } catch (e) {
+    logger.warn('خطا در ensure-profile', e);
+  }
+
+  return null;
 }
 
 /** ساخت لینک دعوت کامل */
