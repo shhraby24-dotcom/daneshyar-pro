@@ -1,20 +1,21 @@
 /**
  * ============================================================
- * دانش‌یار پرو - AuthView (ورود/ثبت‌نام + مهمان)
+ * دانش‌یار پرو - AuthView (ورود/ثبت‌نام + مهمان + دعوت)
  * ============================================================
- * فرم ایمیل/رمز با سوییچ ورود↔ثبت‌نام + دکمه مهمان.
+ * فرم ایمیل/رمز با سوییچ ورود↔ثبت‌نام + دکمه مهمان
+ * + پردازش کد دعوت بعد از ثبت‌نام موفق
  * @module ui/views/AuthView
- * @version 1.0.0
+ * @version 1.1.0
  */
 import { getInstance as getLogger } from '@/core/Logger';
 import { getRouter } from '@/core/Router';
 import { signIn, signUp, isSupabaseEnabled } from '@/services/AuthService';
+import { processReferralOnSignup } from '@/services/ReferralService';
 import { createButton, BUTTON_VARIANTS, BUTTON_SIZES } from '@/ui/components/Button';
 import { createInput, createPasswordInput, createFormGroup } from '@/ui/components/Input';
 import { getToast } from '@/ui/components/Toast';
 import { syncAll } from '@/services/SyncService';
 import { loadSubscription } from '@/services/SubscriptionService';
-import { processReferralOnSignup } from '@/services/ReferralService';
 import { toPersianDigits } from '@/utils/dateFormatter';
 
 const logger = getLogger().module('AuthView');
@@ -23,7 +24,10 @@ export async function createAuthView(_params: Record<string, unknown> = {}): Pro
   logger.info('رندر AuthView');
   const container = document.createElement('div');
   container.className = 'mx-auto max-w-md space-y-6';
-  let mode: 'login' | 'signup' = 'login';
+
+  // ⬇️ خواندن ref از query string URL (مثلاً #/auth?ref=DANESH-XXXXXX)
+  const urlRef = new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('ref');
+  let mode: 'login' | 'signup' = urlRef ? 'signup' : 'login'; // اگر ref دارد، default روی signup بگذار
 
   const render = (): void => {
     container.innerHTML = '';
@@ -39,6 +43,18 @@ export async function createAuthView(_params: Record<string, unknown> = {}): Pro
       : 'حساب بساز تا یادداشت‌ها و کارت‌هایت همیشه همراهت باشند';
     header.appendChild(em); header.appendChild(t); header.appendChild(s);
     container.appendChild(header);
+
+    // پیام ویژه اگر با لینک دعوت آمده
+    if (urlRef) {
+      const refBanner = document.createElement('div');
+      refBanner.className = 'bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center space-y-1';
+      refBanner.innerHTML = `
+        <div class="text-3xl">🎁</div>
+        <div class="font-bold text-primary-300">دعوت شده‌ای!</div>
+        <div class="text-xs text-slate-400">بعد از ثبت‌نام، ۳ روز پریمیوم هدیه می‌گیری</div>
+      `;
+      container.appendChild(refBanner);
+    }
 
     if (!isSupabaseEnabled()) {
       const note = document.createElement('div');
@@ -65,20 +81,35 @@ export async function createAuthView(_params: Record<string, unknown> = {}): Pro
         const email = emailInput.value.trim();
         const pass = passInput.value;
         if (!email || !pass) { getToast().error('ایمیل و رمز را وارد کن'); return; }
+
+        submit.disabled = true;
         const res = mode === 'login' ? await signIn(email, pass) : await signUp(email, pass);
+        submit.disabled = false;
+
         if (res.ok) {
           getToast().success(mode === 'login' ? 'خوش آمدی! 🎉' : 'حساب ساخته شد! 📩');
           void syncAll();
           void loadSubscription();
-          // ⬇️ پردازش دعوت (فقط برای ثبت‌نام جدید، در پس‌زمینه)
+
+          // ⬇️ پردازش دعوت (فقط برای ثبت‌نام جدید، با ۲ ثانیه تأخیر برای آماده شدن session)
           if (mode === 'signup') {
             setTimeout(async () => {
-              const refResult = await processReferralOnSignup();
-              if (refResult.ok) {
-                getToast().success(`🎁 ${toPersianDigits(String(refResult.rewardDays ?? 3))} روز پریمیوم هدیه گرفتی!`);
+              try {
+                const refResult = await processReferralOnSignup();
+                if (refResult.ok) {
+                  getToast().success(
+                    `🎁 ${toPersianDigits(String(refResult.rewardDays ?? 3))} روز پریمیوم هدیه گرفتی!`
+                  );
+                } else if (refResult.error && refResult.error !== 'no_ref') {
+                  // فقط اگر خطای غیر از "بدون ref" باشد، لاگ کن
+                  logger.debug('نتیجه دعوت', refResult);
+                }
+              } catch (e) {
+                logger.warn('خطا در پردازش دعوت', e);
               }
-            }, 2000);
+            }, 2500);
           }
+
           getRouter().navigate('dashboard');
         } else {
           getToast().error(res.error ?? 'خطا رخ داد');
