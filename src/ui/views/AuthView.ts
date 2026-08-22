@@ -107,7 +107,7 @@ export async function createAuthView(_params: Record<string, unknown> = {}): Pro
               } catch (e) {
                 logger.warn('خطا در پردازش دعوت', e);
               }
-            }, 2500);
+            }, 5000);
           }
 
           getRouter().navigate('dashboard');
