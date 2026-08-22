@@ -156,3 +156,8 @@
 - تأیید ایمیل: ندارد (ریسک تقلب مدیریت‌شده با سقف + پاداش کم)
 - منطق ضد تقلب سمت سرور (Edge Function)
 - کد دعوت: DANESH-XXXXXX (تصادفی، unique)
+## نکته مهم درباره Supabase Edge Functions
+- Supabase **همیشه** یک نام پیش‌فرض تولید می‌کند (مثل `smooth-responder`, `clever-handler`, `ancient-tree`)
+- نامی که ما در ادیتور می‌نویسیم **ممکن است** نادیده گرفته شود
+- **همیشه** URL واقعی را از داشبورد Supabase کپی کن و از آن استفاده کن
+- مثال: `https://PROJECT.supabase.co/functions/v1/clever-handler` → نام تابع `clever-handler` است
