@@ -100,8 +100,9 @@ export async function createAuthView(_params: Record<string, unknown> = {}): Pro
                   getToast().success(
                     `🎁 ${toPersianDigits(String(refResult.rewardDays ?? 3))} روز پریمیوم هدیه گرفتی!`
                   );
+                  // ⬇️ به‌روزرسانی localStorage از Supabase
+                  void loadSubscription();
                 } else if (refResult.error && refResult.error !== 'no_ref') {
-                  // فقط اگر خطای غیر از "بدون ref" باشد، لاگ کن
                   logger.debug('نتیجه دعوت', refResult);
                 }
               } catch (e) {
