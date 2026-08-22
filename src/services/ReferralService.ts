@@ -96,7 +96,7 @@ export async function processReferralOnSignup(): Promise<{ ok: boolean; rewardDa
   if (!session?.user) return { ok: false, error: 'no_user' };
 
   try {
-    const { data, error } = await client.functions.invoke('process-referral', {
+    const { data, error } = await client.functions.invoke('clever-handler', {
       body: { refCode },
     });
     if (error) {
