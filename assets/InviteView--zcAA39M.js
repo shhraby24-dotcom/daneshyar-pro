@@ -1,4 +1,4 @@
-import{t as s,R as p,y as L,c as k,z as M,A as D,i as H,B as T,m as V,f as x}from"./index-BjGGFcxz.js";const Y=H().module("InviteView");async function O(P={}){Y.info("رندر InviteView");const e=document.createElement("div");e.className="mx-auto max-w-2xl p-3 sm:p-4 space-y-5 fade-in";const u=document.createElement("div");u.className="text-center space-y-2 py-3",u.innerHTML=`
+import{t as s,R as p,y as L,c as k,z as M,A as D,i as H,B as T,m as V,f as x}from"./index-PZI8XJop.js";const Y=H().module("InviteView");async function O(P={}){Y.info("رندر InviteView");const e=document.createElement("div");e.className="mx-auto max-w-2xl p-3 sm:p-4 space-y-5 fade-in";const u=document.createElement("div");u.className="text-center space-y-2 py-3",u.innerHTML=`
     <div class="text-6xl">🎁</div>
     <h1 class="text-2xl sm:text-3xl font-black text-slate-100">دعوت دوستان</h1>
     <p class="text-sm text-slate-400">با هر دعوت موفق، ${s(String(p))} روز پریمیوم بگیر</p>
