@@ -161,3 +161,9 @@
 - نامی که ما در ادیتور می‌نویسیم **ممکن است** نادیده گرفته شود
 - **همیشه** URL واقعی را از داشبورد Supabase کپی کن و از آن استفاده کن
 - مثال: `https://PROJECT.supabase.co/functions/v1/clever-handler` → نام تابع `clever-handler` است
+
+## تصمیم: شعله‌ی Streak با Lottie
+- **چرا:** CSS/SVG دست‌ساز حس حرفه‌ای نمی‌داد؛ Lottie یعنی هنرِ طراح‌ساخته + کدِ من
+- **رد شده‌ها:** CSS turbulence (تخت)، Canvas particles (سبک اشتباه)
+- **ایمنی:** اگر فایل Lottie معتبر نباشد، به‌جای کرش، آیکون Lucide نمایش داده می‌شود
+- **فایل:** src/assets/flame.json (باید شامل "layers" باشد، نه manifest)

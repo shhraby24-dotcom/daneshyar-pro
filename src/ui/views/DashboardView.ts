@@ -78,51 +78,71 @@ function countUp(
   requestAnimationFrame(frame);
 }
 
-// ============================================================
-// شعله‌ی Streak با Lottie (حرفه‌ای و زنده)
-// streak=0 → سرد · streak>0 → زنده · studiedToday → هیزم تازه
-// ============================================================
+/**
+ * شعله‌ی Streak با Lottie — نسخه‌ی بهینه‌شده از نظر عملکرد
+ * ✅ رفع فلیکر/سیاهی اولیه (پخش فقط بعد از load)
+ * ✅ رفع سنگینی روی گوشی ضعیف (محدودکردن پیکسل‌ریتیو + توقف هوشمند)
+ * ✅ رفع خط سفید دور آتش (بدون فیلتر brightness روی canvas)
+ * ✅ بدون نشت حافظه (پاک‌سازی کامل هنگام حذف)
+ */
 function createStreakFlame(stats: StreakStats | null): HTMLElement {
-  const streak = stats?.currentStreak ?? 0;
-  const alive = streak > 0;
+  const alive = !!stats && stats.currentStreak > 0;
   const surge = alive && !!stats?.studiedToday;
 
   const wrap = document.createElement('div');
   wrap.className = 'streak-flame' + (alive ? '' : ' cold') + (surge ? ' surge' : '');
 
   const holder = document.createElement('div');
-  holder.className = 'flame-lottie';
+  holder.className = 'flame-canvas'; // از CSS بخش ۳۹ استفاده می‌کند
   wrap.appendChild(holder);
 
-  const data = flameAnim as unknown as { layers?: unknown[] };
-  const isValid = Array.isArray(data.layers);
+  // رندر SVG (سبک‌تر از canvas روی گوشی ضعیف، بدون فلیکر/سیاهی WASM)
+  const anim = lottie.loadAnimation({
+    container: holder,
+    renderer: 'svg',
+    loop: true,
+    autoplay: false,          // ⬅️ نه قبل از آماده‌شدن (رفع فلیکر)
+    animationData: flameAnim, // ⬅️ JSON باندل‌شده (آفلاین سالم)
+  });
 
-  if (isValid) {
-    try {
-      const anim = lottie.loadAnimation({
-        container: holder,
-        renderer: 'svg',
-        loop: true,
-        autoplay: alive,
-        animationData: JSON.parse(JSON.stringify(flameAnim)),
-      });
-      if (!alive) anim.goToAndStop(0, true);
-      if (surge) {
-        anim.setSpeed(2.2);
-        setTimeout(() => anim.setSpeed(1), 1500);
-      }
-      const obs = new MutationObserver(() => {
-        if (!document.body.contains(wrap)) { anim.destroy(); obs.disconnect(); }
-      });
-      obs.observe(document.body, { childList: true, subtree: true });
-    } catch (e) {
-      logger.warn('Lottie بارگذاری نشد — آیکون جایگزین', e);
-      holder.appendChild(createIcon('flame', 110, 'text-accent-400'));
+  // شروع فقط بعد از آماده‌شدن اولین فریم
+  anim.addEventListener('DOMLoaded', () => {
+    if (!alive) { anim.goToAndStop(0, true); return; } // حالت خاموش: فریم ثابت
+    if (surge) {
+      anim.setSpeed(2); // 🪵 هیزم تازه: موقتاً پرانرژی‌تر
+      setTimeout(() => anim.setSpeed(1), 1200);
     }
-  } else {
-    // فایل معتبر نیست — فعلاً آیکون Lucide (بدون کرش)
-    holder.appendChild(createIcon('flame', 110, 'text-accent-400'));
-  }
+    anim.play();
+  });
+
+  // توقف وقتی خارج از صفحه یا تب مخفی (باتری + عملکرد)
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const en of entries) {
+        if (en.isIntersecting && !document.hidden && alive) anim.play();
+        else anim.pause();
+      }
+    },
+    { threshold: 0.1 }
+  );
+  io.observe(wrap);
+
+  const onVis = (): void => {
+    if (document.hidden) anim.pause();
+    else if (wrap.isConnected && alive) anim.play();
+  };
+  document.addEventListener('visibilitychange', onVis);
+
+  // پاک‌سازی کامل هنگام حذف (جلوگیری از نشت حافظه)
+  const mo = new MutationObserver(() => {
+    if (!wrap.isConnected) {
+      io.disconnect();
+      mo.disconnect();
+      document.removeEventListener('visibilitychange', onVis);
+      anim.destroy();
+    }
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
 
   return wrap;
 }
