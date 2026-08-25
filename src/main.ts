@@ -111,6 +111,10 @@ function registerViews(): void {
   router.registerView('challenges', (p: ViewParams) => import('@/ui/views/ChallengesView').then((m) => m.createChallengesView(p)));
   router.registerView('legal', (p: ViewParams) => import('@/ui/views/LegalView').then((m) => m.createLegalView(p)));
   router.registerView('invite', (p: ViewParams) => import('@/ui/views/InviteView').then((m) => m.createInviteView(p)));
+  // مسیر موقت برای تست آیکون‌ها (بعد از تأیید حذف می‌شود)
+  router.registerView('icons-preview', () =>
+    import('@/services/IconService').then((m) => m.renderIconPreview())
+  );
   // placeholder ها
   router.registerView('translator', createComingSoonView('مترجم', '🌐', 'ترجمه هوشمند متن‌های تخصصی.'));
   router.registerView('calculator', createComingSoonView('ماشین‌حساب', '🧮', 'محاسبات سریع علمی.'));

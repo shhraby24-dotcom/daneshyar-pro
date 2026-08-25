@@ -24,6 +24,7 @@ import { getInstance as getLogger } from '@/core/Logger';
 import { getToast } from '@/ui/components/Toast';
 import { formatPersianDate, toPersianDigits } from '@/utils/dateFormatter';
 import { openSearchPalette } from '@/ui/components/GlobalSearch';
+import { iconHTML } from '@/services/IconService';
 
 const logger = getLogger().module('Layout');
 
@@ -44,40 +45,38 @@ interface NavItem {
 
 /** سایدبار دسکتاپ (همه‌ی آیتم‌ها) */
 const NAV_ITEMS: NavItem[] = [
-  { route: 'dashboard', icon: '📊', label: 'داشبورد' },
-  { route: 'summarizer', icon: '✨', label: 'خلاصه‌ساز' },
-  { route: 'quiz', icon: '📝', label: 'آزمون‌ساز' },
-  { route: 'flashcards', icon: '🃏', label: 'فلش‌کارت' },
-  { route: 'notes', icon: '📚', label: 'یادداشت‌ها' },
-  { route: 'translator', icon: '🌐', label: 'مترجم', soon: true },
-  { route: 'calculator', icon: '🧮', label: 'ماشین‌حساب', soon: true },
-  { route: 'pomodoro', icon: '⏱️', label: 'پومودورو' },
-  { route: 'challenges', icon: '🎯', label: 'چالش‌ها' },
-  { route: 'premium', icon: '💎', label: 'پریمیوم' },
-  { route: 'invite', icon: '🎁', label: 'دعوت دوستان' },
-  { route: 'auth', icon: '👤', label: 'حساب کاربری' },
-  { route: 'settings', icon: '⚙️', label: 'تنظیمات' },
+  { route: 'dashboard', icon: 'dashboard', label: 'داشبورد' },
+  { route: 'summarizer', icon: 'summarizer', label: 'خلاصه‌ساز' },
+  { route: 'quiz', icon: 'quiz', label: 'آزمون‌ساز' },
+  { route: 'flashcards', icon: 'flashcards', label: 'فلش‌کارت' },
+  { route: 'notes', icon: 'notes', label: 'یادداشت‌ها' },
+  { route: 'translator', icon: 'translator', label: 'مترجم', soon: true },
+  { route: 'calculator', icon: 'calculator', label: 'ماشین‌حساب', soon: true },
+  { route: 'pomodoro', icon: 'pomodoro', label: 'پومودورو' },
+  { route: 'challenges', icon: 'challenges', label: 'چالش‌ها' },
+  { route: 'premium', icon: 'premium', label: 'پریمیوم' },
+  { route: 'auth', icon: 'auth', label: 'حساب کاربری' },
+  { route: 'settings', icon: 'settings', label: 'تنظیمات' },
 ];
 
 /** نوار پایین موبایل (۴ اصلی + «بیشتر») */
 const BOTTOM_NAV_ITEMS: NavItem[] = [
-  { route: 'dashboard', icon: '🏠', label: 'خانه' },
-  { route: 'notes', icon: '📚', label: 'یادداشت' },
-  { route: 'flashcards', icon: '🃏', label: 'فلش‌کارت' },
-  { route: 'quiz', icon: '📝', label: 'آزمون' },
+  { route: 'dashboard', icon: 'home', label: 'خانه' },
+  { route: 'notes', icon: 'notes', label: 'یادداشت' },
+  { route: 'flashcards', icon: 'flashcards', label: 'فلش‌کارت' },
+  { route: 'quiz', icon: 'quiz', label: 'آزمون' },
 ];
 
 /** منوی «بیشتر» (Bottom Sheet) */
 const MORE_ITEMS: NavItem[] = [
-  { route: 'summarizer', icon: '✨', label: 'خلاصه‌ساز' },
-  { route: 'pomodoro', icon: '⏱️', label: 'پومودورو' },
-  { route: 'translator', icon: '🌐', label: 'مترجم', soon: true },
-  { route: 'calculator', icon: '🧮', label: 'ماشین‌حساب', soon: true },
-  { route: 'challenges', icon: '🎯', label: 'چالش‌ها' },
-  { route: 'premium', icon: '💎', label: 'پریمیوم' },
-  { route: 'invite', icon: '🎁', label: 'دعوت دوستان' },
-  { route: 'auth', icon: '👤', label: 'حساب کاربری' },
-  { route: 'settings', icon: '⚙️', label: 'تنظیمات' },
+  { route: 'summarizer', icon: 'summarizer', label: 'خلاصه‌ساز' },
+  { route: 'pomodoro', icon: 'pomodoro', label: 'پومودورو' },
+  { route: 'translator', icon: 'translator', label: 'مترجم', soon: true },
+  { route: 'calculator', icon: 'calculator', label: 'ماشین‌حساب', soon: true },
+  { route: 'challenges', icon: 'challenges', label: 'چالش‌ها' },
+  { route: 'premium', icon: 'premium', label: 'پریمیوم' },
+  { route: 'auth', icon: 'auth', label: 'حساب کاربری' },
+  { route: 'settings', icon: 'settings', label: 'تنظیمات' },
 ];
 
 // ============================================================
@@ -153,7 +152,7 @@ export class Layout {
           <div class="p-4 border-t border-slate-700">
             <div class="flex items-center justify-between text-xs text-slate-400">
               <span>حالت تاریک</span>
-              <button id="theme-toggle" aria-label="تغییر تم" class="sidebar-theme-toggle min-w-11 min-h-11 flex items-center justify-center rounded-lg hover:bg-slate-700 transition">${themeIcon}</button>
+              <button id="theme-toggle" aria-label="تغییر تم" class="sidebar-theme-toggle min-w-11 min-h-11 flex items-center justify-center rounded-lg hover:bg-slate-700 transition">${iconHTML(this._currentTheme === 'dark' ? 'moon' : 'sun', 20)}</button>
             </div>
           </div>
           <div class="p-4 border-t border-slate-700">
@@ -172,7 +171,7 @@ export class Layout {
           <div class="flex items-center justify-between px-4 py-3 gap-3">
             <button id="mobile-menu-btn" aria-label="باز کردن منو" aria-expanded="false"
                     class="lg:hidden min-w-11 min-h-11 flex items-center justify-center rounded-lg hover:bg-slate-800 transition">
-              <span class="text-xl">☰</span>
+              ${iconHTML('menu', 20)}
             </button>
             <div id="global-search-wrap" class="flex-1 max-w-xl">
            <div class="relative">
@@ -221,13 +220,11 @@ export class Layout {
       const stateClass = isActive ? 'nav-active' : 'text-slate-300 hover:bg-slate-700 hover:text-slate-100';
       const ariaCurrent = isActive ? 'aria-current="page"' : '';
       const soonBadge = item.soon ? '<span class="soon-badge">به‌زودی</span>' : '';
-      return `
-        <button data-route="${item.route}" ${ariaCurrent}
-                class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg ${stateClass}">
-          <span class="nav-icon text-xl">${item.icon}</span>
-          <span class="font-medium flex-1 text-start">${item.label}</span>
-          ${soonBadge}
-        </button>`;
+      return `<button data-route="${item.route}" ${ariaCurrent} class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg ${stateClass}">
+        <span class="nav-icon flex items-center">${iconHTML(item.icon, 20)}</span>
+        <span class="font-medium flex-1 text-start">${item.label}</span>
+        ${soonBadge}
+      </button>`;
     }).join('');
   }
 
@@ -235,40 +232,34 @@ export class Layout {
     const currentRoute = this._router.getCurrentRoute()?.name ?? 'dashboard';
     const items = BOTTOM_NAV_ITEMS.map((item) => {
       const isActive = currentRoute === item.route;
-      return `
-        <button data-route="${item.route}" class="bottom-nav-item ${isActive ? 'active' : ''}" ${isActive ? 'aria-current="page"' : ''}>
-          <span class="bnav-icon">${item.icon}</span>
-          <span class="bnav-label">${item.label}</span>
-        </button>`;
+      return `<button data-route="${item.route}" class="bottom-nav-item ${isActive ? 'active' : ''}" ${isActive ? 'aria-current="page"' : ''}>
+        <span class="bnav-icon flex items-center">${iconHTML(item.icon, 22)}</span>
+        <span class="bnav-label">${item.label}</span>
+      </button>`;
     }).join('');
-
     const isMoreActive = MORE_ITEMS.some((i) => i.route === currentRoute);
     const moreBtn = `
       <button id="more-btn" class="bottom-nav-item ${isMoreActive ? 'active' : ''}" aria-label="منوی بیشتر">
-        <span class="bnav-icon">☰</span>
+        <span class="bnav-icon flex items-center">${iconHTML('menu', 22)}</span>
         <span class="bnav-label">بیشتر</span>
       </button>`;
-
     return items + moreBtn;
   }
 
   private _renderSheetItems(themeIcon: string): string {
     const items = MORE_ITEMS.map((item) => {
       const soonBadge = item.soon ? '<span class="soon-badge">به‌زودی</span>' : '';
-      return `
-        <button data-route="${item.route}" class="bottom-sheet-item sheet-nav-item">
-          <span class="bs-icon">${item.icon}</span>
-          <span class="bs-label">${item.label}</span>
-          ${soonBadge}
-        </button>`;
+      return `<button data-route="${item.route}" class="bottom-sheet-item sheet-nav-item">
+        <span class="bs-icon flex items-center">${iconHTML(item.icon, 24)}</span>
+        <span class="bs-label">${item.label}</span>
+        ${soonBadge}
+      </button>`;
     }).join('');
-
     const themeBtn = `
       <button id="sheet-theme-toggle" class="bottom-sheet-item">
-        <span class="bs-icon">${themeIcon}</span>
+        <span class="bs-icon flex items-center">${iconHTML(themeIcon === '🌙' ? 'moon' : 'sun', 24)}</span>
         <span class="bs-label">حالت ${this._currentTheme === 'dark' ? 'تاریک' : 'روشن'}</span>
       </button>`;
-
     return items + themeBtn;
   }
 
@@ -502,10 +493,18 @@ export class Layout {
     if (theme === 'light') document.documentElement.classList.add('light');
     else document.documentElement.classList.remove('light');
 
-    const icon = theme === 'dark' ? '🌙' : '☀️';
-    document.querySelectorAll<HTMLElement>('.sidebar-theme-toggle, #sheet-theme-toggle .bs-icon').forEach((el) => {
-      el.textContent = icon;
-    });
+    const iconName = theme === 'dark' ? 'moon' : 'sun';
+    const iconSvg = iconHTML(iconName, 20);
+
+    // آیکون تم در سایدبار
+    const sidebarToggle = document.querySelector<HTMLElement>('.sidebar-theme-toggle');
+    if (sidebarToggle) sidebarToggle.innerHTML = iconSvg;
+
+    // آیکون تم در منوی «بیشتر»
+    const sheetIcon = document.querySelector<HTMLElement>('#sheet-theme-toggle .bs-icon');
+    if (sheetIcon) sheetIcon.innerHTML = iconSvg;
+
+    // متن حالت تم
     const sheetLabel = document.querySelector<HTMLElement>('#sheet-theme-toggle .bs-label');
     if (sheetLabel) sheetLabel.textContent = theme === 'dark' ? 'حالت تاریک' : 'حالت روشن';
 

@@ -2,20 +2,15 @@
  * ============================================================
  * دانش‌یار پرو - کامپوننت دکمه استاندارد
  * ============================================================
- *
- * توابع کمکی برای ساخت دکمه‌ها با استایل یکپارچه
- *
  * ✅ استفاده از سیستم دکمه main.css (گرادیان + lift + ripple)
  * ✅ Type-safe (union types برای variant و size)
- * ✅ آیکون با textContent (امن در برابر XSS)
- * ✅ حس زنده: ripple + scale هنگام فشار + بزرگ‌شدن آیکون در hover
- * ✅ حالت loading با spinner (بدون از دست رفتن متن)
- * ✅ focus از استایل سراسری focus-visible (تم‌پذیر، بدون hardcode)
- *
+ * ✅ آیکون emoji با textContent (امن در برابر XSS)
+ * ✅ آیکون حرفه‌ای با iconHtml (فقط برای خروجی iconHTML — trusted)
+ * ✅ حس زنده: ripple + scale هنگام فشار
+ * ✅ حالت loading با spinner
  * @module ui/components/Button
- * @version 1.0.0-beta.1
+ * @version 1.1.0
  */
-
 import { getInstance as getLogger } from '@/core/Logger';
 
 const logger = getLogger().module('Button');
@@ -23,10 +18,6 @@ const logger = getLogger().module('Button');
 // ============================================================
 // Types
 // ============================================================
-
-/**
- * انواع دکمه (variant)
- */
 export const BUTTON_VARIANTS = {
   PRIMARY: 'primary',
   SECONDARY: 'secondary',
@@ -35,29 +26,26 @@ export const BUTTON_VARIANTS = {
   SUCCESS: 'success',
   ACCENT: 'accent',
 } as const;
-
 export type ButtonVariant = (typeof BUTTON_VARIANTS)[keyof typeof BUTTON_VARIANTS];
 
-/**
- * اندازه‌های دکمه
- */
 export const BUTTON_SIZES = {
   SM: 'sm',
   MD: 'md',
   LG: 'lg',
 } as const;
-
 export type ButtonSize = (typeof BUTTON_SIZES)[keyof typeof BUTTON_SIZES];
 
-/**
- * گزینه‌های ساخت دکمه
- */
 export interface ButtonOptions {
   label?: string;
   variant?: ButtonVariant;
   size?: ButtonSize;
-  /** آیکون (emoji) - با textContent رندر می‌شود */
+  /** آیکون emoji — با textContent رندر می‌شود (امن) */
   icon?: string | null;
+  /**
+   * آیکون حرفه‌ای (خروجی iconHTML از IconService) — با innerHTML رندر می‌شود.
+   * ⚠️ فقط از خروجی iconHTML() استفاده کن، هرگز محتوای کاربر!
+   */
+  iconHtml?: string | null;
   iconPosition?: 'start' | 'end';
   fullWidth?: boolean;
   disabled?: boolean;
@@ -68,20 +56,13 @@ export interface ButtonOptions {
   onClick?: ((e: MouseEvent) => void | Promise<void>) | null;
 }
 
-/**
- * گزینه‌های گروه دکمه
- */
 export interface ButtonGroupOptions {
   className?: string;
   gap?: string;
 }
 
-/**
- * گزینه‌های دکمه آیکونی
- */
 export interface IconButtonOptions {
   icon: string;
-  /** برای accessibility (aria-label) */
   label?: string;
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -93,11 +74,6 @@ export interface IconButtonOptions {
 // ============================================================
 // نگاشت به کلاس‌های main.css
 // ============================================================
-
-/**
- * هر variant به کلاس ساخته‌شده در main.css نگاشت می‌شود
- * (گرادیان، سایه و hover lift از آنجا می‌آید)
- */
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   [BUTTON_VARIANTS.PRIMARY]: 'btn-primary',
   [BUTTON_VARIANTS.SECONDARY]: 'btn-secondary',
@@ -107,18 +83,12 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   [BUTTON_VARIANTS.ACCENT]: 'btn-accent',
 };
 
-/**
- * اندازه‌ها (md = پیش‌فرض، کلاس اضافه نمی‌خواهد)
- */
 const SIZE_CLASSES: Record<ButtonSize, string> = {
   [BUTTON_SIZES.SM]: 'btn-sm',
   [BUTTON_SIZES.MD]: '',
   [BUTTON_SIZES.LG]: 'btn-lg',
 };
 
-/**
- * اندازه‌های دکمه آیکونی (مربعی)
- */
 const ICON_SIZE_CLASSES: Record<ButtonSize, string> = {
   [BUTTON_SIZES.SM]: 'w-8 h-8 text-sm',
   [BUTTON_SIZES.MD]: 'w-10 h-10 text-base',
@@ -128,25 +98,13 @@ const ICON_SIZE_CLASSES: Record<ButtonSize, string> = {
 // ============================================================
 // توابع ساخت
 // ============================================================
-
-/**
- * ساخت یک دکمه استاندارد
- *
- * @example
- * const btn = createButton({
- *   label: 'ذخیره',
- *   variant: 'primary',
- *   icon: '💾',
- *   onClick: () => save(),
- * });
- * container.appendChild(btn);
- */
 export function createButton(options: ButtonOptions = {}): HTMLButtonElement {
   const {
     label = '',
     variant = BUTTON_VARIANTS.PRIMARY,
     size = BUTTON_SIZES.MD,
     icon = null,
+    iconHtml = null,
     iconPosition = 'start',
     fullWidth = false,
     disabled = false,
@@ -160,7 +118,6 @@ export function createButton(options: ButtonOptions = {}): HTMLButtonElement {
   const btn = document.createElement('button');
   btn.type = type;
 
-  // کلاس‌ها: پایه + variant + اندازه + ripple
   const classes = [
     'btn',
     'btn-interactive',
@@ -175,18 +132,28 @@ export function createButton(options: ButtonOptions = {}): HTMLButtonElement {
   if (id) btn.id = id;
   if (disabled || loading) btn.disabled = true;
 
-  // متن دکمه
   const labelSpan = document.createElement('span');
   labelSpan.textContent = label;
 
   if (loading) {
-    // spinner + متن (متن حفظ می‌شود)
     const spinner = document.createElement('span');
     spinner.className = 'btn-spinner';
     btn.appendChild(spinner);
     btn.appendChild(labelSpan);
+  } else if (iconHtml) {
+    // ⚠️ فقط برای خروجی iconHTML (trusted) — هرگز محتوای کاربر
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'btn-icon flex items-center';
+    iconSpan.innerHTML = iconHtml;
+    if (iconPosition === 'start') {
+      btn.appendChild(iconSpan);
+      btn.appendChild(labelSpan);
+    } else {
+      btn.appendChild(labelSpan);
+      btn.appendChild(iconSpan);
+    }
   } else if (icon) {
-    // آیکون با textContent (امن برای emoji)
+    // emoji با textContent (امن)
     const iconSpan = document.createElement('span');
     iconSpan.className = 'btn-icon';
     iconSpan.textContent = icon;
@@ -201,7 +168,6 @@ export function createButton(options: ButtonOptions = {}): HTMLButtonElement {
     btn.appendChild(labelSpan);
   }
 
-  // اتصال onClick (با پشتیبانی از async)
   if (onClick && typeof onClick === 'function') {
     btn.addEventListener('click', async (e) => {
       if (btn.disabled) return;
@@ -216,42 +182,19 @@ export function createButton(options: ButtonOptions = {}): HTMLButtonElement {
   return btn;
 }
 
-/**
- * ساخت گروهی از دکمه‌ها در یک container
- *
- * @example
- * const group = createButtonGroup([
- *   { label: 'انصراف', variant: 'ghost' },
- *   { label: 'ذخیره', variant: 'primary', onClick: save },
- * ]);
- */
 export function createButtonGroup(
   buttons: ButtonOptions[],
   options: ButtonGroupOptions = {}
 ): HTMLDivElement {
   const { className = '', gap = 'gap-2' } = options;
-
   const container = document.createElement('div');
   container.className = `flex items-center ${gap} ${className}`.trim();
-
   buttons.forEach((btnConfig) => {
     container.appendChild(createButton(btnConfig));
   });
-
   return container;
 }
 
-/**
- * ساخت دکمه آیکونی (فقط آیکون، بدون متن)
- *
- * @example
- * const closeBtn = createIconButton({
- *   icon: '✕',
- *   label: 'بستن',
- *   variant: 'ghost',
- *   onClick: () => close(),
- * });
- */
 export function createIconButton(options: IconButtonOptions): HTMLButtonElement {
   const {
     icon,
@@ -265,7 +208,6 @@ export function createIconButton(options: IconButtonOptions): HTMLButtonElement 
 
   const btn = document.createElement('button');
   btn.type = 'button';
-
   btn.className = [
     'btn',
     'btn-square',

@@ -22,6 +22,7 @@ import { getRouter } from '@/core/Router';
 import { syncAll, onSyncStatus, getLastSync, isSyncAvailable, type SyncUIStatus } from '@/services/SyncService';
 import { getSubscriptionInfo } from '@/services/SubscriptionService';
 import { PLANS } from '@/services/Premium';
+import { createIcon, iconHTML } from '@/services/IconService';
 
 function buildSync(): HTMLElement {
   const box = document.createElement('div');
@@ -41,9 +42,9 @@ function buildSync(): HTMLElement {
 
   const updateStatus = (s: SyncUIStatus): void => {
     const last = getLastSync();
-    if (s === 'syncing') status.textContent = '⟳ در حال سینک...';
-    else if (s === 'success') status.textContent = '✅ سینک شد';
-    else if (s === 'error') status.textContent = '⚠️ خطا در سینک';
+    if (s === 'syncing') status.textContent = 'در حال سینک...';
+    else if (s === 'success') status.textContent = 'سینک شد';
+    else if (s === 'error') status.textContent = 'خطا در سینک';
     else if (s === 'disabled') status.textContent = 'برای سینک وارد شوید';
     else status.textContent = last ? `آخرین سینک: ${last}` : 'هنوز سینک نشده';
   };
@@ -51,7 +52,7 @@ function buildSync(): HTMLElement {
   updateStatus('idle');
 
   const syncBtn = createButton({
-    label: '🔄 سینک اکنون',
+    label: 'سینک اکنون',
     variant: BUTTON_VARIANTS.PRIMARY,
     onClick: () => { void syncAll(); },
   });
@@ -80,16 +81,16 @@ function buildAccount(): HTMLElement {
     void getCurrentUser().then((user) => {
       holder.innerHTML = '';
       if (user) {
-        status.textContent = `✅ وارد شده: ${user.email ?? 'کاربر'}`;
+        status.textContent = `وارد شده: ${user.email ?? 'کاربر'}`;
         holder.appendChild(createButton({
-          label: '🚪 خروج',
+          label: 'خروج',
           variant: BUTTON_VARIANTS.GHOST,
           onClick: async () => { await signOut(); getToast().success('خارج شدی'); refresh(); },
         }));
       } else {
         status.textContent = 'وارد نشده‌ای. برای سینک بین دستگاه‌ها وارد شو.';
         holder.appendChild(createButton({
-          label: '🔑 ورود / ثبت‌نام',
+          label: 'ورود / ثبت‌نام',
           variant: BUTTON_VARIANTS.PRIMARY,
           onClick: () => { getRouter().navigate('auth'); },
         }));
@@ -161,8 +162,8 @@ function row(o: { icon: string; bg: string; title: string; desc?: string; contro
   const r = document.createElement('div');
   r.className = 'ios-list-row';
   const badge = document.createElement('div');
-  badge.className = `w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0 ${o.bg}`;
-  badge.textContent = o.icon;
+  badge.className = `w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${o.bg}`;
+  badge.appendChild(createIcon(o.icon, 18));
   const txt = document.createElement('div');
   txt.className = 'flex-1 min-w-0';
   const t = document.createElement('div');
@@ -181,14 +182,17 @@ function row(o: { icon: string; bg: string; title: string; desc?: string; contro
   return r;
 }
 
-function section(icon: string, title: string, body: HTMLElement): HTMLElement {
+function section(iconName: string, title: string, body: HTMLElement): HTMLElement {
   const box = document.createElement('div');
   box.className = 'bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-3';
   const h = document.createElement('div');
   h.className = 'flex items-center gap-2';
-  const ic = document.createElement('span'); ic.className = 'text-xl'; ic.textContent = icon;
-  const tt = document.createElement('h3'); tt.className = 'font-bold text-slate-100'; tt.textContent = title;
-  h.appendChild(ic); h.appendChild(tt);
+  const ic = createIcon(iconName, 20, 'text-primary-400');
+  const tt = document.createElement('h3');
+  tt.className = 'font-bold text-slate-100';
+  tt.textContent = title;
+  h.appendChild(ic);
+  h.appendChild(tt);
   box.appendChild(h);
   box.appendChild(body);
   return box;
@@ -215,19 +219,24 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
 
     const header = document.createElement('div');
     header.className = 'text-center space-y-2';
-    const em = document.createElement('div'); em.className = 'text-6xl'; em.textContent = '⚙️';
-    const t = document.createElement('h1'); t.className = 'text-3xl font-black text-slate-100'; t.textContent = 'تنظیمات';
-    header.appendChild(em); header.appendChild(t);
+    const em = document.createElement('div');
+    em.className = 'text-primary-400 flex justify-center';
+    em.appendChild(createIcon('settings', 64));
+    const t = document.createElement('h1');
+    t.className = 'text-3xl font-black text-slate-100';
+    t.textContent = 'تنظیمات';
+    header.appendChild(em);
+    header.appendChild(t);
     wrap.appendChild(header);
 
-    wrap.appendChild(section('💎', 'اشتراک پریمیوم', buildSubscription()));
-    wrap.appendChild(section('🎨', 'ظاهر', buildAppearance()));
-    wrap.appendChild(section('👤', 'حساب کاربری', buildAccount()));
-    wrap.appendChild(section('🔄', 'همگام‌سازی', buildSync()));
-    wrap.appendChild(section('📝', 'یادداشت‌ها', buildNotes()));
-    wrap.appendChild(section('🤖', 'هوش مصنوعی', buildAI()));
-    wrap.appendChild(section('💾', 'داده‌ها و پشتیبان', buildData()));
-    wrap.appendChild(section('ℹ️', 'درباره', buildAbout()));
+    wrap.appendChild(section('award', 'اشتراک پریمیوم', buildSubscription()));
+    wrap.appendChild(section('palette', 'ظاهر', buildAppearance()));
+    wrap.appendChild(section('user', 'حساب کاربری', buildAccount()));
+    wrap.appendChild(section('sync', 'همگام‌سازی', buildSync()));
+    wrap.appendChild(section('notes', 'یادداشت‌ها', buildNotes()));
+    wrap.appendChild(section('sparkles', 'هوش مصنوعی', buildAI()));
+    wrap.appendChild(section('database', 'داده‌ها و پشتیبان', buildData()));
+    wrap.appendChild(section('info', 'درباره', buildAbout()));
     return wrap;
   }
 
@@ -245,7 +254,7 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
       const status = document.createElement('div');
       status.className = 'flex items-center gap-2';
       status.innerHTML = `
-        <span class="text-2xl">💎</span>
+        <span class="text-primary-400 flex items-center">${iconHTML('award', 24)}</span>
         <div>
           <div class="font-bold text-green-300">پریمیوم فعال</div>
           <div class="text-xs text-slate-400">پلن ${plan ? plan.label : '—'} · ${toPersianDigits(String(info.daysLeft))} روز مانده</div>
@@ -256,13 +265,13 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
       const btns = document.createElement('div');
       btns.className = 'grid grid-cols-2 gap-2';
       btns.appendChild(createButton({
-        label: '🔄 تمدید',
+        label: 'تمدید',
         variant: BUTTON_VARIANTS.PRIMARY,
         size: BUTTON_SIZES.SM,
        onClick: () => { void getRouter().navigate('premium'); },
       }));
       btns.appendChild(createButton({
-        label: '📋 پلن‌ها',
+        label: 'پلن‌ها',
         variant: BUTTON_VARIANTS.GHOST,
         size: BUTTON_SIZES.SM,
         onClick: () => { void getRouter().navigate('premium'); },
@@ -275,7 +284,7 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
       card.className = 'bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 space-y-3';
       card.innerHTML = `
         <div class="flex items-center gap-2">
-          <span class="text-2xl">🎁</span>
+          <span class="text-primary-400 flex items-center">${iconHTML('gift', 24)}</span>
           <div>
             <div class="font-bold text-primary-300">دوره آزمایشی فعال</div>
             <div class="text-xs text-slate-400">${toPersianDigits(String(info.trialDaysLeft))} روز مانده</div>
@@ -283,7 +292,7 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
         </div>
       `;
       const buyBtn = createButton({
-        label: '💎 خرید پریمیوم',
+        label: 'خرید پریمیوم',
         variant: BUTTON_VARIANTS.PRIMARY,
         size: BUTTON_SIZES.SM,
         onClick: () => { void getRouter().navigate('premium'); },
@@ -296,12 +305,12 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
       const card = document.createElement('div');
       card.className = 'bg-slate-900/50 border border-slate-700 rounded-xl p-4 space-y-3 text-center';
       card.innerHTML = `
-        <div class="text-3xl">🆓</div>
+        <div class="flex justify-center text-primary-400">${iconHTML('user', 32)}</div>
         <div class="text-sm text-slate-300">نسخه رایگان</div>
         <div class="text-xs text-slate-500">با پریمیوم، سهمیه نامحدود AI و همگام‌سازی کامل داشته باشید</div>
       `;
       const upBtn = createButton({
-        label: '💎 ارتقا به پریمیوم',
+        label: 'ارتقا به پریمیوم',
         variant: BUTTON_VARIANTS.PRIMARY,
         size: BUTTON_SIZES.SM,
         onClick: () => { void getRouter().navigate('premium'); },
@@ -326,7 +335,9 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
       card.className = `border rounded-xl p-4 text-center transition-all ${
         active ? 'bg-primary-500/20 border-primary-500 ring-1 ring-primary-500/50' : 'bg-slate-900/50 border-slate-700 hover:border-slate-600'
       }`;
-      const ic = document.createElement('div'); ic.className = 'text-3xl mb-2'; ic.textContent = th.icon;
+      const ic = document.createElement('div');
+      ic.className = 'text-primary-400 flex justify-center mb-2';
+      ic.innerHTML = iconHTML(th.icon === '🌙' ? 'moon' : 'sun', 32);
       const lb = document.createElement('div'); lb.className = 'text-sm font-bold text-slate-100'; lb.textContent = th.label;
       const ds = document.createElement('div'); ds.className = 'text-xs text-slate-500 mt-1'; ds.textContent = th.desc;
       const chk = document.createElement('div'); chk.className = `mt-2 text-xs ${active ? 'text-primary-300' : 'text-transparent'}`; chk.textContent = '✓ انتخاب شده';
@@ -346,7 +357,7 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
     const g = document.createElement('div');
     g.className = 'ios-grouped';
     g.appendChild(row({
-      icon: '📝', bg: 'bg-primary-500/20',
+      icon: 'notes', bg: 'bg-primary-500/20',
       title: 'ذخیره خودکار پیش‌نویس',
       desc: 'اگر ناگهانی ببندی، متن‌ات بازیابی می‌شود',
       control: createSwitch(readAppSettings().autoSaveDraft !== false, (v) => {
@@ -379,10 +390,10 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
     box.appendChild(ql); box.appendChild(qInput);
 
     const save = createButton({
-      label: '💾 ذخیره کلیدها', variant: BUTTON_VARIANTS.PRIMARY, size: BUTTON_SIZES.SM,
+      label: 'ذخیره کلیدها', variant: BUTTON_VARIANTS.PRIMARY, size: BUTTON_SIZES.SM,
       onClick: () => {
         saveUserKeys(gInput.value.trim(), qInput.value.trim());
-        getToast().success('کلیدها ذخیره شد 🤖');
+        getToast().success('کلیدها ذخیره شد');
         render();
       },
     });
@@ -409,7 +420,7 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
     const btns = document.createElement('div');
     btns.className = 'grid grid-cols-2 gap-3';
     btns.appendChild(createButton({
-      label: '📥 خروجی (JSON)', variant: BUTTON_VARIANTS.SECONDARY,
+      label: 'خروجی (JSON)', variant: BUTTON_VARIANTS.SECONDARY,
       onClick: async () => {
         try {
           const json = await getDatabase().exportData();
@@ -420,12 +431,12 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
           a.download = `daneshyar-backup-${new Date().toISOString().slice(0, 10)}.json`;
           a.click();
           URL.revokeObjectURL(url);
-          getToast().success('فایل پشتیبان دانلود شد 💾');
+          getToast().success('فایل پشتیبان دانلود شد ');
         } catch { getToast().error('خطا در خروجی'); }
       },
     }));
     btns.appendChild(createButton({
-      label: '📤 بازیابی', variant: BUTTON_VARIANTS.GHOST,
+      label: 'بازیابی', variant: BUTTON_VARIANTS.GHOST,
       onClick: async () => {
         const input = document.createElement('input');
         input.type = 'file'; input.accept = 'application/json';
@@ -437,7 +448,7 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
           try {
             const text = await f.text();
             await getDatabase().importData(text);
-            getToast().success('داده‌ها بازیابی شد ✅');
+            getToast().success('داده‌ها بازیابی شد ');
           } catch { getToast().error('فایل پشتیبان نامعتبر است'); }
         });
         input.click();
@@ -451,27 +462,27 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
   function buildAbout(): HTMLElement {
     const g = document.createElement('div');
     g.className = 'ios-grouped';
-    g.appendChild(row({ icon: '🎓', bg: 'bg-accent-500/20', title: 'دانش‌یار پرو', desc: `نسخه ${toPersianDigits('1.0.0-beta.1')} · دستیار مطالعه‌ی هوشمند`, control: document.createElement('span') }));
+    g.appendChild(row({ icon: 'books', bg: 'bg-accent-500/20', title: 'دانش‌یار پرو', desc: `نسخه ${toPersianDigits('1.0.0-beta.1')} · دستیار مطالعه‌ی هوشمند`, control: document.createElement('span') }));
 
     // لینک‌های قانونی
     const legalLinks: { id: string; icon: string; label: string }[] = [
-      { id: 'terms', icon: '📜', label: 'شرایط استفاده' },
-      { id: 'privacy', icon: '🔒', label: 'حریم خصوصی' },
-      { id: 'refund', icon: '💰', label: 'سیاست بازپرداخت' },
+      { id: 'terms', icon: 'info', label: 'شرایط استفاده' },
+      { id: 'privacy', icon: 'shield', label: 'حریم خصوصی' },
+      { id: 'refund', icon: 'creditcard', label: 'سیاست بازپرداخت' },
     ];
     for (const link of legalLinks) {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'ios-list-row w-full text-start';
       const badge = document.createElement('div');
-      badge.className = 'w-9 h-9 rounded-lg flex items-center justify-center text-lg bg-slate-700/50';
-      badge.textContent = link.icon;
+      badge.className = 'w-9 h-9 rounded-lg flex items-center justify-center bg-slate-700/50';
+      badge.appendChild(createIcon(link.icon, 18));
       const txt = document.createElement('div');
       txt.className = 'flex-1 text-sm text-slate-200';
       txt.textContent = link.label;
       const arrow = document.createElement('span');
-      arrow.className = 'text-slate-500';
-      arrow.textContent = '←';
+      arrow.className = 'text-slate-500 flex items-center';
+      arrow.innerHTML = iconHTML('chevron-left', 16);
       btn.appendChild(badge);
       btn.appendChild(txt);
       btn.appendChild(arrow);
