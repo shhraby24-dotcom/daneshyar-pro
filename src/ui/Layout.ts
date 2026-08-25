@@ -55,6 +55,7 @@ const NAV_ITEMS: NavItem[] = [
   { route: 'pomodoro', icon: 'pomodoro', label: 'پومودورو' },
   { route: 'challenges', icon: 'challenges', label: 'چالش‌ها' },
   { route: 'premium', icon: 'premium', label: 'پریمیوم' },
+  { route: 'invite', icon: 'invite', label: 'دعوت دوستان' },
   { route: 'auth', icon: 'auth', label: 'حساب کاربری' },
   { route: 'settings', icon: 'settings', label: 'تنظیمات' },
 ];
@@ -75,6 +76,7 @@ const MORE_ITEMS: NavItem[] = [
   { route: 'calculator', icon: 'calculator', label: 'ماشین‌حساب', soon: true },
   { route: 'challenges', icon: 'challenges', label: 'چالش‌ها' },
   { route: 'premium', icon: 'premium', label: 'پریمیوم' },
+  { route: 'invite', icon: 'invite', label: 'دعوت دوستان' },
   { route: 'auth', icon: 'auth', label: 'حساب کاربری' },
   { route: 'settings', icon: 'settings', label: 'تنظیمات' },
 ];
@@ -139,7 +141,7 @@ export class Layout {
         <div class="flex flex-col h-full">
           <div class="p-6 border-b border-slate-700">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-2xl shadow-lg">🎓</div>
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500/20 to-accent-500/20 border border-slate-700 flex items-center justify-center text-accent-300 shadow-lg">${iconHTML('books', 22)}</div>
               <div>
                 <h1 class="text-lg font-bold">دانش‌یار پرو</h1>
                 <p class="text-xs text-slate-400">نسخه ${version}</p>
@@ -156,10 +158,10 @@ export class Layout {
             </div>
           </div>
           <div class="p-4 border-t border-slate-700">
-            <div class="flex flex-wrap gap-2 text-xs text-slate-500">
-              <button data-legal="terms" class="hover:text-slate-300 transition">📜 شرایط</button>
-              <button data-legal="privacy" class="hover:text-slate-300 transition">🔒 حریم خصوصی</button>
-              <button data-legal="refund" class="hover:text-slate-300 transition">💰 بازپرداخت</button>
+            <div class="flex items-center justify-between gap-1 text-[10px] text-slate-500">
+              <button data-legal="terms" class="inline-flex items-center gap-1 whitespace-nowrap hover:text-slate-300 transition">${iconHTML('notes', 12)} شرایط</button>
+              <button data-legal="privacy" class="inline-flex items-center gap-1 whitespace-nowrap hover:text-slate-300 transition">${iconHTML('shield', 12)} حریم خصوصی</button>
+              <button data-legal="refund" class="inline-flex items-center gap-1 whitespace-nowrap hover:text-slate-300 transition">${iconHTML('creditcard', 12)} بازپرداخت</button>
             </div>
           </div>
         </div>
@@ -177,15 +179,15 @@ export class Layout {
            <div class="relative">
              <input id="global-search" type="text" readonly placeholder="جستجو در همه‌چیز... (Ctrl+K)"
                        class="w-full bg-slate-800/80 border border-slate-700 rounded-xl py-2.5 ps-10 pe-4 text-base focus:outline-none focus:border-primary-500 transition" />
-                <span class="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">🔍</span>
+                <span class="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none flex items-center">${iconHTML('search', 18)}</span>
               </div>
             </div>
             <div class="hidden md:flex items-center gap-2 text-sm text-slate-400 whitespace-nowrap">
-              <span>📅</span><span>${today}</span>
+              <span class="flex items-center">${iconHTML('calendar', 16)}</span><span>${today}</span>
             </div>
             <div class="flex items-center gap-1">
-              <button id="export-btn" aria-label="خروجی" title="خروجی" class="hidden sm:flex min-w-11 min-h-11 items-center justify-center rounded-lg hover:bg-slate-800 transition">📥</button>
-              <button id="import-btn" aria-label="ورودی" title="ورودی" class="hidden sm:flex min-w-11 min-h-11 items-center justify-center rounded-lg hover:bg-slate-800 transition">📤</button>
+              <button id="export-btn" aria-label="خروجی" title="خروجی" class="hidden sm:flex min-w-11 min-h-11 items-center justify-center rounded-lg hover:bg-slate-800 transition">${iconHTML('download', 20)}</button>
+              <button id="import-btn" aria-label="ورودی" title="ورودی" class="hidden sm:flex min-w-11 min-h-11 items-center justify-center rounded-lg hover:bg-slate-800 transition">${iconHTML('upload', 20)}</button>
             </div>
           </div>
         </header>
