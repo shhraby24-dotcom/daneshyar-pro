@@ -132,12 +132,23 @@ function createStreakFlame(stats: StreakStats | null): HTMLElement {
     else if (wrap.isConnected && alive) anim.play();
   };
   document.addEventListener('visibilitychange', onVis);
-
+  // ⚡ هنگام اسکرول، رندر متوقف تا صفحه روان بماند؛ بعد از توقف اسکرول، ادامه
+  let scrollTimer: number | undefined;
+  const onScroll = (): void => {
+    anim.pause();
+    window.clearTimeout(scrollTimer);
+    scrollTimer = window.setTimeout(() => {
+      if (!document.hidden && wrap.isConnected && alive) anim.play();
+    }, 200);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
   // پاک‌سازی کامل هنگام حذف (جلوگیری از نشت حافظه)
   const mo = new MutationObserver(() => {
     if (!wrap.isConnected) {
       io.disconnect();
       mo.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      window.clearTimeout(scrollTimer);
       document.removeEventListener('visibilitychange', onVis);
       anim.destroy();
     }
