@@ -281,3 +281,4 @@ export function renderIconPreview(): HTMLElement {
   container.appendChild(grid);
   return container;
 }
+export { ICON_MAP };
