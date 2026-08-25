@@ -17,8 +17,8 @@
  */
 import { getInstance as getLogger } from '@/core/Logger';
 import { createElement } from 'lucide';
-import type { IconNode } from 'lucide';
 import {
+  type IconNode,
   // ناوبری اصلی
   Home,
   FileText,
@@ -118,6 +118,8 @@ const ICON_MAP: Record<string, IconNode> = {
   globe: Globe,
   calculator: Calculator,
   books: BookOpen,
+  target: Target,
+  layers: Layers,
 
   // تم
   moon: Moon,
