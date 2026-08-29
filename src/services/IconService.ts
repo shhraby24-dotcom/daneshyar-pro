@@ -35,6 +35,7 @@ import {
   Globe,
   Calculator,
   BookOpen,
+  Pin, Tag,
   // تم
   Moon,
   Sun,
@@ -120,6 +121,8 @@ const ICON_MAP: Record<string, IconNode> = {
   books: BookOpen,
   target: Target,
   layers: Layers,
+  pin: Pin,
+  tag: Tag,
 
   // تم
   moon: Moon,

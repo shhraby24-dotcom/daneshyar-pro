@@ -2,16 +2,18 @@
  * ============================================================
  * دانش‌یار پرو - جستجوی سراسری (Command Palette)
  * ============================================================
- * 🔍 جستجوی زنده در یادداشت‌ها + فلش‌کارت‌ها + آزمون‌ها
+ * 🔎 جستجوی زنده در یادداشت‌ها + فلش‌کارت‌ها + آزمون‌ها
  * ⌨️ ناوبری کیبورد (↑↓ / Enter / Esc) + هایلایت امن
  * 💎 ردیف پریمیوم «جستجوی معنایی AI» (قلاب پول‌سازی)
+ * ✅ v2: بدون ایموجی — آیکون‌های Lucide
  * @module ui/components/GlobalSearch
- * @version 1.0.0
+ * @version 2.0.0
  */
 import { getInstance as getLogger } from '@/core/Logger';
 import { getDatabase, type DbNote, type DbFlashcard, type DbQuizResult } from '@/core/Database';
 import { getRouter } from '@/core/Router';
 import { toPersianDigits } from '@/utils/dateFormatter';
+import { iconHTML } from '@/services/IconService';
 
 const logger = getLogger().module('GlobalSearch');
 
@@ -41,20 +43,19 @@ function appendHighlighted(el: HTMLElement, text: string, query: string): void {
 export function openSearchPalette(): void {
   if (overlay) return;
   const router = getRouter();
-
   overlay = document.createElement('div');
   overlay.className = 'search-overlay';
   overlay.innerHTML = `
     <div class="search-panel" role="dialog" aria-modal="true" aria-label="جستجوی سراسری">
       <div class="search-head">
-        <span class="search-head-icon">🔍</span>
+        <span class="search-head-icon flex items-center">${iconHTML('search', 18)}</span>
         <input id="search-input" class="search-input" placeholder="جستجو در یادداشت‌ها، فلش‌کارت‌ها و آزمون‌ها..." autocomplete="off" />
-        <button id="search-close" class="search-close" aria-label="بستن">✕</button>
+        <button id="search-close" class="search-close flex items-center justify-center" aria-label="بستن">${iconHTML('close', 18)}</button>
       </div>
       <div id="search-results" class="search-results"></div>
       <div class="search-foot">
         <span>↑↓ حرکت</span><span>↵ باز کردن</span><span>Esc بستن</span>
-        <span class="search-premium">💎 جستجوی معنایی AI — به‌زودی</span>
+        <span class="search-premium flex items-center gap-1">${iconHTML('sparkles', 14)} جستجوی معنایی AI — به‌زودی</span>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -69,7 +70,6 @@ export function openSearchPalette(): void {
   let selected = -1;
 
   const close = (): void => { if (overlay) { overlay.remove(); overlay = null; } };
-
   overlay.addEventListener('mousedown', (e) => { if (e.target === overlay) close(); });
   closeBtn.addEventListener('click', close);
 
@@ -103,17 +103,21 @@ export function openSearchPalette(): void {
     selected = (selected + d + flat.length) % flat.length;
     paint();
   }
+
   function paint(): void {
     flat.forEach((f, i) => f.el.classList.toggle('selected', i === selected));
     const cur = flat[selected];
     if (cur) cur.el.scrollIntoView({ block: 'nearest' });
   }
 
-  function group(title: string): HTMLElement {
+  function group(title: string, icon: string): HTMLElement {
     const g = document.createElement('div');
     const h = document.createElement('div');
-    h.className = 'search-group-title';
-    h.textContent = title;
+    h.className = 'search-group-title flex items-center gap-1.5';
+    h.innerHTML = iconHTML(icon, 14);
+    const t = document.createElement('span');
+    t.textContent = title;
+    h.appendChild(t);
     g.appendChild(h);
     resultsEl.appendChild(g);
     return g;
@@ -123,7 +127,9 @@ export function openSearchPalette(): void {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'search-item';
-    const ic = document.createElement('span'); ic.className = 'search-item-icon'; ic.textContent = icon;
+    const ic = document.createElement('span');
+    ic.className = 'search-item-icon flex items-center';
+    ic.innerHTML = iconHTML(icon, 18);
     const body = document.createElement('div'); body.className = 'search-item-body';
     const t = document.createElement('div'); t.className = 'search-item-title'; appendHighlighted(t, title, input.value);
     const s = document.createElement('div'); s.className = 'search-item-snippet'; appendHighlighted(s, snippet, input.value);
@@ -146,7 +152,6 @@ export function openSearchPalette(): void {
       return;
     }
     const ql = query.toLowerCase();
-
     const notes = data.notes.filter((n) =>
       (n.title || '').toLowerCase().includes(ql) ||
       (n.content || '').toLowerCase().includes(ql) ||
@@ -158,25 +163,25 @@ export function openSearchPalette(): void {
     const quizzes = data.quizzes.filter((x) => (x.title || '').toLowerCase().includes(ql)).slice(0, 4);
 
     if (notes.length === 0 && cards.length === 0 && quizzes.length === 0) {
-      resultsEl.innerHTML = '<div class="search-empty">😕 نتیجه‌ای یافت نشد</div>';
+      resultsEl.innerHTML = `<div class="search-empty">${iconHTML('search', 24)}<br>نتیجه‌ای یافت نشد</div>`;
       return;
     }
 
     if (notes.length > 0) {
-      const g = group('📚 یادداشت‌ها');
-      notes.forEach((n) => addItem(g, '📝', n.title || 'بدون عنوان', (n.content || '').slice(0, 80), n.category || 'سایر', () => {
+      const g = group('یادداشت‌ها', 'notes');
+      notes.forEach((n) => addItem(g, 'notes', n.title || 'بدون عنوان', (n.content || '').slice(0, 80), n.category || 'سایر', () => {
         sessionStorage.setItem('pendingOpenNote', n.id);
         router.navigate('notes');
         close();
       }));
     }
     if (cards.length > 0) {
-      const g = group('🃏 فلش‌کارت‌ها');
-      cards.forEach((c) => addItem(g, '🃏', c.front, c.back, c.deck || '', () => { router.navigate('flashcards'); close(); }));
+      const g = group('فلش‌کارت‌ها', 'flashcards');
+      cards.forEach((c) => addItem(g, 'flashcards', c.front, c.back, c.deck || '', () => { router.navigate('flashcards'); close(); }));
     }
     if (quizzes.length > 0) {
-      const g = group('📊 آزمون‌ها');
-      quizzes.forEach((x) => addItem(g, '📊', x.title || 'آزمون', `نمره: ${toPersianDigits(String(x.percentage ?? 0))}٪`, '', () => { router.navigate('quiz'); close(); }));
+      const g = group('آزمون‌ها', 'quiz');
+      quizzes.forEach((x) => addItem(g, 'quiz', x.title || 'آزمون', `نمره: ${toPersianDigits(String(x.percentage ?? 0))}٪`, '', () => { router.navigate('quiz'); close(); }));
     }
     selected = 0;
     paint();
