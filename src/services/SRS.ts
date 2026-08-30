@@ -1,50 +1,30 @@
 /**
  * ============================================================
- * دانش‌یار پرو - سیستم Spaced Repetition (SRS)
+ * دانش‌یار پرو - SRS نسخه‌ی ۲ (مرور هوشمند تطبیقی)
  * ============================================================
- *
- * پیاده‌سازی الگوریتم SM-2 برای یادگیری بهینه فلش‌کارت‌ها
- *
- * ✅ الگوریتم SM-2 استاندارد
- * ✅ ضرایب تطبیقی برای محتوای فارسی
- * ✅ پیش‌بینی ۷ روزه مرورهای آینده
- * ✅ تحلیل کارایی با پیشنهادات هوشمند
- * ✅ محاسبه maturity و retention rate
- *
+ * 🧠 یادگیری مجدد درون‌روزی: کارت ضعیف همان روز برمی‌گردد [۱۰دقیقه→۱ساعت→۱روز]
+ * 🎓 فارغ‌التحصیلی: ۳ درست متوالی + فاصله≥۲۱ روز ⇒ برای همیشه از چرخه‌ی ضعف خارج
+ * 📉 منحنی فراموشی: صف مرور بر اساس پرریسک‌ترین کارت‌ها (R = 0.5^(t/S))
+ * 🔀 Interleaving موضوع‌ها + Fuzz ±۵٪ + سقف بار روزانه (بهینه)
+ * 🎚️ Ease تطبیقی [۱.۳–۲.۸] با بازیابی کندتر برای کارت‌های سخت
+ * ⚡ سازگار با همه‌ی APIهای قبلی (هیچ viewای نمی‌شکند)
  * @module services/SRS
- * @version 1.0.0-beta.1
+ * @version 2.0.0
  */
-
 import { getInstance as getLogger } from '@/core/Logger';
 
 const logger = getLogger().module('SRS');
 
 // ============================================================
-// Types و Interfaces
+// Types
 // ============================================================
-
-/**
- * سطوح کیفیت پاسخ (0-5)
- */
 export const QUALITY_LEVELS = {
-  BLACKOUT: 0,
-  INCORRECT: 1,
-  HARD: 2,
-  CORRECT_HARD: 3,
-  CORRECT: 4,
-  PERFECT: 5,
+  BLACKOUT: 0, INCORRECT: 1, HARD: 2, CORRECT_HARD: 3, CORRECT: 4, PERFECT: 5,
 } as const;
-
 export type QualityLevel = (typeof QUALITY_LEVELS)[keyof typeof QUALITY_LEVELS];
 
-/**
- * انواع محتوای آموزشی
- */
 export type ConceptType = 'math' | 'definition' | 'formula' | 'concept' | 'fact' | 'default';
 
-/**
- * یک فلش‌کارت
- */
 export interface Flashcard {
   id: string;
   front: string;
@@ -60,525 +40,289 @@ export interface Flashcard {
   lastReview: string | null;
   lastQuality: number | null;
   totalReviews: number;
+  // ── فیلدهای v2 (اختیاری، سازگار عقب‌رو) ──
+  relearnStep?: number | null;   // ایندکس پله‌ی یادگیری مجدد؛ null = بیرون
+  consecutiveCorrect?: number;   // درست‌های متوالی
+  mature?: boolean;              // فارغ‌التحصیل‌شده
+  difficulty?: number;           // 0..1 (AI یا هیورستیک)
 }
 
-/**
- * داده‌های ورودی برای ساخت فلش‌کارت
- */
 export interface CreateCardData {
   id?: string;
   front: string;
   back: string;
   topic?: string;
   conceptType?: ConceptType;
+  difficulty?: number;
 }
 
-/**
- * تنظیمات SRS
- */
 export interface SRSConfig {
-  initialEase: number;
-  minEase: number;
-  maxInterval: number;
-  graduationInterval: number;
-  easyInterval: number;
-  learningSteps: number[];
-  graduatingInterval: number;
-  easyIntervalDays: number;
+  initialEase: number; minEase: number; maxEase: number; maxInterval: number;
 }
-
-/**
- * پیش‌بینی مرور آینده
- */
-export interface ForecastEntry {
-  date: string;
-  count: number;
-}
-
-/**
- * آمار SRS
- */
+export interface ForecastEntry { date: string; count: number; }
 export interface SRSStats {
-  total: number;
-  due: number;
-  new: number;
-  learning: number;
-  reviewedToday: number;
-  retentionRate: number;
-  averageEase: number;
-  averageInterval: number;
-  forecast: ForecastEntry[];
-  maturity: number;
+  total: number; due: number; new: number; learning: number; reviewedToday: number;
+  retentionRate: number; averageEase: number; averageInterval: number;
+  forecast: ForecastEntry[]; maturity: number;
 }
-
-/**
- * پیشنهاد SRS
- */
-export interface SRSRecommendation {
-  type: 'warning' | 'info' | 'success';
-  message: string;
-  action: string;
-}
-
-/**
- * تحلیل کارایی
- */
+export interface SRSRecommendation { type: 'warning' | 'info' | 'success'; message: string; action: string; }
 export interface EfficiencyAnalysis {
-  dailyBurden: number;
-  dailyTimeMinutes: number;
-  retentionRate: number;
-  efficiency: number;
-  recommendations: SRSRecommendation[];
+  dailyBurden: number; dailyTimeMinutes: number; retentionRate: number;
+  efficiency: number; recommendations: SRSRecommendation[];
 }
-
-/**
- * پیش‌بینی زمان بهینه
- */
 export interface OptimalTimePrediction {
   status: 'overdue' | 'due_today' | 'future';
   priority: 'high' | 'medium' | 'low';
-  message: string;
-  hoursOverdue?: string;
-  hoursUntil?: string;
-  daysUntil?: number;
+  message: string; hoursOverdue?: string; hoursUntil?: string; daysUntil?: number;
 }
 
 // ============================================================
-// ضرایب تطبیقی
+// ثابت‌های هوشمند
 // ============================================================
+/** پله‌های یادگیری مجدد (دقیقه): ۱۰ دقیقه → ۱ ساعت → ۱ روز */
+export const RELEARN_STEPS_MIN = [10, 60, 1440];
+const MATURE_INTERVAL = 21;
+const GRAD_CORRECT = 3;
+const DAY_MS = 86400000;
 
 const CONTENT_MULTIPLIERS: Record<ConceptType, number> = {
-  math: 0.8,
-  definition: 1.0,
-  formula: 0.85,
-  concept: 1.1,
-  fact: 1.2,
-  default: 1.0,
+  math: 0.8, definition: 1.0, formula: 0.85, concept: 1.1, fact: 1.2, default: 1.0,
 };
 
 // ============================================================
-// کلاس اصلی SRS
+// کلاس اصلی
 // ============================================================
-
-/**
- * کلاس اصلی SpacedRepetitionSystem
- */
 export class SpacedRepetitionSystem {
   private config: SRSConfig;
-
   constructor() {
-    this.config = {
-      initialEase: 2.5,
-      minEase: 1.3,
-      maxInterval: 365,
-      graduationInterval: 1,
-      easyInterval: 4,
-      learningSteps: [1, 10],
-      graduatingInterval: 1,
-      easyIntervalDays: 4,
-    };
-
-    logger.debug('SRS initialized with SM-2 algorithm');
+    this.config = { initialEase: 2.5, minEase: 1.3, maxEase: 2.8, maxInterval: 365 };
+    logger.debug('SRS v2 initialized (adaptive spaced repetition)');
   }
 
-  /**
-   * محاسبه زمان مرور بعدی یک فلش‌کارت
-   */
+  // ── زمان مرور بعدی (هسته‌ی هوشمند) ──
   schedule(card: Flashcard, quality: number): Flashcard {
-    if (quality < 0 || quality > 5) {
-      throw new Error('کیفیت باید بین 0 تا 5 باشد');
-    }
-
+    if (quality < 0 || quality > 5) throw new Error('کیفیت باید بین 0 تا 5 باشد');
     const now = new Date();
-    const updated: Flashcard = { ...card };
+    const u: Flashcard = { ...card };
+    u.lastReview = now.toISOString();
+    u.lastQuality = quality;
+    u.totalReviews = (u.totalReviews ?? 0) + 1;
+    const difficulty = u.difficulty ?? 0.5;
 
-    // اگر کیفیت کمتر از 3 باشد (پاسخ نادرست یا سخت)
+    // ── پاسخ نادرست → ورود به یادگیری مجدد درون‌روزی ──
     if (quality < 3) {
-      updated.repetitions = 0;
-      updated.interval = 1;
-      updated.lapses = (updated.lapses ?? 0) + 1;
-
-      logger.debug('کارت reset شد', {
-        cardId: card.id,
-        quality,
-        lapses: updated.lapses,
-      });
-    } else {
-      // پاسخ صحیح
-      if (updated.repetitions === 0) {
-        updated.interval = 1;
-      } else if (updated.repetitions === 1) {
-        updated.interval = 6;
-      } else {
-        updated.interval = Math.round(updated.interval * updated.ease);
-      }
-      updated.repetitions = (updated.repetitions ?? 0) + 1;
+      u.lapses = (u.lapses ?? 0) + 1;
+      u.consecutiveCorrect = 0;
+      u.mature = false;
+      u.relearnStep = 0;
+      u.ease = Math.max(this.config.minEase, (u.ease ?? this.config.initialEase) - 0.2);
+      u.nextReview = new Date(now.getTime() + (RELEARN_STEPS_MIN[0] ?? 10) * 60000).toISOString();
+      logger.debug('کارت وارد یادگیری مجدد شد', { cardId: card.id, lapses: u.lapses });
+      return u;
     }
 
-    // به‌روزرسانی ease factor
-    const easeChange = 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02);
-    updated.ease = Math.max(
-      this.config.minEase,
-      (updated.ease ?? this.config.initialEase) + easeChange
-    );
+    // ── پاسخ درست ──
+    u.consecutiveCorrect = (u.consecutiveCorrect ?? 0) + 1;
 
-    // اعمال ضریب تطبیقی بر اساس نوع محتوا
-    const contentMultiplier = this._getContentMultiplier(card.conceptType);
-    const adjustedInterval = Math.round(updated.interval * contentMultiplier);
+    if (u.relearnStep != null) {
+      const next = u.relearnStep + 1;
+      if (next >= RELEARN_STEPS_MIN.length) {
+        // پایان پله‌ها → خروج از یادگیری مجدد
+        u.relearnStep = null;
+        u.repetitions = 1;
+        u.interval = 1;
+      } else {
+        u.relearnStep = next;
+        u.nextReview = new Date(now.getTime() + (RELEARN_STEPS_MIN[next] ?? 1440) * 60000).toISOString();
+        return u;
+      }
+    } else {
+      // رشد SM-2 با Fuzz
+      if ((u.repetitions ?? 0) === 0) u.interval = 1;
+      else if ((u.repetitions ?? 0) === 1) u.interval = 6;
+      else {
+        let iv = Math.round((u.interval || 1) * (u.ease || 2.5));
+        if (iv > 2) iv = Math.round(iv * (0.95 + Math.random() * 0.1));
+        u.interval = iv;
+      }
+      u.repetitions = (u.repetitions ?? 0) + 1;
+    }
 
-    // محدود کردن به حداکثر فاصله
-    updated.interval = Math.min(adjustedInterval, this.config.maxInterval);
+    // ── Ease: افت سریع در lapse (بالا)، بازیابی آرام در درست؛ کارت سخت کندتر بالا می‌رود ──
+    const gain = (0.05 + (quality - 3) * 0.05) * (1 - difficulty * 0.5);
+    u.ease = Math.min(this.config.maxEase, Math.max(this.config.minEase, (u.ease ?? this.config.initialEase) + gain));
 
-    // محاسبه تاریخ مرور بعدی
-    const nextReview = new Date(now);
-    nextReview.setDate(nextReview.getDate() + updated.interval);
-    updated.nextReview = nextReview.toISOString();
+    // ── ضریب نوع محتوا + سقف ──
+    const mult = CONTENT_MULTIPLIERS[u.conceptType ?? 'default'] ?? 1.0;
+    u.interval = Math.min(Math.max(1, Math.round((u.interval || 1) * mult)), this.config.maxInterval);
 
-    // به‌روزرسانی آمار
-    updated.lastReview = now.toISOString();
-    updated.lastQuality = quality;
-    updated.totalReviews = (updated.totalReviews ?? 0) + 1;
+    // ── فارغ‌التحصیلی: قوی شد ⇒ برای همیشه از چرخه‌ی ضعف خارج ──
+    if ((u.consecutiveCorrect ?? 0) >= GRAD_CORRECT && (u.interval ?? 0) >= MATURE_INTERVAL) {
+      u.mature = true;
+      logger.debug('کارت فارغ‌التحصیل شد', { cardId: card.id, interval: u.interval });
+    }
 
-    logger.debug('کارت schedule شد', {
-      cardId: card.id,
-      quality,
-      interval: updated.interval,
-      ease: updated.ease.toFixed(2),
-      nextReview: updated.nextReview,
-    });
-
-    return updated;
+    u.nextReview = this._daysFrom(now, u.interval || 1);
+    return u;
   }
 
-  /**
-   * دریافت فلش‌کارت‌های آماده مرور
-   */
-  getDueCards(flashcards: Flashcard[]): Flashcard[] {
+  // ── احتمال فراموشی (منحنی فراموشی؛ نصف‌عمر = interval) ──
+  getRetention(card: Flashcard): number {
+    if (!card.lastReview) return 1;
+    const elapsed = (Date.now() - new Date(card.lastReview).getTime()) / DAY_MS;
+    const stability = Math.max(card.interval || 1, 1);
+    return Math.pow(0.5, elapsed / stability);
+  }
+
+  // ── کارت ضعیف؟ (در یادگیری مجدد، یا lapse بدون فارغ‌التحصیلی) ──
+  isWeak(card: Flashcard): boolean {
+    return card.relearnStep != null || ((card.lapses ?? 0) > 0 && card.mature !== true);
+  }
+
+  // ── صف هوشمند: relearn اول، بعد due به‌ترتیب ریسک با interleaving، بعد جدید (با سقف) ──
+  buildSmartQueue(cards: Flashcard[], opts: { newLimit?: number; dueCap?: number } = {}): Flashcard[] {
+    const newLimit = opts.newLimit ?? 20;
+    const dueCap = opts.dueCap ?? 100;
     const now = new Date();
-    return flashcards.filter((card) => {
-      const nextReview = new Date(card.nextReview);
-      return nextReview <= now;
-    });
+    const isDue = (c: Flashcard): boolean => new Date(c.nextReview) <= now;
+    const relearn = cards.filter((c) => c.relearnStep != null && isDue(c));
+    const due = cards
+      .filter((c) => c.relearnStep == null && isDue(c))
+      .sort((a, b) => this.getRetention(a) - this.getRetention(b))
+      .slice(0, dueCap);
+    const fresh = this.getNewCards(cards).sort(() => Math.random() - 0.5).slice(0, newLimit);
+    return [...relearn, ...this._interleaveTopics(due), ...fresh];
   }
 
-  /**
-   * دریافت فلش‌کارت‌های جدید (هرگز مرور نشده)
-   */
-  getNewCards(flashcards: Flashcard[]): Flashcard[] {
-    return flashcards.filter((card) => !card.lastReview);
+  getDueCards(cards: Flashcard[]): Flashcard[] {
+    const now = new Date();
+    return cards.filter((c) => new Date(c.nextReview) <= now);
+  }
+  getNewCards(cards: Flashcard[]): Flashcard[] {
+    return cards.filter((c) => !c.lastReview);
+  }
+  getLearningCards(cards: Flashcard[]): Flashcard[] {
+    return cards.filter((c) => c.relearnStep != null || ((c.repetitions ?? 0) < 2 && !!c.lastReview));
   }
 
-  /**
-   * دریافت فلش‌کارت‌های در حال یادگیری
-   */
-  getLearningCards(flashcards: Flashcard[]): Flashcard[] {
-    return flashcards.filter(
-      (card) =>
-        card.repetitions !== undefined &&
-        card.repetitions < 2 &&
-        card.lastReview
-    );
-  }
-
-  /**
-   * محاسبه آمار مرور
-   */
-  getStats(flashcards: Flashcard[]): SRSStats {
+  getStats(cards: Flashcard[]): SRSStats {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    const due = this.getDueCards(flashcards);
-    const newCards = this.getNewCards(flashcards);
-    const learning = this.getLearningCards(flashcards);
-
-    // فلش‌کارت‌های مرور شده امروز
-    const reviewedToday = flashcards.filter((card) => {
-      if (!card.lastReview) return false;
-      const reviewDate = new Date(card.lastReview);
-      return reviewDate >= today;
-    });
-
-    // محاسبه retention rate
-    const totalReviews = flashcards.reduce(
-      (sum, c) => sum + (c.totalReviews ?? 0),
-      0
-    );
-    const lapses = flashcards.reduce((sum, c) => sum + (c.lapses ?? 0), 0);
-    const retentionRate =
-      totalReviews > 0
-        ? parseFloat((((totalReviews - lapses) / totalReviews) * 100).toFixed(1))
-        : 0;
-
-    // پیش‌بینی مرورهای آینده (7 روز آینده)
+    const due = this.getDueCards(cards);
+    const newCards = this.getNewCards(cards);
+    const learning = this.getLearningCards(cards);
+    const reviewedToday = cards.filter((c) => {
+      if (!c.lastReview) return false;
+      return new Date(c.lastReview) >= today;
+    }).length;
+    const totalReviews = cards.reduce((s, c) => s + (c.totalReviews ?? 0), 0);
+    const lapses = cards.reduce((s, c) => s + (c.lapses ?? 0), 0);
+    const retentionRate = totalReviews > 0 ? parseFloat((((totalReviews - lapses) / totalReviews) * 100).toFixed(1)) : 0;
     const forecast: ForecastEntry[] = [];
     for (let i = 0; i < 7; i++) {
-      const date = new Date(today);
-      date.setDate(date.getDate() + i);
-      const dateStr = date.toDateString();
-
-      const count = flashcards.filter((card) => {
-        const nextReview = new Date(card.nextReview);
-        return nextReview.toDateString() === dateStr;
-      }).length;
-
-      forecast.push({
-        date: date.toISOString(),
-        count,
-      });
+      const d = new Date(today); d.setDate(d.getDate() + i);
+      const ds = d.toDateString();
+      forecast.push({ date: d.toISOString(), count: cards.filter((c) => new Date(c.nextReview).toDateString() === ds).length });
     }
-
     return {
-      total: flashcards.length,
-      due: due.length,
-      new: newCards.length,
-      learning: learning.length,
-      reviewedToday: reviewedToday.length,
-      retentionRate,
-      averageEase: this._calculateAverageEase(flashcards),
-      averageInterval: this._calculateAverageInterval(flashcards),
-      forecast,
-      maturity: this._calculateMaturity(flashcards),
+      total: cards.length, due: due.length, new: newCards.length, learning: learning.length,
+      reviewedToday, retentionRate,
+      averageEase: this._avgEase(cards), averageInterval: this._avgInterval(cards),
+      forecast, maturity: this._maturity(cards),
     };
   }
 
-  /**
-   * محاسبه بهینگی مرور
-   */
-  analyzeEfficiency(flashcards: Flashcard[]): EfficiencyAnalysis {
-    const stats = this.getStats(flashcards);
-
-    // محاسبه burden (تعداد مرورهای روزانه مورد نیاز)
-    const matureCards = flashcards.filter((c) => c.interval >= 21);
-    const dailyBurden = matureCards.reduce((sum, c) => {
-      return sum + 1 / (c.interval || 1);
-    }, 0);
-
-    // تخمین زمان مطالعه روزانه
-    const avgTimePerCard = 10; // ثانیه
-    const dailyTimeMinutes = (dailyBurden * avgTimePerCard) / 60;
-
+  analyzeEfficiency(cards: Flashcard[]): EfficiencyAnalysis {
+    const stats = this.getStats(cards);
+    const matureCards = cards.filter((c) => (c.interval ?? 0) >= 21);
+    const dailyBurden = matureCards.reduce((s, c) => s + 1 / (c.interval || 1), 0);
+    const dailyTimeMinutes = (dailyBurden * 10) / 60;
     return {
       dailyBurden: parseFloat(dailyBurden.toFixed(1)),
       dailyTimeMinutes: parseFloat(dailyTimeMinutes.toFixed(1)),
       retentionRate: stats.retentionRate,
-      efficiency: this._calculateEfficiencyScore(stats),
-      recommendations: this._generateRecommendations(stats, flashcards),
+      efficiency: this._efficiencyScore(stats),
+      recommendations: this._recommendations(stats, cards),
     };
   }
 
-  /**
-   * پیش‌بینی زمان بهینه برای مرور
-   */
   predictOptimalTime(card: Flashcard): OptimalTimePrediction {
     const now = new Date();
-    const nextReview = new Date(card.nextReview);
-    const hoursUntilDue =
-      (nextReview.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-    // اگر overdue است
-    if (hoursUntilDue < 0) {
-      return {
-        status: 'overdue',
-        priority: 'high',
-        message: 'این کارت باید فوراً مرور شود',
-        hoursOverdue: Math.abs(hoursUntilDue).toFixed(1),
-      };
-    }
-
-    // اگر امروز باید مرور شود
-    if (hoursUntilDue < 24) {
-      return {
-        status: 'due_today',
-        priority: 'medium',
-        message: 'امروز باید مرور شود',
-        hoursUntil: hoursUntilDue.toFixed(1),
-      };
-    }
-
-    // آینده
-    return {
-      status: 'future',
-      priority: 'low',
-      message: `${Math.ceil(hoursUntilDue / 24)} روز دیگر`,
-      daysUntil: Math.ceil(hoursUntilDue / 24),
-    };
+    const hoursUntilDue = (new Date(card.nextReview).getTime() - now.getTime()) / 3600000;
+    if (hoursUntilDue < 0) return { status: 'overdue', priority: 'high', message: 'این کارت باید فوراً مرور شود', hoursOverdue: Math.abs(hoursUntilDue).toFixed(1) };
+    if (hoursUntilDue < 24) return { status: 'due_today', priority: 'medium', message: 'امروز باید مرور شود', hoursUntil: hoursUntilDue.toFixed(1) };
+    return { status: 'future', priority: 'low', message: `${Math.ceil(hoursUntilDue / 24)} روز دیگر`, daysUntil: Math.ceil(hoursUntilDue / 24) };
   }
 
-  /**
-   * ایجاد فلش‌کارت جدید با مقادیر پیش‌فرض
-   */
   createCard(data: CreateCardData): Flashcard {
     return {
-      id:
-        data.id ||
-        Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-      front: data.front,
-      back: data.back,
+      id: data.id || Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      front: data.front, back: data.back,
       topic: data.topic || 'general',
       conceptType: data.conceptType || 'default',
       createdAt: new Date().toISOString(),
-      ease: this.config.initialEase,
-      interval: 0,
-      repetitions: 0,
-      lapses: 0,
+      ease: this.config.initialEase, interval: 0, repetitions: 0, lapses: 0,
       nextReview: new Date().toISOString(),
-      lastReview: null,
-      lastQuality: null,
-      totalReviews: 0,
+      lastReview: null, lastQuality: null, totalReviews: 0,
+      relearnStep: null, consecutiveCorrect: 0, mature: false,
+      difficulty: data.difficulty,
     };
   }
 
-  /**
-   * ریست کردن یک فلش‌کارت
-   */
   resetCard(card: Flashcard): Flashcard {
-    return {
-      ...card,
-      ease: this.config.initialEase,
-      interval: 0,
-      repetitions: 0,
-      lapses: 0,
-      nextReview: new Date().toISOString(),
-      lastReview: null,
-      lastQuality: null,
-    };
+    return { ...card, ease: this.config.initialEase, interval: 0, repetitions: 0, lapses: 0, nextReview: new Date().toISOString(), lastReview: null, lastQuality: null, relearnStep: null, consecutiveCorrect: 0, mature: false };
   }
 
-  // ============================================================
-  // متدهای خصوصی
-  // ============================================================
-
-  /**
-   * محاسبه ضریب تطبیقی بر اساس نوع محتوا
-   */
-  private _getContentMultiplier(conceptType: ConceptType | undefined): number {
-    return CONTENT_MULTIPLIERS[conceptType ?? 'default'] ?? CONTENT_MULTIPLIERS.default;
+  // ── خصوصی ──
+  private _daysFrom(now: Date, days: number): string {
+    const d = new Date(now); d.setDate(d.getDate() + days); return d.toISOString();
   }
-
-  /**
-   * محاسبه میانگین ease
-   */
-  private _calculateAverageEase(flashcards: Flashcard[]): number {
-    if (flashcards.length === 0) return 0;
-    const total = flashcards.reduce(
-      (sum, c) => sum + (c.ease ?? this.config.initialEase),
-      0
-    );
-    return parseFloat((total / flashcards.length).toFixed(2));
+  private _interleaveTopics(sorted: Flashcard[]): Flashcard[] {
+    const out: Flashcard[] = [];
+    const pool = [...sorted];
+    let last = '';
+    while (pool.length > 0) {
+      let idx = pool.findIndex((c) => (c.topic || 'general') !== last);
+      if (idx === -1 || idx > 4) idx = 0;
+      const c = pool.splice(idx, 1)[0];
+      if (c) { out.push(c); last = c.topic || 'general'; }
+    }
+    return out;
   }
-
-  /**
-   * محاسبه میانگین interval
-   */
-  private _calculateAverageInterval(flashcards: Flashcard[]): number {
-    const withInterval = flashcards.filter((c) => c.interval > 0);
-    if (withInterval.length === 0) return 0;
-    const total = withInterval.reduce((sum, c) => sum + c.interval, 0);
-    return Math.round(total / withInterval.length);
+  private _avgEase(cards: Flashcard[]): number {
+    if (cards.length === 0) return 0;
+    return parseFloat((cards.reduce((s, c) => s + (c.ease ?? this.config.initialEase), 0) / cards.length).toFixed(2));
   }
-
-  /**
-   * محاسبه maturity (درصد کارت‌های بالغ)
-   */
-  private _calculateMaturity(flashcards: Flashcard[]): number {
-    if (flashcards.length === 0) return 0;
-    const mature = flashcards.filter((c) => c.interval >= 21).length;
-    return parseFloat(((mature / flashcards.length) * 100).toFixed(1));
+  private _avgInterval(cards: Flashcard[]): number {
+    const w = cards.filter((c) => (c.interval ?? 0) > 0);
+    if (w.length === 0) return 0;
+    return Math.round(w.reduce((s, c) => s + c.interval, 0) / w.length);
   }
-
-  /**
-   * محاسبه امتیاز کارایی
-   */
-  private _calculateEfficiencyScore(stats: SRSStats): number {
+  private _maturity(cards: Flashcard[]): number {
+    if (cards.length === 0) return 0;
+    return parseFloat(((cards.filter((c) => (c.interval ?? 0) >= 21).length / cards.length) * 100).toFixed(1));
+  }
+  private _efficiencyScore(stats: SRSStats): number {
     let score = 100;
-
-    // کسر برای retention پایین
-    if (stats.retentionRate < 90) {
-      score -= (90 - stats.retentionRate) * 2;
-    }
-
-    // کسر برای ease خیلی پایین
-    if (stats.averageEase < 2.0) {
-      score -= (2.0 - stats.averageEase) * 20;
-    }
-
-    // پاداش برای maturity بالا
-    if (stats.maturity > 50) {
-      score += (stats.maturity - 50) * 0.5;
-    }
-
+    if (stats.retentionRate < 90) score -= (90 - stats.retentionRate) * 2;
+    if (stats.averageEase < 2.0) score -= (2.0 - stats.averageEase) * 20;
+    if (stats.maturity > 50) score += (stats.maturity - 50) * 0.5;
     return parseFloat(Math.max(0, Math.min(100, score)).toFixed(0));
   }
-
-  /**
-   * تولید پیشنهادات
-   */
-  private _generateRecommendations(
-    stats: SRSStats,
-    flashcards: Flashcard[]
-  ): SRSRecommendation[] {
-    const recommendations: SRSRecommendation[] = [];
-
-    if (stats.retentionRate < 85) {
-      recommendations.push({
-        type: 'warning',
-        message: 'نرخ یادآوری پایین است. کارت‌های سخت را بیشتر مرور کنید.',
-        action: 'review_hard_cards',
-      });
-    }
-
-    if (stats.due > 20) {
-      recommendations.push({
-        type: 'info',
-        message: `${stats.due} کارت آماده مرور دارید. بهتر است امروز مرور کنید.`,
-        action: 'start_review',
-      });
-    }
-
-    if (stats.averageEase < 2.0) {
-      recommendations.push({
-        type: 'warning',
-        message: 'میانگین سهولت کارت‌ها پایین است. شاید کارت‌ها خیلی سخت هستند.',
-        action: 'review_difficulty',
-      });
-    }
-
-    if (stats.maturity < 30 && flashcards.length > 10) {
-      recommendations.push({
-        type: 'info',
-        message: 'هنوز بیشتر کارت‌ها بالغ نشده‌اند. به مرور ادامه دهید.',
-        action: 'continue_review',
-      });
-    }
-
-    return recommendations;
+  private _recommendations(stats: SRSStats, cards: Flashcard[]): SRSRecommendation[] {
+    const r: SRSRecommendation[] = [];
+    if (stats.retentionRate < 85) r.push({ type: 'warning', message: 'نرخ یادآوری پایین است. کارت‌های سخت را بیشتر مرور کنید.', action: 'review_hard_cards' });
+    if (stats.due > 20) r.push({ type: 'info', message: `${stats.due} کارت آماده مرور دارید. بهتر است امروز مرور کنید.`, action: 'start_review' });
+    if (stats.averageEase < 2.0) r.push({ type: 'warning', message: 'میانگین سهولت کارت‌ها پایین است. شاید کارت‌ها خیلی سخت هستند.', action: 'review_difficulty' });
+    if (stats.maturity < 30 && cards.length > 10) r.push({ type: 'info', message: 'هنوز بیشتر کارت‌ها بالغ نشده‌اند. به مرور ادامه دهید.', action: 'continue_review' });
+    return r;
   }
 }
-
-// ============================================================
-// Singleton
-// ============================================================
 
 let srsInstance: SpacedRepetitionSystem | null = null;
-
-/**
- * دریافت نمونه singleton از SRS
- */
 export function getSRS(): SpacedRepetitionSystem {
-  if (!srsInstance) {
-    srsInstance = new SpacedRepetitionSystem();
-  }
+  if (!srsInstance) srsInstance = new SpacedRepetitionSystem();
   return srsInstance;
 }
-
-/**
- * ریست کردن نمونه singleton (فقط برای تست)
- */
-export function resetSRS(): void {
-  srsInstance = null;
-}
-
-/**
- * Export پیش‌فرض
- */
+export function resetSRS(): void { srsInstance = null; }
 export default getSRS();

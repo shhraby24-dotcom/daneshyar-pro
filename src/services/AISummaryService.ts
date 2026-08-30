@@ -13,6 +13,7 @@
 import { getInstance as getLogger } from '@/core/Logger';
 import { AI_CONFIG, AI_KEYS_LS, AI_USAGE_LS } from '@/config/ai';
 import type { SummaryLevel } from '@/services/Summarizer';
+import { API_BASE } from '@/config/api';
 
 const logger = getLogger().module('AISummaryService');
 
@@ -208,7 +209,7 @@ async function callGemini(key: string, prompt: string): Promise<AISummary> {
 }
 
 async function callGroq(key: string, prompt: string): Promise<AISummary> {
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const res = await fetch(`${API_BASE.groq}/chat/completions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
     body: JSON.stringify({

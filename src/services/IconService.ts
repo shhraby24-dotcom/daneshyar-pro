@@ -55,6 +55,8 @@ import {
   LogOut,
   Eye,
   EyeOff,
+  Mic,
+  Play,
   // وضعیت‌ها
   Check,
   AlertCircle,
@@ -149,6 +151,8 @@ const ICON_MAP: Record<string, IconNode> = {
   eye: Eye,
   eyeoff: EyeOff,
   'eye-off': EyeOff,
+  mic: Mic,
+  play: Play,
 
   // وضعیت‌ها
   check: Check,

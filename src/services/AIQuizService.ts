@@ -6,6 +6,7 @@
 import { getInstance as getLogger } from '@/core/Logger';
 import { AI_CONFIG, AI_LIMITS, AI_KEYS_LS, AI_USAGE_LS, PREMIUM_LS, type AITier } from '@/config/ai';
 import type { Question as QuizQuestion, QuestionType } from '@/services/QuizGenerator';
+import { API_BASE } from '@/config/api';
 
 const logger = getLogger().module('AIQuizService');
 
@@ -90,7 +91,8 @@ function parseQuestions(raw: string): QuizQuestion[] {
 }
 
 async function callGemini(key: string, prompt: string): Promise<QuizQuestion[]> {
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${AI_CONFIG.GEMINI_MODEL}:generateContent?key=${key}`, {
+
+  const res = await fetch(`${API_BASE.gemini}/${AI_CONFIG.GEMINI_MODEL}:generateContent?key=${key}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -105,7 +107,7 @@ async function callGemini(key: string, prompt: string): Promise<QuizQuestion[]> 
 }
 
 async function callGroq(key: string, prompt: string): Promise<QuizQuestion[]> {
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const res = await fetch(`${API_BASE.groq}/chat/completions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
     body: JSON.stringify({
