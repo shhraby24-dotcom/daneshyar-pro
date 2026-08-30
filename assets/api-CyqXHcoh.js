@@ -1,0 +1,1 @@
+const a={DEV_GEMINI_KEY:"",DEV_GROQ_KEY:"",GEMINI_MODEL:"gemini-2.0-flash",GROQ_MODEL:"llama-3.3-70b-versatile"},s={free:3,byok:20,premium:100},e="daneshyar_ai_keys",_="daneshyar_ai_usage",o="daneshyar_premium",n={gemini:"https://generativelanguage.googleapis.com/v1beta/models",groq:"https://api.groq.com/openai/v1"};export{a as A,o as P,e as a,n as b,_ as c,s as d};
