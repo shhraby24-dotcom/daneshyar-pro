@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
+  base: './', // ⬅️ حیاتی برای GitHub Pages
   plugins: [tailwindcss()],
   resolve: {
     alias: { '@': '/src' },
