@@ -61,6 +61,8 @@ import {
   Coffee,
   SkipForward,
   Music,
+  Smartphone,
+  Brain,
 
   // وضعیت‌ها
   Check,
@@ -162,6 +164,10 @@ const ICON_MAP: Record<string, IconNode> = {
   coffee: Coffee,
   skip: SkipForward,
   music: Music,
+  smartphone: Smartphone,
+  mobile: Smartphone,
+  brain: Brain,
+  memory: Brain,
 
   // وضعیت‌ها
   check: Check,

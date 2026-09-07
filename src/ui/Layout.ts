@@ -463,7 +463,31 @@ export class Layout {
   // ناوبری فعال + تم
   // ============================================================
 
-  private _updateActiveNav(routeName: string): void {
+    private _updateActiveNav(routeName: string): void {
+    // مخفی کردن bottom nav و sidebar در لندینگ
+    const bottomNavEl = document.getElementById('bottom-nav');
+    const sidebarEl = document.getElementById('sidebar');
+    const topbarEl = document.getElementById('topbar');
+    const mainContentEl = document.getElementById('main-content');
+
+    if (routeName === 'landing') {
+      if (bottomNavEl) bottomNavEl.classList.add('hidden');
+      if (sidebarEl) sidebarEl.classList.add('hidden');
+      if (topbarEl) topbarEl.classList.add('hidden');
+      if (mainContentEl) {
+        mainContentEl.classList.remove('p-4');
+        mainContentEl.classList.add('p-0');
+      }
+    } else {
+      if (bottomNavEl) bottomNavEl.classList.remove('hidden');
+      if (sidebarEl) sidebarEl.classList.remove('hidden');
+      if (topbarEl) topbarEl.classList.remove('hidden');
+      if (mainContentEl) {
+        mainContentEl.classList.remove('p-0');
+        mainContentEl.classList.add('p-4');
+      }
+    }
+
     // سایدبار
     document.querySelectorAll<HTMLElement>('.nav-item').forEach((btn) => {
       const isActive = btn.dataset.route === routeName;
@@ -486,7 +510,8 @@ export class Layout {
     });
     const moreBtn = document.getElementById('more-btn');
     if (moreBtn) moreBtn.classList.toggle('active', !inBottom && inMore);
-  // جستجوی سراسری فقط در داشبورد
+
+    // جستجوی سراسری فقط در داشبورد
     const searchWrap = document.getElementById('global-search-wrap');
     if (searchWrap) searchWrap.classList.toggle('hidden', routeName !== 'dashboard');
   }

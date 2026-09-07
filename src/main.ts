@@ -25,6 +25,7 @@ import { isPremium } from '@/services/Premium';
 import { checkAndReward } from '@/services/RewardEngine';
 import { startAutoRewardWatcher } from '@/services/AutoRewardWatcher';
 import { savePendingRef } from '@/services/ReferralService';
+import { createLandingView } from '@/ui/views/LandingView';
 
 const logger = getLogger({ level: 'DEBUG', showTimestamp: true, persistToStorage: false });
 getEventBus({ debug: false });
@@ -38,41 +39,68 @@ type ViewParams = Record<string, unknown>;
 
 async function bootstrap(): Promise<void> {
   try {
-
     const hashQuery = window.location.hash.split('?')[1] ?? '';
     const refCode = new URLSearchParams(hashQuery).get('ref');
     if (refCode) {
       savePendingRef(refCode);
     }
-
     logger.info('📦 مرحله ۱: آماده‌سازی DOM');
     const app = document.createElement('div');
     app.id = 'app';
     document.body.innerHTML = '';
     document.body.appendChild(app);
-
     logger.info('📦 مرحله ۲: بارگذاری State');
     await state.load();
 
+    // ── رفتار هوشمند Landing ──
+    const hash = window.location.hash;
+    const isLandingRoute = hash === '#/landing' || hash === '#/landing/';
+    const hasData = state.get('notes').length > 0 || state.get('flashcards').length > 0;
+
+    // کاربران جدید بدون داده → redirect به landing
+    if ((!hash || hash === '#' || hash === '#/' || hash === '') && !hasData) {
+      window.location.replace('#/landing');
+      return;
+    }
+
     logger.info('📦 مرحله ۳: رندر Layout');
+
+    // Landing به‌صورت standalone (بدون Layout اپ)
+    if (isLandingRoute) {
+      const landingView = await createLandingView();
+      app.appendChild(landingView);
+      logger.info('✅ Landing page رندر شد');
+      return;
+    }
+
+    // اپ عادی با Layout
     app.appendChild(getLayout().render());
 
     logger.info('📦 مرحله ۴: ثبت View ها');
     router.setContainer('#main-content');
     registerViews();
-
+    
+    // ── منطق بازدید اول: غریبه → لندینگ، کاربر با داده → داشبورد ──
+    const currentRoute = router.getCurrentRoute();
+    if (!currentRoute || currentRoute.name === 'dashboard') {
+      const db = getDatabase();
+      const stats = await db.getStats();
+      const hasData = stats.totalNotes > 0 || stats.totalFlashcards > 0 || stats.totalQuizzes > 0;
+      if (!hasData) {
+        await router.navigate('landing', {}, { replace: true });
+      }
+    }
+    
     logger.info('📦 مرحله ۵: شروع Router');
     await router.start();
-    void syncAll(); // اگر session نباشد، بی‌صدا رد می‌شود
+    void syncAll();
     void loadSubscription();
-    void checkAndReward(); // چک خودکار چالش‌ها در شروع اپ
+    void checkAndReward();
     startAutoRewardWatcher();
-        // ── Trial برای کاربران جدید ──
     checkTrialExpiry();
     if (!hasUsedTrial() && !isPremium()) {
       startTrial();
     }
-    
     logger.info('✅ دانش‌یار پرو آماده است!');
     logger.info('📊 آمار Storage', storage.getStats());
   } catch (error) {
@@ -97,7 +125,13 @@ function createComingSoonView(title: string, icon: string, description: string) 
 }
 
 function registerViews(): void {
-  // ⚡ eager فقط برای اولین صفحه
+  // ⚡ لندینگ (eager برای اولین بازدید)
+  router.registerView('landing', createLandingView);
+  
+  // ⚡ اپ اصلی (alias برای dashboard)
+  router.registerView('app', createDashboardView);
+  
+  // ⚡ eager فقط برای داشبورد (اگر کاربر با داده وارد شد)
   router.registerView('dashboard', createDashboardView);
 
   // ⚡ lazy (code-splitting → شروع سریع‌تر روی موبایل)
@@ -111,16 +145,22 @@ function registerViews(): void {
   router.registerView('challenges', (p: ViewParams) => import('@/ui/views/ChallengesView').then((m) => m.createChallengesView(p)));
   router.registerView('legal', (p: ViewParams) => import('@/ui/views/LegalView').then((m) => m.createLegalView(p)));
   router.registerView('invite', (p: ViewParams) => import('@/ui/views/InviteView').then((m) => m.createInviteView(p)));
-  // مسیر موقت برای تست آیکون‌ها (بعد از تأیید حذف می‌شود)
+
+  // مسیر موقت برای تست آیکون‌ها
   router.registerView('icons-preview', () =>
     import('@/services/IconService').then((m) => m.renderIconPreview())
   );
+
   // placeholder ها
   router.registerView('translator', createComingSoonView('مترجم', '🌐', 'ترجمه هوشمند متن‌های تخصصی.'));
   router.registerView('calculator', createComingSoonView('ماشین‌حساب', '🧮', 'محاسبات سریع علمی.'));
   router.registerView('premium', (p: ViewParams) => import('@/ui/views/PremiumView').then((m) => m.createPremiumView(p)));
-  router.registerView('premium', (p: ViewParams) => import('@/ui/views/PremiumView').then((m) => m.createPremiumView(p)));
-
+  router.registerView('landing', createLandingView);
+  // ── لندینگ (ویترین اپلیکیشن‌مانند) ──
+  router.registerView('landing', async () => {
+    const { createLandingView } = await import('@/ui/views/LandingView');
+    return createLandingView();
+  });
   router.setNotFound((params) => {
     const div = document.createElement('div');
     div.className = 'min-h-[70vh] flex items-center justify-center p-8';

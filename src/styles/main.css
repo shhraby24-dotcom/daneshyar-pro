@@ -1216,3 +1216,54 @@ body { overscroll-behavior-y: none; }
 .streak-flame .flame-lottie { width: 100%; height: 100%; }
 .streak-flame .flame-lottie svg { width: 100%; height: 100%; }
 .streak-flame.cold .flame-lottie { filter: grayscale(1) brightness(.6); opacity: .45; }
+
+/* ============================================================
+   LANDING MODE — وقتی landing فعال است، Layout اپ مخفی می‌شود
+   ============================================================ */
+body.landing-mode #sidebar,
+body.landing-mode #bottom-nav,
+body.landing-mode #topbar,
+body.landing-mode #mobile-overlay,
+body.landing-mode #sheet-overlay,
+body.landing-mode #bottom-sheet {
+  display: none !important;
+}
+
+body.landing-mode #main-content {
+  padding: 0 !important;
+}
+
+/* Typography بهبودیافته برای فارسی */
+.landing-view {
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.landing-view h1, .landing-view h2, .landing-view h3, .landing-view h4 {
+  line-height: 1.4;
+}
+
+/* FAQ chevron rotation */
+.landing-view .faq-chevron.rotate-90 {
+  transform: rotate(-90deg);
+}
+
+/* Mockup glow animation */
+.landing-mockup::after {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: -1;
+  animation: mockupPulse 4s ease-in-out infinite;
+}
+
+@keyframes mockupPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-mockup::after { animation: none; }
+}

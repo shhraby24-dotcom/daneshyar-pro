@@ -21,8 +21,8 @@ export interface Plan {
 
 export const PLANS: Plan[] = [
   { id: 'monthly', label: 'ماهانه', priceToman: 99000, period: 'ماه', months: 1 },
-  { id: 'term', label: 'ترمیک', priceToman: 320000, period: 'ترم (۴ ماه)', months: 4, badge: '📚 ویژه ترم' },
-  { id: 'yearly', label: 'سالانه', priceToman: 890000, period: 'سال', months: 12, badge: '🎁 ۳ ماه رایگان', highlight: true },
+  { id: 'term', label: 'ترمیک', priceToman: 320000, period: 'ترم (۴ ماه)', months: 4, badge: 'ویژه ترم' },
+  { id: 'yearly', label: 'سالانه', priceToman: 890000, period: 'سال', months: 12, badge: '۳ ماه رایگان', highlight: true },
 ];
 
 export function isPremium(): boolean {

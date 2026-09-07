@@ -158,6 +158,11 @@ const DEFAULT_ROUTES: Record<string, Omit<RouteConfig, 'name'>> = {
     icon: '⚙️',
     requiresAuth: false,
   },
+  landing: {
+    title: 'خوش آمدید',
+    icon: '🚀',
+    requiresAuth: false,
+  },
 };
 
 // ============================================================
@@ -643,23 +648,27 @@ export class Router {
       this.navigate(name, params, { replace: true });
     }
   /**
-   * راه‌اندازی اولیه بر اساس URL فعلی
-   */
+  راه‌اندازی اولیه بر اساس URL فعلی
+  */
   async start(): Promise<void> {
     const { name, params } = this._parseHashUrl();
-
-    if (
-      !window.location.hash ||
-      window.location.hash === '#' ||
-      window.location.hash === '#/'
-    ) {
-      // URL خالی است، به default route برو
-      await this.navigate(this._defaultRoute, {}, { replace: true });
+  
+    // اگر URL خالی است، تصمیم هوشمند بگیر
+    if (!window.location.hash || window.location.hash === '#' || window.location.hash === '#/') {
+      // بررسی کاربر جدید/قدیمی
+      const { getDatabase } = await import('@/core/Database');
+      let isNewUser = true;
+      try {
+        const stats = await getDatabase().getStats();
+        isNewUser = stats.totalNotes === 0 && stats.totalFlashcards === 0 && stats.totalQuizzes === 0;
+      } catch { /* ignore */ }
+    
+      // کاربر جدید → لندینگ، قدیمی → داشبورد
+      const defaultRoute = isNewUser ? 'landing' : 'dashboard';
+      await this.navigate(defaultRoute, {}, { replace: true });
     } else {
-      // URL مشخص است، به همان مسیر برو
       await this.navigate(name, params, { replace: true });
     }
-
     logger.info('Router شروع شد', { initialRoute: name });
   }
 
