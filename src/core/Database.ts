@@ -451,9 +451,28 @@ export class DatabaseService {
     } catch {
       throw new Error('فایل پشتیبان نامعتبر است');
     }
-
-    if (!data || typeof data !== 'object') {
+  if (!data || typeof data !== 'object') {
       throw new Error('فایل پشتیبان نامعتبر است');
+    }
+
+  // ⭐ اعتبارسنجی ساختار: هر فیلد باید آرایه از objects باشد (یا undefined)
+    const collections = [
+      { key: 'notes', name: 'یادداشت‌ها' },
+      { key: 'flashcards', name: 'فلش‌کارت‌ها' },
+      { key: 'quizHistory', name: 'آزمون‌ها' },
+      { key: 'studySessions', name: 'جلسات مطالعه' },
+      { key: 'achievements', name: 'دستاوردها' },
+    ] as const;
+
+    for (const { key, name } of collections) {
+      const val = data[key as keyof typeof data];
+      if (val === undefined) continue;
+      if (!Array.isArray(val)) {
+        throw new Error(`ساختار فایل پشتیبان نامعتبر: بخش «${name}» باید آرایه باشد`);
+      }
+      if (val.length > 0 && typeof val[0] !== 'object') {
+        throw new Error(`ساختار فایل پشتیبان نامعتبر: آیتم‌های «${name}» باید object باشند`);
+      }
     }
 
     await this.db.transaction(

@@ -1066,29 +1066,6 @@ button:not(:disabled):not(.no-press):is(.rounded-full, .btn-square, [class*="rou
   .btn:hover:hover { transform: none; }
 }
 /* ============================================================
-   29. CATEGORY CHIPS - انتخابگر لمسی دسته‌بندی (موبایل-اول)
-   ============================================================ */
-.cat-chip {
-  padding: 10px 16px;
-  min-height: 44px;
-  border-radius: 9999px;
-  border: 1px solid var(--app-line-strong);
-  background: var(--app-surface-overlay);
-  color: var(--app-ink-soft);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s var(--ease-ios);
-  -webkit-tap-highlight-color: transparent;
-}
-.cat-chip:active { transform: scale(0.94); }
-.cat-chip.active {
-  background: var(--app-primary-500);
-  border-color: var(--app-primary-500);
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-/* ============================================================
    29. CATEGORY CHIPS - انتخابگر لمسی دسته‌بندی
    ============================================================ */
 .cat-chip {

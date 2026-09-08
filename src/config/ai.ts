@@ -1,11 +1,16 @@
 /**
  * دانش‌یار پرو - پیکربندی AI
- * ⬇️ کلیدهای توسعه‌دهنده را یک‌بار اینجا بگذار
+ * ⬇️ کلیدهای توسعه‌دهنده را از env می‌خواند (اگر نباشد، خالی می‌ماند)
  * @module config/ai
  */
+
+// خواندن کلیدها از environment variables (Vite prefix: VITE_)
+const envGeminiKey = (import.meta.env as Record<string, string | undefined>).VITE_GEMINI_KEY ?? '';
+const envGroqKey = (import.meta.env as Record<string, string | undefined>).VITE_GROQ_KEY ?? '';
+
 export const AI_CONFIG = {
-  DEV_GEMINI_KEY: '', // ← کلید Gemini تو
-  DEV_GROQ_KEY: '',   // ← کلید Groq تو
+  DEV_GEMINI_KEY: envGeminiKey,
+  DEV_GROQ_KEY: envGroqKey,
   GEMINI_MODEL: 'gemini-2.0-flash',
   GROQ_MODEL: 'llama-3.3-70b-versatile',
 };
