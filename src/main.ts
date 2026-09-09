@@ -2,12 +2,11 @@
  * ============================================================
  * دانش‌یار پرو - نقطه شروع (بهینه‌سازی موبایل + PWA)
  * ============================================================
- * ⚡ code-splitting: فقط داشبورد eager، بقیه lazy (bundle کوچک‌تر)
+ * ⚡ code-splitting: فقط داشبورد eager، بقیه lazy
  * 📲 ثبت Service Worker فقط در production
- * 🧹 حذف کد تکراری Input و ثبت‌های دوباره
- * 🌱 seedDemoData فقط در DEV یا با ?demo=1 اجرا می‌شود (نه در production!)
- * 🔀 Landing به‌صورت standalone رندر می‌شود (Router/viewها ثبت نمی‌شوند)
- *    → برای ناوبری از لندینگ به اپ، hash ست + ریلود لازم است (LandingView.goTo)
+ * 🌱 seedDemoData فقط در DEV یا با ?demo=1
+ * 🧹 purgeDemoData: پاک‌سازی یک‌باره‌ی نوت‌های دموی قدیمی
+ * 🔀 لندینگ: رندر مستقیم برای کاربر جدید (بدون ریدایرکت = بدون صفحه سیاه)
  * @module main
  */
 import './style.css';
@@ -45,9 +44,7 @@ async function bootstrap(): Promise<void> {
   try {
     const hashQuery = window.location.hash.split('?')[1] ?? '';
     const refCode = new URLSearchParams(hashQuery).get('ref');
-    if (refCode) {
-      savePendingRef(refCode);
-    }
+    if (refCode) savePendingRef(refCode);
 
     logger.info('📦 مرحله ۱: آماده‌سازی DOM');
     const app = document.createElement('div');
@@ -58,42 +55,40 @@ async function bootstrap(): Promise<void> {
     logger.info('📦 مرحله ۲: بارگذاری State');
     await state.load();
 
-    // ── رفتار هوشمند Landing ──
     const hash = window.location.hash;
     const isLandingRoute = hash === '#/landing' || hash === '#/landing/';
 
-    // کاربران جدید بدون داده → redirect به landing
-    if ((!hash || hash === '#' || hash === '#/' || hash === '')) {
+    // ⭐ کاربر جدید بدون داده → رندر مستقیم لندینگ (بدون ریدایرکت = بدون صفحه سیاه)
+    if (!hash || hash === '#' || hash === '#/' || hash === '') {
       const db = getDatabase();
       await db.init();
       const stats = await db.getStats();
       const hasData = stats.totalNotes > 0 || stats.totalFlashcards > 0 || stats.totalQuizzes > 0;
       if (!hasData) {
-        window.location.replace('#/landing');
-        return; // ⭐ مهم: بلافاصله برگرد، نه اینکه ادامه بدهد
+        const landingView = await createLandingView();
+        app.appendChild(landingView);
+        history.replaceState(null, '', '#/landing');
+        logger.info('✅ Landing برای کاربر جدید رندر شد');
+        return;
       }
     }
 
-    logger.info('📦 مرحله ۳: رندر Layout');
-
-    // ── ⭐ Landing به‌صورت standalone (بدون Layout اپ، بدون Router) ──
-    // برای ناوبری از لندینگ به اپ، LandingView باید hash را ست کند و ریلود بزند
-    // تا bootstrap دوباره اجرا شود و این بار Router راه‌اندازی شود.
+    // ⭐ مسیر لندینگ: standalone (بدون Layout، بدون Router)
     if (isLandingRoute) {
       const landingView = await createLandingView();
       app.appendChild(landingView);
-      logger.info('✅ Landing page رندر شد (standalone — Router/views ثبت نشده‌اند)');
+      logger.info('✅ Landing page رندر شد (standalone)');
       return;
     }
 
-    // اپ عادی با Layout
+    logger.info('📦 مرحله ۳: رندر Layout');
     app.appendChild(getLayout().render());
 
     logger.info('📦 مرحله ۴: ثبت View ها');
     router.setContainer('#main-content');
     registerViews();
 
-    logger.info('📦 مرحله ۵: شروع Router');
+    logger.info('📦 مرحله : شروع Router');
     await router.start();
 
     void syncAll();
@@ -129,19 +124,13 @@ function createComingSoonView(title: string, icon: string, description: string) 
 }
 
 function registerViews(): void {
-  // ⭐ لندینگ (eager import در بالای فایل)
+  // ⭐ لندینگ — فقط یک‌بار ثبت می‌شود
   router.registerView('landing', createLandingView);
 
-  // ⭐ اپ اصلی (alias برای dashboard)
   router.registerView('app', createDashboardView);
-
-  // ⭐ eager فقط برای داشبورد
   router.registerView('dashboard', createDashboardView);
-
-  // ⭐ auth (eager - نیاز به نمایش سریع در لندینگ → login)
   router.registerView('auth', createAuthView);
 
-  // ⚡ lazy (code-splitting → شروع سریع‌تر روی موبایل)
   router.registerView('notes', (p: ViewParams) => import('@/ui/views/NotesView').then((m) => m.createNotesView(p)));
   router.registerView('flashcards', (p: ViewParams) => import('@/ui/views/FlashcardsView').then((m) => m.createFlashcardsView(p)));
   router.registerView('quiz', (p: ViewParams) => import('@/ui/views/QuizView').then((m) => m.createQuizView(p)));
@@ -153,12 +142,10 @@ function registerViews(): void {
   router.registerView('invite', (p: ViewParams) => import('@/ui/views/InviteView').then((m) => m.createInviteView(p)));
   router.registerView('premium', (p: ViewParams) => import('@/ui/views/PremiumView').then((m) => m.createPremiumView(p)));
 
-  // مسیر موقت برای تست آیکون‌ها
   router.registerView('icons-preview', () =>
     import('@/services/IconService').then((m) => m.renderIconPreview())
   );
 
-  // placeholder ها
   router.registerView('translator', createComingSoonView('مترجم', '🌐', 'ترجمه هوشمند متن‌های تخصصی.'));
   router.registerView('calculator', createComingSoonView('ماشین‌حساب', '🧮', 'محاسبات سریع علمی.'));
 
@@ -183,9 +170,7 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   });
 }
 
-// ── دمو (فقط DEV یا با flag دستی) ──
-// ⭐ مهم: در production هرگز اجرا نمی‌شود.
-// برای فعال‌کردن دستی در production: URL = https://site.com/#/dashboard?demo=1
+// ── داده‌ی دمو (فقط DEV یا با ?demo=1) ──
 async function seedDemoData(): Promise<void> {
   const db = getDatabase();
   await db.init();
@@ -210,12 +195,25 @@ async function seedDemoData(): Promise<void> {
   }
 }
 
+// ⭐ پاک‌سازی یک‌باره‌ی نوت‌های دموی قدیمی (روی همه‌ی دستگاه‌ها)
+async function purgeDemoData(): Promise<void> {
+  const db = getDatabase();
+  await db.init();
+  const notes = await db.getNotes();
+  for (const n of notes) {
+    if (n.id.startsWith('demo-note-')) await db.deleteNote(n.id);
+  }
+}
+
 bootstrap();
 
-// ⭐ گیت‌کردن seed: فقط DEV یا flag ?demo=1 در hash
+// پاک‌سازی همیشه اجرا می‌شود (نوت‌های دموی کاشته‌شده‌ی قبلی را می‌سوزاند)
+setTimeout(() => { purgeDemoData().catch((e) => logger.error('خطا در پاک‌سازی دمو', e)); }, 600);
+
+// ⭐ seed فقط در DEV یا با پرچم ?demo=1 — در production هرگز
 const shouldSeedDemo =
   import.meta.env.DEV ||
   new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('demo') === '1';
 if (shouldSeedDemo) {
-  setTimeout(() => { seedDemoData().catch((e) => logger.error('خطا در دمو', e)); }, 500);
-}// comment
+  setTimeout(() => { seedDemoData().catch((e) => logger.error('خطا در دمو', e)); }, 800);
+}
