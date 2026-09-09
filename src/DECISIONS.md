@@ -177,8 +177,8 @@
 - پارک‌شده: صیقل دسکتاپ، اسکرین‌شات واقعی به‌جای موکاپ، تنظیمات اضافه
 
 ## [1405/06] بسته‌ی سخت‌سازی قبل از دمو
-- seedDemoData فقط در DEV یا ?demo=1 (دموی والدین باید داده‌ی واقعی/خالی نشان دهد، نه جعلی)
-- کلیدهای AI از import.meta.env (VITE_GEMINI_KEY / VITE_GROQ_KEY) + فایل .env لوکال
-- importData: اعتبارسنجی ساختار قبل از transaction (پیام خطای فارسی)
-- لندینگ standalone: بدون Router؛ ناوبری به اپ = ست hash + ریلود (مستند شد)
-- پارک آگاهانه: صیقل بصری تنظیمات v2 · AI روی گوشی (پروکسی) · دسکتاپ کامل · اجرای سمت سرورِ premium/quota (همراه زرین‌پال)
+- seedDemoData فقط در DEV یا ?demo=1
+- کلیدهای AI از import.meta.env (VITE_GEMINI_KEY / VITE_GROQ_KEY)
+- importData: اعتبارسنجی ساختار قبل از transaction
+- لندینگ standalone بدون Router؛ ناوبری به اپ = ست hash + ریلود
+- پارک: صیقل تنظیمات v2 · AI روی گوشی · دسکتاپ کامل · اجرای سروری premium (با زرین‌پال)

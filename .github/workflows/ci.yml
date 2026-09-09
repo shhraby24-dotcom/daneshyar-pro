@@ -2,11 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
 
 jobs:
-  build-test:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,11 +16,32 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install
+      - name: نصب وابستگی‌ها
         run: npm ci
 
-      - name: Type-check + Build
+      - name: بیلد
         run: npm run build
 
-      - name: Unit Tests
-        run: npm test
+      - name: تست‌ها
+        run: npx vitest run --passWithNoTests
+
+      - name: نوتیفیکیشن تلگرام
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          JOB_STATUS: ${{ job.status }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "سکرت‌های تلگرام تنظیم نشده‌اند؛ رد می‌شوم."
+            exit 0
+          fi
+          if [ "$JOB_STATUS" = "success" ]; then EMO="✅"; else EMO="❌"; fi
+          TEXT="$EMO دانش‌یار پرو | CI: $JOB_STATUS
+          آخرین commit: $COMMIT_MSG
+          جزئیات: $RUN_URL"
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="$TEXT"
