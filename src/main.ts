@@ -218,5 +218,4 @@ const shouldSeedDemo =
   new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('demo') === '1';
 if (shouldSeedDemo) {
   setTimeout(() => { seedDemoData().catch((e) => logger.error('خطا در دمو', e)); }, 500);
-}/ /   t e s t  
- 
+}// comment
