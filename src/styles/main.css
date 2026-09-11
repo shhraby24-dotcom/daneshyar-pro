@@ -1116,6 +1116,11 @@ button:not(:disabled):not(.no-press):is(.rounded-full, .btn-square, [class*="rou
   padding: 6px 14px;
   font-size: 13px;
 }
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 13px;
+}
 /* ============================================================
    32. MIC BUTTON - تایپ صوتی
    ============================================================ */
