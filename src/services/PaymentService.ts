@@ -1,10 +1,9 @@
 /**
- * دانش‌یار پرو - درگاه پرداخت (بخش A: شبیه‌سازی بتا)
- * 🔜 بخش B: اتصال به زرین‌پال
+ * دانش‌یار پرو - سرویس پرداخت دستی
+ * پرداخت از طریق ارسال رسید به پشتیبانی و دریافت کد فعال‌سازی
  * @module services/PaymentService
  */
 import { getSupabaseClient, getSession } from '@/services/AuthService';
-import { activatePremium, type Plan } from '@/services/Premium';
 import { getInstance as getLogger } from '@/core/Logger';
 const logger = getLogger().module('Payment');
 
@@ -14,8 +13,13 @@ export interface PaymentResult {
   message?: string;
 }
 
-export async function requestPayment(plan: Plan): Promise<PaymentResult> {
-  logger.info('درخواست پرداخت', { plan: plan.id });
+/**
+ * Request payment - Manual payment flow
+ * For manual payments, user sends receipt to support and receives activation code
+ * This function does NOT activate Premium - activation happens via ActivationCodeService
+ */
+export async function requestPayment(planId: string): Promise<PaymentResult> {
+  logger.info('Manual payment request', { planId });
 
   const client = getSupabaseClient();
   if (!client) return { ok: false, error: 'سرویس ابری فعال نیست' };
@@ -23,27 +27,34 @@ export async function requestPayment(plan: Plan): Promise<PaymentResult> {
   const session = await getSession();
   if (!session?.user) return { ok: false, error: 'برای خرید ابتدا وارد شوید' };
 
-  // 🔜 برای production واقعی: ریدایرکت به درگاه زرین‌پال
-  // فعلاً برای بتا: grant از طریق Edge Function (امن، چون فقط از مسیر معتبر)
-  const { data, error } = await client.functions.invoke('smooth-responder', {
-    body: { planId: plan.id },
-  });
+  // Manual payment flow - no automatic activation
+  // User will receive activation code from support after payment verification
+  logger.info('Manual payment flow - user will send receipt to support');
+  
+  return { 
+    ok: true, 
+    message: 'لطفاً رسید پرداخت را به آدرس پشتیبانی ارسال کنید تا کد فعال‌سازی دریافت نمایید.'
+  };
+}
 
-  if (error || !data?.ok) {
-    let msg = error ? (error.message ?? String(error)) : 'پاسخ نامعتبر از سرور';
-    // خواندن جزئیات خطا از response سرور
-    try {
-      const ctx = (error as unknown as { context?: Response }).context;
-      if (ctx && typeof ctx.json === 'function') {
-        const errData = await ctx.json();
-        if (errData && errData.error) msg = String(errData.error);
-      }
-    } catch { /* ignore */ }
-    logger.error('خطا در فعال‌سازی اشتراک', { error, data });
-    return { ok: false, error: 'خطا: ' + msg };
-  }
+/**
+ * Get support contact information for manual payments
+ */
+export function getSupportContacts(): { telegram: string; email: string } {
+  return {
+    telegram: '@S_upport_Daneshyar',
+    email: 'support.daneshyar.yar@gmail.com'
+  };
+}
 
-  activatePremium(plan.id);
-  logger.info('✅ پریمیوم فعال شد (از طریق Edge Function)', { plan: plan.id });
-  return { ok: true, message: 'پرداخت (شبیه‌سازی بتا) موفق! پریمیوم فعال شد 💎' };
+/**
+ * Get price for a plan
+ */
+export function getPlanPrice(planId: string): { price: number; days: number } | null {
+  const prices: Record<string, { price: number; days: number }> = {
+    monthly: { price: 99000, days: 30 },
+    term: { price: 320000, days: 120 },
+    yearly: { price: 890000, days: 365 },
+  };
+  return prices[planId] || null;
 }
