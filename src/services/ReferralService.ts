@@ -3,12 +3,14 @@
  * @module services/ReferralService
  */
 import { getSupabaseClient, getSession } from '@/services/AuthService';
+import { activateEntitlement } from '@/services/Premium';
 import { getInstance as getLogger } from '@/core/Logger';
 
 const logger = getLogger().module('ReferralService');
 
 const REFERRAL_LS = 'daneshyar_pending_ref';
 export const MAX_REFERRALS = 20;
+// Reward days are now handled as reward entitlement, not paid subscription
 export const REWARD_DAYS = 3;
 
 /** ذخیره کد دعوت در localStorage (هنگام ورود با لینک) */
@@ -43,17 +45,17 @@ export async function getMyReferralCode(): Promise<string | null> {
   const existingCode = (data as { referral_code?: string })?.referral_code;
   if (existingCode) return existingCode;
 
-  // اگر کد نبود، از Edge Function بساز (برای کاربران قدیمی یا موارد استثنا)
+  // اگر کد نبود، از Edge Function بساز
   try {
     const { data: ensureData, error } = await client.functions.invoke('ensure-profile', {
       body: {},
     });
     if (!error && ensureData?.ok && ensureData.referralCode) {
-      logger.info('کد دعوت ساخته شد (ensure-profile)');
+      logger.info('Referral code created (ensure-profile)');
       return ensureData.referralCode as string;
     }
   } catch (e) {
-    logger.warn('خطا در ensure-profile', e);
+    logger.warn('Error in ensure-profile', e);
   }
 
   return null;
@@ -100,17 +102,21 @@ export async function processReferralOnSignup(): Promise<{ ok: boolean; rewardDa
       body: { refCode },
     });
     if (error) {
-      logger.warn('خطا در process-referral', error);
+      logger.warn('Error in process-referral', error);
       return { ok: false, error: error.message };
     }
     if (data?.ok) {
       clearPendingRef();
-      logger.info('✅ دعوت پردازش شد', { rewardDays: data.rewardDays });
+      // Grant reward entitlement instead of paid subscription
+      if (data.rewardDays) {
+        activateEntitlement('reward', 'referral', data.rewardDays);
+      }
+      logger.info('Referral processed', { rewardDays: data.rewardDays });
       return { ok: true, rewardDays: data.rewardDays };
     }
     return { ok: false, error: data?.error ?? 'unknown' };
   } catch (e) {
-    logger.error('خطا در processReferralOnSignup', e);
+    logger.error('Error in processReferralOnSignup', e);
     return { ok: false, error: String(e) };
   }
 }
