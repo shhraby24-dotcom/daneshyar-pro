@@ -5,9 +5,9 @@
 import { getInstance as getLogger } from '@/core/Logger';
 const logger = getLogger().module('Premium');
 
-const PREMIUM_LS = 'daneshyar_premium';
-const PLAN_LS = 'daneshyar_premium_plan';
-const EXPIRY_LS = 'daneshyar_premium_exp';
+// LocalStorage keys for trial and reward entitlements (NOT for paid subscriptions)
+const TRIAL_LS = 'daneshyar_trial';
+const REWARD_LS = 'daneshyar_reward';
 
 export interface Plan {
   id: string;
@@ -25,68 +25,139 @@ export const PLANS: Plan[] = [
   { id: 'yearly', label: 'سالانه', priceToman: 890000, period: 'سال', months: 12, badge: '۳ ماه رایگان', highlight: true },
 ];
 
+/**
+ * Check if user has active PAID subscription
+ * This should ONLY return true if verified from Supabase
+ * localStorage is NOT a valid source for paid subscription status
+ */
 export function isPremium(): boolean {
+  // Paid subscription status must be verified from Supabase only
+  // This function now returns false by default - real status comes from SubscriptionService
+  return false;
+}
+
+/**
+ * Get the paid subscription plan ID
+ * Returns null if no paid subscription
+ */
+export function getPremiumPlan(): string | null {
+  // Plan should come from Supabase subscriptions table, not localStorage
+  return null;
+}
+
+/**
+ * Activate trial or reward entitlement (NOT paid subscription)
+ * This is for local entitlements only - paid subscriptions are managed by Supabase
+ */
+export function activateEntitlement(type: 'trial' | 'reward', planId: string, days: number): void {
+  const exp = new Date(Date.now() + days * 86400000).toISOString();
+  localStorage.setItem(TRIAL_LS, type === 'trial' ? '1' : '0');
+  localStorage.setItem(`${type}_plan`, planId);
+  localStorage.setItem(`${type}_exp`, exp);
+  logger.info(`Entitlement activated: ${type}`, { planId, exp });
+}
+
+/**
+ * Deactivate trial or reward entitlement
+ */
+export function deactivateEntitlement(type: 'trial' | 'reward'): void {
+  localStorage.removeItem(TRIAL_LS);
+  localStorage.removeItem(`${type}_plan`);
+  localStorage.removeItem(`${type}_exp`);
+}
+
+/**
+ * Check if trial entitlement is active
+ */
+export function isTrialEntitlementActive(): boolean {
   try {
-    if (localStorage.getItem(PREMIUM_LS) !== '1') return false;
-    const exp = localStorage.getItem(EXPIRY_LS);
-    if (exp && new Date(exp) < new Date()) { deactivatePremium(); return false; }
+    if (localStorage.getItem(TRIAL_LS) !== '1') return false;
+    const exp = localStorage.getItem('trial_exp');
+    if (exp && new Date(exp) < new Date()) { deactivateEntitlement('trial'); return false; }
     return true;
   } catch { return false; }
 }
 
-export function getPremiumPlan(): string | null {
-  return localStorage.getItem(PLAN_LS);
-}
-
-export function activatePremium(planId: string, customDays?: number): void {
-  const plan = PLANS.find((p) => p.id === planId);
-  const days = customDays ?? (plan ? plan.months * 30 : 30);
-  const exp = new Date(Date.now() + days * 86400000).toISOString();
-  localStorage.setItem(PREMIUM_LS, '1');
-  localStorage.setItem(PLAN_LS, planId);
-  localStorage.setItem(EXPIRY_LS, exp);
-  logger.info('💎 پریمیوم فعال شد', { planId, exp });
-}
-
-export function deactivatePremium(): void {
-  localStorage.removeItem(PREMIUM_LS);
-  localStorage.removeItem(PLAN_LS);
-  localStorage.removeItem(EXPIRY_LS);
-}
-
-const PROMO_CODES: Record<string, string> = {
-  'DANESHYAR-PRO': 'yearly',
-  'BETA-TESTER': 'yearly',
-  'LAUNCH1405': 'monthly',
-};
-
-export function tryPromo(code: string): boolean {
-  const planId = PROMO_CODES[code.trim().toUpperCase()];
-  if (!planId) return false;
-  activatePremium(planId);
-  return true;
-}
-
-/** تاریخ انقضای پریمیوم (برای نمایش در تنظیمات) */
-export function getPremiumExpiry(): string | null {
+/**
+ * Check if reward entitlement is active
+ */
+export function isRewardEntitlementActive(): boolean {
   try {
-    return localStorage.getItem(EXPIRY_LS);
+    if (localStorage.getItem(TRIAL_LS) !== '0') return false;
+    const exp = localStorage.getItem('reward_exp');
+    if (exp && new Date(exp) < new Date()) { deactivateEntitlement('reward'); return false; }
+    return true;
+  } catch { return false; }
+}
+
+/**
+ * Get trial entitlement expiry
+ */
+export function getTrialExpiry(): string | null {
+  try {
+    return localStorage.getItem('trial_exp');
   } catch {
     return null;
   }
 }
 
-/** روزهای باقی‌مانده پریمیوم */
-export function getPremiumDaysLeft(): number {
-  const exp = getPremiumExpiry();
+/**
+ * Get reward entitlement expiry
+ */
+export function getRewardExpiry(): string | null {
+  try {
+    return localStorage.getItem('reward_exp');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Days left for trial entitlement
+ */
+export function getTrialDaysLeft(): number {
+  const exp = getTrialExpiry();
   if (!exp) return 0;
   const diff = new Date(exp).getTime() - Date.now();
   return Math.max(0, Math.ceil(diff / 86400000));
 }
 
+/**
+ * Days left for reward entitlement
+ */
+export function getRewardDaysLeft(): number {
+  const exp = getRewardExpiry();
+  if (!exp) return 0;
+  const diff = new Date(exp).getTime() - Date.now();
+  return Math.max(0, Math.ceil(diff / 86400000));
+}
+
+/**
+ * Get the trial entitlement plan
+ */
+export function getTrialPlan(): string | null {
+  try {
+    return localStorage.getItem('trial_plan');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get the reward entitlement plan
+ */
+export function getRewardPlan(): string | null {
+  try {
+    return localStorage.getItem('reward_plan');
+  } catch {
+    return null;
+  }
+}
+
 export function formatToman(n: number): string {
   return n.toLocaleString('fa-IR') + ' تومان';
 }
+
 /** معادل ماهانه یک پلن */
 export function monthlyEquivalent(plan: Plan): number {
   return Math.round(plan.priceToman / plan.months);
