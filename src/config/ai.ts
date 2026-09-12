@@ -26,4 +26,3 @@ export const AI_LIMITS: Record<AITier, number> = {
 
 export const AI_KEYS_LS = 'daneshyar_ai_keys';
 export const AI_USAGE_LS = 'daneshyar_ai_usage';
-export const PREMIUM_LS = 'daneshyar_premium';
