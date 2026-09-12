@@ -4,7 +4,8 @@
  * @module services/AIQuizService
  */
 import { getInstance as getLogger } from '@/core/Logger';
-import { AI_CONFIG, AI_LIMITS, AI_KEYS_LS, AI_USAGE_LS, PREMIUM_LS, type AITier } from '@/config/ai';
+import { AI_CONFIG, AI_LIMITS, AI_KEYS_LS, AI_USAGE_LS, type AITier } from '@/config/ai';
+import { isSubscriptionValid } from '@/services/SubscriptionService';
 import type { Question as QuizQuestion, QuestionType } from '@/services/QuizGenerator';
 import { API_BASE } from '@/config/api';
 
@@ -27,10 +28,20 @@ export function saveUserKeys(gemini: string, groq: string): void {
   try { localStorage.setItem(AI_KEYS_LS, JSON.stringify({ gemini, groq })); } catch { /* ignore */ }
 }
 
+/**
+ * Get AI tier based on subscription status and user keys
+ * Paid subscription status comes from Supabase (source of truth)
+ * BYOK status comes from user-provided API keys
+ */
 export function getTier(): AITier {
-  try { if (localStorage.getItem(PREMIUM_LS) === '1') return 'premium'; } catch { /* ignore */ }
+  // Check for paid subscription from Supabase first
+  if (isSubscriptionValid()) return 'premium';
+  
+  // Check for user-provided API keys (BYOK)
   const k = readUserKeys();
   if (k.gemini || k.groq) return 'byok';
+  
+  // Default to free tier
   return 'free';
 }
 
