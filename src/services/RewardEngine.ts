@@ -1,9 +1,10 @@
 /**
  * دانش‌یار پرو - موتور پاداش (v3: چالش‌های بیشتر + نشان‌های پلکانی نگهبان شعله)
+ * پاداش‌ها به عنوان entitlement جداگانه از اشتراک پولی هستند
  * @module services/RewardEngine
  */
 import { getDatabase } from '@/core/Database';
-import { activatePremium } from '@/services/Premium';
+import { activateEntitlement, getRewardDaysLeft, getRewardPlan } from '@/services/Premium';
 import { getInstance as getLogger } from '@/core/Logger';
 
 const logger = getLogger().module('RewardEngine');
@@ -14,7 +15,7 @@ export interface Challenge {
   id: string;
   title: string;
   description: string;
-  icon: string; // نام آیکون Lucide
+  icon: string;
   category: ChallengeCategory;
   rewardDays: number;
   target: number;
@@ -25,14 +26,12 @@ export interface Challenge {
 
 export interface ChallengeStatus extends Challenge {
   current: number;
-  progress: number; // 0..100
+  progress: number;
   completed: boolean;
 }
 
-// ============================================================
-// helper: بیشترین زنجیره‌ی روزهای متوالی مطالعه
-// ============================================================
 const DAY_MS = 86400000;
+
 async function longestConsecutiveStudyDays(): Promise<number> {
   const unique = await getDatabase().getUniqueStudyDays();
   const list = Array.from(unique);
@@ -54,11 +53,7 @@ async function longestConsecutiveStudyDays(): Promise<number> {
   return best;
 }
 
-// ============================================================
-// چالش‌ها
-// ============================================================
 const CHALLENGES: Challenge[] = [
-  // ── روزانه ──
   { id: 'first_summary', title: 'اولین خلاصه', description: 'اولین خلاصه‌ی خود را بساز', icon: 'sparkles', category: 'daily', rewardDays: 1, target: 1,
     getCurrent: async () => (await getDatabase().getStudySessions()).filter((s) => s.type === 'summarize').length,
     ctaRoute: 'summarizer', ctaLabel: 'ساخت خلاصه' },
@@ -68,8 +63,6 @@ const CHALLENGES: Challenge[] = [
   { id: 'first_quiz', title: 'اولین آزمون', description: 'اولین آزمونت را بساز', icon: 'quiz', category: 'daily', rewardDays: 1, target: 1,
     getCurrent: async () => (await getDatabase().getQuizHistory()).length,
     ctaRoute: 'quiz', ctaLabel: 'ساخت آزمون' },
-
-  // ── هفتگی ──
   { id: 'streak_7', title: 'قهرمان هفته', description: '۷ روز متوالی تمرین کن', icon: 'flame', category: 'weekly', rewardDays: 3, target: 7,
     getCurrent: longestConsecutiveStudyDays,
     ctaRoute: 'dashboard', ctaLabel: 'شروع مطالعه' },
@@ -79,19 +72,15 @@ const CHALLENGES: Challenge[] = [
   { id: 'card_week', title: 'کارخانه کارت', description: '۲۵ فلش‌کارت بساز', icon: 'flashcards', category: 'weekly', rewardDays: 3, target: 25,
     getCurrent: async () => (await getDatabase().getFlashcards()).length,
     ctaRoute: 'flashcards', ctaLabel: 'ساخت فلش‌کارت' },
-
-  // ── دستاورد ──
   { id: 'flashcard_50', title: 'کلکسیونر کارت', description: '۵۰ فلش‌کارت بساز', icon: 'flashcards', category: 'achievement', rewardDays: 4, target: 50,
     getCurrent: async () => (await getDatabase().getFlashcards()).length,
     ctaRoute: 'flashcards', ctaLabel: 'ساخت فلش‌کارت' },
-  { id: 'quiz_master', title: 'استاد آزمون', description: '۱۰ آزمون بساز (AI یا آفلاین)', icon: 'quiz', category: 'achievement', rewardDays: 5, target: 10,
+  { id: 'quiz_master', title: 'استاد آزمون', description: '۱۰ آزمون بساز', icon: 'quiz', category: 'achievement', rewardDays: 5, target: 10,
     getCurrent: async () => (await getDatabase().getQuizHistory()).length,
     ctaRoute: 'quiz', ctaLabel: 'ساخت آزمون' },
   { id: 'high_scorer', title: 'نمره‌آور', description: '۳ آزمون با نمره بالای ۸۰٪', icon: 'trophy', category: 'achievement', rewardDays: 5, target: 3,
     getCurrent: async () => (await getDatabase().getQuizHistory()).filter((q) => ((q as { percentage?: number }).percentage ?? 0) >= 80).length,
     ctaRoute: 'quiz', ctaLabel: 'ساخت آزمون' },
-
-  // ── نشان‌های پلکانی نگهبان شعله ──
   { id: 'guardian_30', title: 'نگهبان شعله · برنز', description: '۳۰ روز متوالی تمرین کن', icon: 'flame', category: 'achievement', rewardDays: 3, target: 30,
     getCurrent: longestConsecutiveStudyDays, ctaRoute: 'dashboard', ctaLabel: 'شروع مطالعه' },
   { id: 'guardian_60', title: 'نگهبان شعله · نقره', description: '۶۰ روز متوالی تمرین کن', icon: 'flame', category: 'achievement', rewardDays: 5, target: 60,
@@ -100,14 +89,10 @@ const CHALLENGES: Challenge[] = [
     getCurrent: longestConsecutiveStudyDays, ctaRoute: 'dashboard', ctaLabel: 'شروع مطالعه' },
   { id: 'guardian_180', title: 'نگهبان شعله · الماس', description: '۱۸۰ روز متوالی تمرین کن', icon: 'shield', category: 'achievement', rewardDays: 14, target: 180,
     getCurrent: longestConsecutiveStudyDays, ctaRoute: 'dashboard', ctaLabel: 'شروع مطالعه' },
-  // TODO: تخفیف اشتراک برای این نشان، در فاز پولیش به Premium متصل می‌شود
   { id: 'guardian_365', title: 'نگهبان شعله · افسانه', description: '۱ سال متوالی تمرین کن + تخفیف ویژه', icon: 'award', category: 'achievement', rewardDays: 30, target: 365,
     getCurrent: longestConsecutiveStudyDays, ctaRoute: 'dashboard', ctaLabel: 'شروع مطالعه' },
 ];
 
-// ============================================================
-// API
-// ============================================================
 export async function getChallengesWithStatus(): Promise<ChallengeStatus[]> {
   const db = getDatabase();
   const result: ChallengeStatus[] = [];
@@ -133,12 +118,13 @@ export async function checkAndReward(): Promise<ChallengeStatus[]> {
       const current = await challenge.getCurrent();
       if (current >= challenge.target) {
         await db.unlockAchievement(challenge.id);
-        activatePremium(challenge.id, challenge.rewardDays);
+        // Use reward entitlement instead of paid subscription
+        activateEntitlement('reward', challenge.id, challenge.rewardDays);
         unlocked.push({ ...challenge, current, progress: 100, completed: true });
-        logger.info(`چالش تکمیل شد: ${challenge.title}`, { rewardDays: challenge.rewardDays });
+        logger.info('Challenge completed: ' + challenge.title, { rewardDays: challenge.rewardDays });
       }
     } catch (e) {
-      logger.warn('خطا در چک چالش', { id: challenge.id, error: e });
+      logger.warn('Error checking challenge', { id: challenge.id, error: e });
     }
   }
   return unlocked;
@@ -146,4 +132,12 @@ export async function checkAndReward(): Promise<ChallengeStatus[]> {
 
 export function getAllChallenges(): Challenge[] {
   return [...CHALLENGES];
+}
+
+export function getRewardDaysLeft(): number {
+  return getRewardDaysLeft();
+}
+
+export function getRewardPlan(): string | null {
+  return getRewardPlan();
 }
