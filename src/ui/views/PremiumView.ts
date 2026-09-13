@@ -317,7 +317,6 @@ export async function createPremiumView(_params: Record<string, unknown> = {}): 
     
     getToast().info(message, 'راهنمای پرداخت');
   }
-  }
 
   function buildComparison(): HTMLElement {
     const section = document.createElement('div');
