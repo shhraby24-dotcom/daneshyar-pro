@@ -3,12 +3,8 @@
  * @module main
  */
 import './style.css';
-import { getInstance as getLogger } from '@/core/Logger';
 import { getInstance as getEventBus } from '@/core/EventBus';
-import { getStorage } from '@/core/Storage';
-import { getState } from '@/core/State';
 import { getRouter } from '@/core/Router';
-import { getErrorHandler } from '@/core/Errors';
 import { getLayout } from '@/ui/Layout';
 import { createDashboardView } from '@/ui/views/DashboardView';
 import { getDatabase } from '@/core/Database';
@@ -16,21 +12,16 @@ import { createAuthView } from '@/ui/views/AuthView';
 import { syncAll } from '@/services/SyncService';
 import { loadSubscription, getCurrentSubscription, isSubscriptionValid } from '@/services/SubscriptionService';
 import { startTrial, hasUsedTrial, checkTrialExpiry, isTrialActive } from '@/services/TrialService';
-import { getInstance as getLoggerInstance } from '@/core/Logger';
+import { getInstance as getLogger } from '@/core/Logger';
 import { startAutoRewardWatcher } from '@/services/AutoRewardWatcher';
 import { savePendingRef } from '@/services/ReferralService';
 import { createLandingView } from '@/ui/views/LandingView';
 
-const logger = getLoggerInstance({ level: 'DEBUG', showTimestamp: true, persistToStorage: false });
+const logger = getLogger({ level: 'DEBUG', showTimestamp: true, persistToStorage: false });
 getEventBus({ debug: false });
-const storage = getStorage();
-const state = getState();
 const router = getRouter();
-getErrorHandler();
 
 logger.info('Starting Daneshyar Pro...');
-
-type ViewParams = Record<string, unknown>;
 
 async function bootstrap(): Promise<void> {
   try {
@@ -48,7 +39,8 @@ async function bootstrap(): Promise<void> {
     await state.load();
 
     const hash = window.location.hash;
-    const isLandingRoute = hash === '#/landing' || hash === '#/landing/';
+    const isLandingRoute = hash === '#/landing' |
+| hash === '#/landing/';
 
     // New user without data -> direct render landing (no redirect = no blank screen)
     if (!hash || hash === '#' || hash === '#/' || hash === '') {
@@ -102,6 +94,7 @@ async function bootstrap(): Promise<void> {
         startTrial();
         logger.info('Trial started for new user');
       }
+
     }
 
     // Start other services
@@ -123,8 +116,8 @@ async function bootstrap(): Promise<void> {
 function registerViews(): void {
   const router = getRouter();
   // Register all views
-  router.register('dashboard', () => createDashboardView());
-  router.register('auth', () => createAuthView());
+  router.registerView('dashboard', () => createDashboardView());
+  router.registerView('auth', () => createAuthView());
   // Other view registrations...
 }
 
