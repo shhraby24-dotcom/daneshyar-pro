@@ -23,6 +23,7 @@ import { getCurrentUser, signOut } from '@/services/AuthService';
 import { getRouter } from '@/core/Router';
 import { syncAll, onSyncStatus, getLastSync, isSyncAvailable, type SyncUIStatus } from '@/services/SyncService';
 import { getSubscriptionInfo } from '@/services/SubscriptionService';
+import { isTrialActive, getTrialDaysRemaining } from '@/services/TrialService';
 import { PLANS } from '@/services/Premium';
 import { createIcon, iconHTML } from '@/services/IconService';
 
@@ -39,7 +40,8 @@ type Phase = 'main' | 'ai' | 'data' | 'advanced';
 function getXP(): number { try { return parseInt(localStorage.getItem(XP_KEY) || '0', 10) || 0; } catch { return 0; } }
 const levelOf = (xp: number): number => Math.floor(xp / 100) + 1;
 
-function readAppSettings(): { autoSaveDraft?: boolean; reduceMotion?: boolean } {
+function readAppSettings(): { autoSaveDraft?: boolean
+; reduceMotion?: boolean } {
   try {
     const raw = localStorage.getItem(SETTINGS_LS);
     return raw ? (JSON.parse(raw) as { autoSaveDraft?: boolean; reduceMotion?: boolean }) : {};
@@ -84,6 +86,7 @@ function createSettingsRow(opts: {
   if (onClick) row.addEventListener('click', onClick);
 
   const iconBox = document.createElement('div');
+
   iconBox.className = `w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
     danger ? 'bg-red-500/15 text-red-400' : 'bg-primary-500/15 text-primary-400'
   }`;
@@ -133,7 +136,8 @@ function createSwitch(initial: boolean, onChange: (v: boolean) => void): HTMLEle
   knob.className = 'absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-200';
   btn.appendChild(knob);
   const paint = (): void => {
-    btn.classList.toggle('bg-primary-500', on);
+    btn.classList.toggle('
+bg-primary-500', on);
     btn.classList.toggle('bg-slate-700', !on);
     knob.classList.toggle('start-5', on);
     knob.classList.toggle('start-0.5', !on);
@@ -181,7 +185,8 @@ function openXpSheet(): void {
 
   const sheet = document.createElement('div');
   sheet.className = 'fixed bottom-0 inset-x-0 z-[81] mx-auto max-w-md rounded-t-3xl bg-slate-800 border border-slate-700 p-5 space-y-4';
-  sheet.animate([{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  sheet.animate([{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' 
+});
 
   const close = (): void => { backdrop.remove(); sheet.remove(); };
   backdrop.addEventListener('click', close);
@@ -218,7 +223,8 @@ function openXpSheet(): void {
   const x1 = document.createElement('div');
   x1.className = 'text-sm font-bold text-slate-200';
   x1.innerHTML = `${toPersianDigits(String(inLevel))} <span class="text-slate-500">از</span> ۱۰۰ <span class="text-slate-500">XP تا سطح بعد</span>`;
-  const x2 = document.createElement('div');
+  con
+st x2 = document.createElement('div');
   x2.className = 'text-xs text-slate-500 mt-0.5';
   x2.textContent = `مجموع کل: ${toPersianDigits(String(xp))} XP`;
   xpText.appendChild(x1); xpText.appendChild(x2);
@@ -254,7 +260,8 @@ function openXpSheet(): void {
   });
 
   const cta = createButton({
-    label: 'شروع کسب XP', variant: BUTTON_VARIANTS.ACCENT, size: BUTTON_SIZES.LG,
+    label: 'شروع کسب XP', variant: BUTTON_VARIANTS.ACCENT, 
+size: BUTTON_SIZES.LG,
     iconHtml: iconHTML('play', 16),
     onClick: () => { close(); void getRouter().navigate('flashcards'); },
   });
@@ -304,7 +311,8 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
     const h1 = document.createElement('h1');
     h1.className = 'text-2xl sm:text-3xl font-black text-slate-100';
     h1.textContent = 'تنظیمات';
-    const h2 = document.createElement('p');
+    const h2 = document
+.createElement('p');
     h2.className = 'text-xs text-slate-500 mt-0.5';
     h2.textContent = 'دانش‌یار را مطابق خودت شخصی‌سازی کن';
     hTxt.appendChild(h1); hTxt.appendChild(h2);
@@ -353,7 +361,8 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
 
     const card = document.createElement('button');
     card.type = 'button';
-    card.className = 'w-full bg-slate-800 border border-slate-700/70 hover:border-primary-500/40 rounded-2xl p-4 transition-all active:scale-[.99] group';
+    card.className = 'w-full bg-slate-800 border border-slate-700/70 hover:border-primary-500/40 
+rounded-2xl p-4 transition-all active:scale-[.99] group';
 
     const row = document.createElement('div');
     row.className = 'flex items-center gap-4';
@@ -395,11 +404,12 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
 
   // ═════════════════════════════════════════════════════════
   // Hero Premium طلایی (تنها گرادیان رنگی صفحه)
-  // ═════════════════════════════════════════════════════════
+  // ════════════════════════════════
+═════════════════════════
   function buildPremiumHero(): HTMLElement {
     const info = getSubscriptionInfo();
 
-    if (info.isPremium) {
+    if (info.hasPaidSubscription) {
       const plan = PLANS.find((p) => p.id === info.planId);
       const hero = document.createElement('div');
       hero.className = 'relative overflow-hidden rounded-2xl border border-accent-500/30 p-5';
@@ -428,7 +438,8 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
       status.className = 'text-[10px] font-bold text-accent-300 bg-accent-500/15 border border-accent-500/30 px-2.5 py-1 rounded-full flex items-center gap-1';
       status.innerHTML = iconHTML('check', 11);
       const st = document.createElement('span'); st.textContent = 'فعال';
-      status.appendChild(st);
+      status.appendChild(st
+);
       top.appendChild(brand); top.appendChild(status);
       inner.appendChild(top);
 
@@ -450,7 +461,7 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
       return hero;
     }
 
-    if (info.isTrial) {
+    if (isTrialActive()) {
       const hero = document.createElement('div');
       hero.className = 'rounded-2xl p-5 bg-slate-800 border border-primary-500/30';
       const top = document.createElement('div');
@@ -460,12 +471,13 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
       ic.innerHTML = iconHTML('gift', 22);
       const txt = document.createElement('div');
       const tt = document.createElement('div'); tt.className = 'text-sm font-bold text-slate-100'; tt.textContent = 'دوره آزمایشی فعال';
-      const td = document.createElement('div'); td.className = 'text-xs text-slate-400 mt-0.5'; td.textContent = `${toPersianDigits(String(info.trialDaysLeft))} روز تا پایان`;
+      const td = document.createElement('div'); td.className = 'text-xs text-slate-400 mt-0.5'; td.textContent = `${toPersianDigits(String(getTrialDaysRemaining()))} روز تا پایان`;
       txt.appendChild(tt); txt.appendChild(td);
       top.appendChild(ic); top.appendChild(txt);
       hero.appendChild(top);
       const btn = createButton({
-        label: 'ارتقا به Premium', variant: BUTTON_VARIANTS.ACCENT, size: BUTTON_SIZES.MD,
+        label: 'ارتقا به P
+remium', variant: BUTTON_VARIANTS.ACCENT, size: BUTTON_SIZES.MD,
         iconHtml: iconHTML('sparkles', 16),
         onClick: () => { void getRouter().navigate('premium'); },
       });
@@ -505,7 +517,8 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
       onClick: () => { void getRouter().navigate('premium'); },
     });
     btn.classList.add('w-full');
-    hero.appendChild(btn);
+    
+hero.appendChild(btn);
     return hero;
   }
 
@@ -548,7 +561,8 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
             const ok = await getModal().confirm('خروج از حساب', 'آیا مطمئنی؟ داده‌های محلی حفظ می‌شوند.', { confirmText: 'خروج', dangerMode: true });
             if (!ok) return;
             await signOut();
-            getToast().success('از حساب خارج شدی');
+            getToast().success('از حساب
+ خارج شدی');
             tt.textContent = 'وارد نشده';
             td.textContent = 'برای سینک وارد شو';
             avatar.textContent = '?';
@@ -585,7 +599,8 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
       syncWrap.appendChild(syncRow);
 
       const unsub = onSyncStatus((s: SyncUIStatus) => {
-        const last = getLastSync();
+        const last = getLastSyn
+c();
         if (s === 'syncing') { std.textContent = 'در حال سینک...'; syncBtn.disabled = true; }
         else if (s === 'success') { std.textContent = 'سینک با موفقیت انجام شد'; syncBtn.disabled = false; }
         else if (s === 'error') { std.textContent = 'خطا در سینک'; syncBtn.disabled = false; }
@@ -631,7 +646,8 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
       icon: 'minimize',
       title: 'کاهش انیمیشن',
       description: 'برای کسانی که حرکت زیاد اذیت‌شان می‌کند',
-      trailing: createSwitch(settings.reduceMotion === true, (v) => {
+      trailing: 
+createSwitch(settings.reduceMotion === true, (v) => {
         writeAppSettings({ reduceMotion: v });
         getToast().success(v ? 'انیمیشن کاهش یافت' : 'انیمیشن کامل فعال شد');
       }),
@@ -697,6 +713,7 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
   function buildAboutGroup(): HTMLElement {
     const g = document.createElement('div');
     g.appendChild(createSettingsRow({
+
       icon: 'award',
       title: 'دانش‌یار پرو',
       description: `نسخه ${toPersianDigits('1.0.0-beta.1')} · ساخته‌شده برای یادگیری بهتر`,
@@ -717,256 +734,6 @@ export async function createSettingsView(_params: Record<string, unknown> = {}):
   // ═════════════════════════════════════════════════════════
   // زیرصفحه AI
   // ═════════════════════════════════════════════════════════
-  function buildAISubpage(): HTMLElement {
-    const wrap = document.createElement('div');
-    wrap.className = 'space-y-4';
-    const header = document.createElement('div');
-    header.className = 'flex items-center gap-3 sticky top-0 bg-slate-900/95 backdrop-blur z-10 py-3 -mx-1 px-1';
-    header.appendChild(createButton({ label: 'بازگشت', variant: BUTTON_VARIANTS.GHOST, size: BUTTON_SIZES.SM, iconHtml: iconHTML('back', 16), onClick: () => { phase = 'main'; render(); } }));
-    const t = document.createElement('h1'); t.className = 'text-xl font-black text-slate-100 flex-1'; t.textContent = 'دستیار هوشمند';
-    header.appendChild(t);
-    wrap.appendChild(header);
+  function buildAISubpage(): HTMLEle
 
-    const intro = document.createElement('div');
-    intro.className = 'bg-slate-800 border border-slate-700/70 rounded-xl p-4 space-y-3';
-    const ih = document.createElement('div');
-    ih.className = 'flex items-center gap-2';
-    ih.appendChild(createIcon('sparkles', 20, 'text-primary-400'));
-    const iT = document.createElement('h3'); iT.className = 'font-bold text-slate-100'; iT.textContent = 'مدل فعال';
-    ih.appendChild(iT); intro.appendChild(ih);
-    const modelChip = document.createElement('div');
-    modelChip.className = 'flex items-center gap-3 bg-primary-500/10 border border-primary-500/30 rounded-lg p-3';
-    const mic = document.createElement('div');
-    mic.className = 'w-10 h-10 rounded-lg bg-primary-500/20 text-primary-400 flex items-center justify-center flex-shrink-0';
-    mic.appendChild(createIcon('sparkles', 20));
-    modelChip.appendChild(mic);
-    const mTxt = document.createElement('div');
-    mTxt.className = 'flex-1 min-w-0';
-    const m1 = document.createElement('div'); m1.className = 'text-sm font-bold text-primary-300'; m1.textContent = 'Google Gemini';
-    const m2 = document.createElement('div'); m2.className = 'text-xs text-slate-400 mt-0.5'; m2.textContent = `سهمیه امروز: ${toPersianDigits(String(getRemainingQuota()))} (${getTier()})`;
-    mTxt.appendChild(m1); mTxt.appendChild(m2);
-    modelChip.appendChild(mTxt);
-    const check = document.createElement('div');
-    check.className = 'w-8 h-8 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center flex-shrink-0';
-    check.innerHTML = iconHTML('check', 16);
-    modelChip.appendChild(check);
-    intro.appendChild(modelChip);
-    wrap.appendChild(intro);
-
-    const keys = readStoredKeys();
-    const kb = document.createElement('div');
-    kb.className = 'bg-slate-800 border border-slate-700/70 rounded-xl p-4 space-y-3';
-    const kh = document.createElement('div');
-    kh.className = 'flex items-center gap-2';
-    kh.appendChild(createIcon('key', 18, 'text-primary-400'));
-    const kT = document.createElement('h3'); kT.className = 'font-bold text-slate-100'; kT.textContent = 'کلیدهای API شخصی (اختیاری)';
-    kh.appendChild(kT); kb.appendChild(kh);
-    const kDesc = document.createElement('p');
-    kDesc.className = 'text-xs text-slate-400 leading-relaxed';
-    kDesc.textContent = 'با کلید شخصی، سهمیه نامحدود خواهی داشت.';
-    kb.appendChild(kDesc);
-
-    const gW = document.createElement('div'); gW.className = 'space-y-1.5';
-    const gL = document.createElement('label'); gL.className = 'text-xs font-semibold text-slate-300'; gL.textContent = 'کلید Gemini';
-    const gI = document.createElement('input'); gI.type = 'password'; gI.className = 'input w-full'; gI.dir = 'ltr'; gI.placeholder = 'AIza...'; gI.value = keys.gemini;
-    gW.appendChild(gL); gW.appendChild(gI); kb.appendChild(gW);
-
-    const qW = document.createElement('div'); qW.className = 'space-y-1.5';
-    const qL = document.createElement('label'); qL.className = 'text-xs font-semibold text-slate-300'; qL.textContent = 'کلید Groq (پشتیبان)';
-    const qI = document.createElement('input'); qI.type = 'password'; qI.className = 'input w-full'; qI.dir = 'ltr'; qI.placeholder = 'gsk_...'; qI.value = keys.groq;
-    qW.appendChild(qL); qW.appendChild(qI); kb.appendChild(qW);
-
-    const save = createButton({
-      label: 'ذخیره کلیدها', variant: BUTTON_VARIANTS.PRIMARY, size: BUTTON_SIZES.MD,
-      iconHtml: iconHTML('save', 16),
-      onClick: () => { saveUserKeys(gI.value.trim(), qI.value.trim()); getToast().success('کلیدها ذخیره شدند'); render(); },
-    });
-    save.classList.add('w-full');
-    kb.appendChild(save);
-
-    if (keys.gemini || keys.groq) {
-      const clear = createButton({
-        label: 'حذف کلیدها', variant: BUTTON_VARIANTS.GHOST, size: BUTTON_SIZES.SM,
-        iconHtml: iconHTML('trash', 14),
-        onClick: async () => {
-          const ok = await getModal().confirm('حذف کلیدها', 'کلیدهای ذخیره‌شده پاک می‌شوند.', { confirmText: 'حذف', dangerMode: true });
-          if (!ok) return;
-          try { localStorage.removeItem(AI_KEYS_LS); } catch { /* ignore */ }
-          getToast().success('کلیدها حذف شدند');
-          render();
-        },
-      });
-      clear.classList.add('w-full');
-      kb.appendChild(clear);
-    }
-    wrap.appendChild(kb);
-
-    const note = document.createElement('div');
-    note.className = 'flex items-start gap-3 bg-slate-800/50 border border-slate-700/50 rounded-xl p-4';
-    const nic = document.createElement('div');
-    nic.className = 'w-8 h-8 rounded-lg bg-primary-500/15 text-primary-400 flex items-center justify-center flex-shrink-0';
-    nic.appendChild(createIcon('shield', 14));
-    const nTxt = document.createElement('div');
-    const nt1 = document.createElement('div'); nt1.className = 'text-xs font-bold text-slate-200 mb-1'; nt1.textContent = 'حریم خصوصی';
-    const nt2 = document.createElement('p'); nt2.className = 'text-[11px] text-slate-400 leading-relaxed';
-    nt2.textContent = 'کلیدها فقط روی دستگاه شما ذخیره می‌شوند. بدون کلید، از کلید پیش‌فرض با سهمیه محدود استفاده می‌شود.';
-    nTxt.appendChild(nt1); nTxt.appendChild(nt2);
-    note.appendChild(nic); note.appendChild(nTxt);
-    wrap.appendChild(note);
-
-    return wrap;
-  }
-
-  // ═════════════════════════════════════════════════════════
-  // زیرصفحه داده‌ها
-  // ═════════════════════════════════════════════════════════
-  function buildDataSubpage(): HTMLElement {
-    const wrap = document.createElement('div');
-    wrap.className = 'space-y-4';
-    const header = document.createElement('div');
-    header.className = 'flex items-center gap-3 sticky top-0 bg-slate-900/95 backdrop-blur z-10 py-3 -mx-1 px-1';
-    header.appendChild(createButton({ label: 'بازگشت', variant: BUTTON_VARIANTS.GHOST, size: BUTTON_SIZES.SM, iconHtml: iconHTML('back', 16), onClick: () => { phase = 'main'; render(); } }));
-    const t = document.createElement('h1'); t.className = 'text-xl font-black text-slate-100 flex-1'; t.textContent = 'داده‌ها و پشتیبان';
-    header.appendChild(t);
-    wrap.appendChild(header);
-
-    const sb = document.createElement('div');
-    sb.className = 'bg-slate-800 border border-slate-700/70 rounded-xl p-4';
-    const sh = document.createElement('div');
-    sh.className = 'flex items-center gap-2 mb-3';
-    sh.appendChild(createIcon('database', 18, 'text-primary-400'));
-    const sT = document.createElement('h3'); sT.className = 'font-bold text-slate-100'; sT.textContent = 'آمار داده‌های شما';
-    sh.appendChild(sT); sb.appendChild(sh);
-    const sg = document.createElement('div'); sg.className = 'grid grid-cols-3 gap-2';
-    const sl = document.createElement('div'); sl.className = 'col-span-3 text-center text-xs text-slate-400 py-4'; sl.textContent = 'در حال محاسبه...';
-    sg.appendChild(sl); sb.appendChild(sg);
-    void getDatabase().getStats().then((s) => {
-      sl.remove();
-      [
-        { v: s.totalNotes, l: 'یادداشت' },
-        { v: s.totalFlashcards, l: 'فلش‌کارت' },
-        { v: s.totalQuizzes, l: 'آزمون' },
-      ].forEach((it) => {
-        const b = document.createElement('div'); b.className = 'bg-slate-900/50 rounded-lg p-3 text-center';
-        const v = document.createElement('div'); v.className = 'text-xl font-black text-primary-400'; v.textContent = toPersianDigits(String(it.v));
-        const lb = document.createElement('div'); lb.className = 'text-[10px] text-slate-400 mt-0.5'; lb.textContent = it.l;
-        b.appendChild(v); b.appendChild(lb);
-        sg.appendChild(b);
-      });
-    });
-    wrap.appendChild(sb);
-
-    const bb = document.createElement('div');
-    bb.className = 'bg-slate-800 border border-slate-700/70 rounded-xl p-4 space-y-3';
-    const bh = document.createElement('div');
-    bh.className = 'flex items-center gap-2 mb-2';
-    bh.appendChild(createIcon('archive', 18, 'text-primary-400'));
-    const bT = document.createElement('h3'); bT.className = 'font-bold text-slate-100'; bT.textContent = 'پشتیبان‌گیری و بازیابی';
-    bh.appendChild(bT); bb.appendChild(bh);
-    const desc = document.createElement('p');
-    desc.className = 'text-xs text-slate-400 leading-relaxed mb-3';
-    desc.textContent = 'قبل از پاک کردن داده‌ها یا تغییر دستگاه، یک پشتیبان بساز.';
-    bb.appendChild(desc);
-
-    bb.appendChild(createButton({
-      label: 'دانلود خروجی JSON', variant: BUTTON_VARIANTS.PRIMARY,
-      iconHtml: iconHTML('download', 16),
-      onClick: async () => {
-        try {
-          const json = await getDatabase().exportData();
-          const blob = new Blob([json], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url; a.download = `daneshyar-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click();
-          URL.revokeObjectURL(url);
-          getToast().success('فایل پشتیبان دانلود شد');
-        } catch { getToast().error('خطا در خروجی'); }
-      },
-    }));
-
-    bb.appendChild(createButton({
-      label: 'بازیابی از فایل', variant: BUTTON_VARIANTS.GHOST,
-      iconHtml: iconHTML('upload', 16),
-      onClick: async () => {
-        const input = document.createElement('input'); input.type = 'file'; input.accept = 'application/json';
-        input.addEventListener('change', async () => {
-          const f = input.files?.[0]; if (!f) return;
-          const ok = await getModal().confirm('بازیابی داده‌ها', 'داده‌های فعلی با فایل پشتیبان جایگزین می‌شوند. این عمل غیرقابل بازگشت است.', { confirmText: 'بازیابی', dangerMode: true });
-          if (!ok) return;
-          try {
-            const text = await f.text();
-            await getDatabase().importData(text);
-            getToast().success('داده‌ها بازیابی شدند');
-          } catch { getToast().error('فایل پشتیبان نامعتبر است'); }
-        });
-        input.click();
-      },
-    }));
-    wrap.appendChild(bb);
-    return wrap;
-  }
-
-  // ═════════════════════════════════════════════════════════
-  // زیرصفحه پیشرفته
-  // ═════════════════════════════════════════════════════════
-  function buildAdvancedSubpage(): HTMLElement {
-    const wrap = document.createElement('div');
-    wrap.className = 'space-y-4';
-    const header = document.createElement('div');
-    header.className = 'flex items-center gap-3 sticky top-0 bg-slate-900/95 backdrop-blur z-10 py-3 -mx-1 px-1';
-    header.appendChild(createButton({ label: 'بازگشت', variant: BUTTON_VARIANTS.GHOST, size: BUTTON_SIZES.SM, iconHtml: iconHTML('back', 16), onClick: () => { phase = 'main'; render(); } }));
-    const t = document.createElement('h1'); t.className = 'text-xl font-black text-slate-100 flex-1'; t.textContent = 'تنظیمات پیشرفته';
-    header.appendChild(t);
-    wrap.appendChild(header);
-
-    const warn = document.createElement('div');
-    warn.className = 'flex items-start gap-3 bg-accent-500/5 border border-accent-500/20 rounded-xl p-4';
-    warn.appendChild(createIcon('alert-triangle', 18, 'text-accent-400 flex-shrink-0 mt-0.5'));
-    const wTxt = document.createElement('p');
-    wTxt.className = 'text-xs text-slate-300 leading-relaxed';
-    wTxt.textContent = 'این گزینه‌ها روی داده‌های شما تأثیر می‌گذارند. با احتیاط استفاده کنید.';
-    warn.appendChild(wTxt);
-    wrap.appendChild(warn);
-
-    const ops = document.createElement('div');
-    ops.className = 'bg-slate-800 border border-slate-700/70 rounded-xl overflow-hidden divide-y divide-slate-700/60';
-
-    ops.appendChild(createSettingsRow({
-      icon: 'trash',
-      title: 'پاک کردن کش برنامه',
-      description: 'حافظه‌ی موقت را پاک می‌کند (داده‌ها حفظ می‌شوند)',
-      onClick: async () => {
-        const ok = await getModal().confirm('پاک کردن کش', 'آیا مطمئنی؟', { confirmText: 'پاک کن' });
-        if (!ok) return;
-        try {
-          if ('caches' in window) {
-            const names = await caches.keys();
-            await Promise.all(names.map((n) => caches.delete(n)));
-          }
-          getToast().success('کش پاک شد');
-        } catch { getToast().error('خطا در پاک کردن کش'); }
-      },
-    }));
-
-    ops.appendChild(createSettingsRow({
-      icon: 'refresh',
-      title: 'ریست تنظیمات',
-      description: 'تنظیمات را به حالت پیش‌فرض برمی‌گرداند',
-      danger: true,
-      onClick: async () => {
-        const ok = await getModal().confirm('ریست تنظیمات', 'همه‌ی تنظیمات (به جز داده‌ها) به حالت پیش‌فرض برمی‌گردند.', { confirmText: 'ریست کن', dangerMode: true });
-        if (!ok) return;
-        try { localStorage.removeItem(SETTINGS_LS); } catch { /* ignore */ }
-        getToast().success('تنظیمات ریست شد');
-        render();
-      },
-    }));
-    wrap.appendChild(ops);
-    return wrap;
-  }
-
-  render();
-  return container;
-}
-
-export default createSettingsView;
+... [Content truncated]
