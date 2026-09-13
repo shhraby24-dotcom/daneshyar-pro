@@ -5,9 +5,15 @@
 import { getInstance as getLogger } from '@/core/Logger';
 const logger = getLogger().module('Premium');
 
-// LocalStorage keys for trial and reward entitlements (NOT for paid subscriptions)
-const TRIAL_LS = 'daneshyar_trial';
-const REWARD_LS = 'daneshyar_reward';
+// LocalStorage keys for trial entitlement (NOT for paid subscriptions)
+const TRIAL_ACTIVE_LS = 'trial_active';
+const TRIAL_PLAN_LS = 'trial_plan';
+const TRIAL_EXP_LS = 'trial_exp';
+
+// LocalStorage keys for reward entitlement (NOT for paid subscriptions)
+const REWARD_ACTIVE_LS = 'reward_active';
+const REWARD_PLAN_LS = 'reward_plan';
+const REWARD_EXP_LS = 'reward_exp';
 
 export interface Plan {
   id: string;
@@ -51,9 +57,15 @@ export function getPremiumPlan(): string | null {
  */
 export function activateEntitlement(type: 'trial' | 'reward', planId: string, days: number): void {
   const exp = new Date(Date.now() + days * 86400000).toISOString();
-  localStorage.setItem(TRIAL_LS, type === 'trial' ? '1' : '0');
-  localStorage.setItem(`${type}_plan`, planId);
-  localStorage.setItem(`${type}_exp`, exp);
+  if (type === 'trial') {
+    localStorage.setItem(TRIAL_ACTIVE_LS, '1');
+    localStorage.setItem(TRIAL_PLAN_LS, planId);
+    localStorage.setItem(TRIAL_EXP_LS, exp);
+  } else {
+    localStorage.setItem(REWARD_ACTIVE_LS, '1');
+    localStorage.setItem(REWARD_PLAN_LS, planId);
+    localStorage.setItem(REWARD_EXP_LS, exp);
+  }
   logger.info(`Entitlement activated: ${type}`, { planId, exp });
 }
 
@@ -61,9 +73,15 @@ export function activateEntitlement(type: 'trial' | 'reward', planId: string, da
  * Deactivate trial or reward entitlement
  */
 export function deactivateEntitlement(type: 'trial' | 'reward'): void {
-  localStorage.removeItem(TRIAL_LS);
-  localStorage.removeItem(`${type}_plan`);
-  localStorage.removeItem(`${type}_exp`);
+  if (type === 'trial') {
+    localStorage.removeItem(TRIAL_ACTIVE_LS);
+    localStorage.removeItem(TRIAL_PLAN_LS);
+    localStorage.removeItem(TRIAL_EXP_LS);
+  } else {
+    localStorage.removeItem(REWARD_ACTIVE_LS);
+    localStorage.removeItem(REWARD_PLAN_LS);
+    localStorage.removeItem(REWARD_EXP_LS);
+  }
 }
 
 /**
@@ -71,8 +89,8 @@ export function deactivateEntitlement(type: 'trial' | 'reward'): void {
  */
 export function isTrialEntitlementActive(): boolean {
   try {
-    if (localStorage.getItem(TRIAL_LS) !== '1') return false;
-    const exp = localStorage.getItem('trial_exp');
+    if (localStorage.getItem(TRIAL_ACTIVE_LS) !== '1') return false;
+    const exp = localStorage.getItem(TRIAL_EXP_LS);
     if (exp && new Date(exp) < new Date()) { deactivateEntitlement('trial'); return false; }
     return true;
   } catch { return false; }
@@ -83,8 +101,8 @@ export function isTrialEntitlementActive(): boolean {
  */
 export function isRewardEntitlementActive(): boolean {
   try {
-    if (localStorage.getItem(TRIAL_LS) !== '0') return false;
-    const exp = localStorage.getItem('reward_exp');
+    if (localStorage.getItem(REWARD_ACTIVE_LS) !== '1') return false;
+    const exp = localStorage.getItem(REWARD_EXP_LS);
     if (exp && new Date(exp) < new Date()) { deactivateEntitlement('reward'); return false; }
     return true;
   } catch { return false; }
@@ -95,7 +113,7 @@ export function isRewardEntitlementActive(): boolean {
  */
 export function getTrialExpiry(): string | null {
   try {
-    return localStorage.getItem('trial_exp');
+    return localStorage.getItem(TRIAL_EXP_LS);
   } catch {
     return null;
   }
@@ -106,7 +124,7 @@ export function getTrialExpiry(): string | null {
  */
 export function getRewardExpiry(): string | null {
   try {
-    return localStorage.getItem('reward_exp');
+    return localStorage.getItem(REWARD_EXP_LS);
   } catch {
     return null;
   }
@@ -137,7 +155,7 @@ export function getRewardDaysLeft(): number {
  */
 export function getTrialPlan(): string | null {
   try {
-    return localStorage.getItem('trial_plan');
+    return localStorage.getItem(TRIAL_PLAN_LS);
   } catch {
     return null;
   }
@@ -148,7 +166,7 @@ export function getTrialPlan(): string | null {
  */
 export function getRewardPlan(): string | null {
   try {
-    return localStorage.getItem('reward_plan');
+    return localStorage.getItem(REWARD_PLAN_LS);
   } catch {
     return null;
   }
