@@ -134,10 +134,5 @@ export function getAllChallenges(): Challenge[] {
   return [...CHALLENGES];
 }
 
-export function getRewardDaysLeft(): number {
-  return getRewardDaysLeft();
-}
+export { getRewardDaysLeft, getRewardPlan } from'@/services/Premium';
 
-export function getRewardPlan(): string | null {
-  return getRewardPlan();
-}
