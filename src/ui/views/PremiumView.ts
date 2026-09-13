@@ -287,7 +287,7 @@ export async function createPremiumView(_params: Record<string, unknown> = {}): 
       const cta = createButton({
         label: 'انتخاب پلن',
         variant: plan.highlight ? BUTTON_VARIANTS.PRIMARY : BUTTON_VARIANTS.SECONDARY,
-        size: BUTTON_SIZES.FULL,
+        size: BUTTON_SIZES.LG,
         onClick: () => {
           const selectedPlan = PLANS.find(p => p.id === plan.id);
           if (selectedPlan) {
@@ -305,15 +305,22 @@ export async function createPremiumView(_params: Record<string, unknown> = {}): 
 
   function showActivationInstructions(plan: Plan): void {
     const priceInfo = formatToman(plan.priceToman) + ' / ' + plan.period;
-    const message = `پلن ${plan.label} به مبلغ ${priceInfo} انتخاب شد.
+    const message = 'پلن ' + plan.label + ' به مبلغ ' + priceInfo + ' انتخاب شد.
 
-برای فعال‌سازی:
-۱. مبلغ را به روش اعلام‌شده پرداخت کنید.
-۲. رسید پرداخت را به آدرس‌های زیر ارسال کنید:
-   تلگرام: ${SUPPORT_CONTACTS.telegram}
-   ایمیل: ${SUPPORT_CONTACTS.email}
-۳. پس از تأیید، کد فعال‌سازی یک‌بارمصرف دریافت خواهید کرد.
-۴. کد را در بخش «فعال‌سازی کد» وارد کنید.`;
+' +
+      'برای فعال‌سازی:
+' +
+      '۱. مبلغ را به روش اعلام‌شده پرداخت کنید.
+' +
+      '۲. رسید پرداخت را به آدرس‌های زیر ارسال کنید:
+' +
+      '   تلگرام: ' + SUPPORT_CONTACTS.telegram + '
+' +
+      '   ایمیل: ' + SUPPORT_CONTACTS.email + '
+' +
+      '۳. پس از تأیید، کد فعال‌سازی یک‌بارمصرف دریافت خواهید کرد.
+' +
+      '۴. کد را در بخش «فعال‌سازی کد» وارد کنید.';
     
     getToast().info(message, 'راهنمای پرداخت');
   }
