@@ -305,7 +305,7 @@ export async function createPremiumView(_params: Record<string, unknown> = {}): 
 
   function showActivationInstructions(plan: Plan): void {
     const priceInfo = formatToman(plan.priceToman) + ' / ' + plan.period;
-    const message = 'پلن ' + plan.label + ' به مبلغ ' + priceInfo + ' انتخاب شد.
+    const message = 'پلن ' + plan.label + ' به مبلغ ' + priceInfo + ' انتخاب شد.\n\n' +
 
 ' +
       'برای فعال‌سازی:
