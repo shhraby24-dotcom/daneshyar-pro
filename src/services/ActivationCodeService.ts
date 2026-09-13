@@ -23,7 +23,7 @@ export async function redeemActivationCode(code: string): Promise<ActivationResu
   // Validate code format
   const trimmedCode = code.trim().toUpperCase();
   if (!trimmedCode || trimmedCode.length < 4) {
-    logger.warn('Invalid activation code format', { code: trimmedCode });
+    logger.warn('Invalid activation code format');
     return { ok: false, error: 'فرمت کد نامعتبر است. کد باید حداقل ۴ کاراکتر باشد.' };
   }
 
@@ -61,7 +61,7 @@ export async function redeemActivationCode(code: string): Promise<ActivationResu
         // Ignore
       }
       
-      logger.error('Error redeeming activation code', { error: errorMessage, code: trimmedCode });
+      logger.error('Error redeeming activation code', { error: errorMessage });
       
       // Map common errors to user-friendly messages
       if (errorMessage.includes('not found') || errorMessage.includes('Invalid')) {
@@ -85,7 +85,6 @@ export async function redeemActivationCode(code: string): Promise<ActivationResu
 
     // Success - code was redeemed
     logger.info('Activation code redeemed successfully', { 
-      code: trimmedCode, 
       planId: data.planId,
       expiresAt: data.expiresAt
     });
@@ -96,7 +95,7 @@ export async function redeemActivationCode(code: string): Promise<ActivationResu
       expiresAt: data.expiresAt,
     };
   } catch (e) {
-    logger.error('Unexpected error in redeemActivationCode', { error: e, code: trimmedCode });
+    logger.error('Unexpected error in redeemActivationCode', { error: String(e) });
     return { ok: false, error: 'خطای غیرمنتظره. لطفا بعدا امتحان کنید.' };
   }
 }
