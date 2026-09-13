@@ -4,8 +4,8 @@
  * @module services/QuotaGate
  */
 import { getTier, getRemainingQuota } from '@/services/AIQuizService';
-import { getCurrentSubscription, isSubscriptionValid } from '@/services/SubscriptionService';
-import { isTrialActive, isRewardEntitlementActive } from '@/services/TrialService';
+import { isSubscriptionValid } from '@/services/SubscriptionService';
+import { isTrialActive, isRewardEntitlementActive } from '@/services/Premium';
 
 export interface QuotaCheckResult {
   allowed: boolean;
