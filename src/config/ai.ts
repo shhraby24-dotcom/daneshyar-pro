@@ -1,10 +1,12 @@
 /**
  * دانش‌یار پرو - پیکربندی AI
- * ⬇️ کلیدهای توسعه‌دهنده را از env می‌خواند (اگر نباشد، خالی می‌ماند)
+ * 🔒 کلیدها از env خوانده می‌شوند (اگر نباشد، خالی می‌ماند)
+ * ✅ BYOK: کاربر کلید خودش را در تنظیمات می‌گذارد
+ * 🔮 Edge Function: بعد از اینماد اضافه می‌شود
  * @module config/ai
  */
 
-// خواندن کلیدها از environment variables (Vite prefix: VITE_)
+// کلیدهای dev از env (اگر نباشد، خالی می‌ماند)
 const envGeminiKey = (import.meta.env as Record<string, string | undefined>).VITE_GEMINI_KEY ?? '';
 const envGroqKey = (import.meta.env as Record<string, string | undefined>).VITE_GROQ_KEY ?? '';
 

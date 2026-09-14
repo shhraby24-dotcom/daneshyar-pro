@@ -53,10 +53,11 @@ const PROMPT = (text: string, count: number, types: QuestionType[], forExam: boo
   `تو یک معلم ایرانی هستی. از متن زیر دقیقاً ${count} سوال آموزشی به زبان فارسی بساز.
 انواع مجاز: ${types.join(', ')} (mc=چندگزینه‌ای، fill=جاخالی، tf=درست/غلط).
 ${forExam ? 'سوالات سخت و کنکوری باشند.' : 'سوالات متعادل باشند.'}
-خروجی را فقط به صورت یک آرایه JSON معتبر برگردان با این ساختار:
-[{"type":"mc","question":"...","options":["a","b","c","d"],"correctIndex":0,"answer":"a","explanation":"...","difficulty":2,"concept":"..."}]
-برای fill فیلد answer و acceptableAnswers بگذار. برای tf گزینه‌ها ["صحیح","غلط"].
-
+خروجی را فقط به صورت یک آرایه JSON معتبر برگردان با این ساختار دقیق (هیچ متن اضافه‌ای قبل یا بعد از آرایه ننویس):
+[{"type":"mc","question":"متن سوال","options":["گزینه 1","گزینه 2","گزینه 3","گزینه 4"],"correctIndex":0,"answer":"a","explanation":"توضیح کوتاه","difficulty":2,"concept":"مفهوم"}]
+برای نوع fill فیلدهای answer (string) و acceptableAnswers (آرایه string) را بگذار و options را حذف کن.
+برای نوع tf گزینه‌ها را دقیقاً ["صحیح","غلط"] بگذار و correctIndex عدد 0 یا 1 باشد.
+هر سوال باید id نداشته باشد؛ id در کلاینت تولید می‌شود.
 متن:
 ${text.slice(0, 6000)}`;
 

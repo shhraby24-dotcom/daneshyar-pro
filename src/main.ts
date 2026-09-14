@@ -88,7 +88,7 @@ async function bootstrap(): Promise<void> {
     router.setContainer('#main-content');
     registerViews();
 
-    logger.info('📦 مرحله : شروع Router');
+    logger.info('📦 مرحله ۵: شروع Router');
     await router.start();
 
     void syncAll();
