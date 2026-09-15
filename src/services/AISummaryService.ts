@@ -1,22 +1,14 @@
 /**
- * ============================================================
- * دانش‌یار پرو - سرویس خلاصه‌سازی AI تطبیقی (Domain-Aware)
- * ============================================================
- * 🧠 پرامپت تطبیقی: نوع متن را تشخیص می‌دهد و لحن/حفاظت را تنظیم می‌کند
- * 📜 قانون طلایی: بخش‌های اصیل (بیت/لغت/فرمول/تعریف) دست‌نخورده می‌مانند
- * 🔗 زنجیره: کش → Gemini → Groq → (خطا → آفلاین در View)
- * 💾 کش هوشمند: هر متن+سطح یک‌بار ساخته می‌شود (هزینه کمتر + باز شدن آنی)
- * 🎚️ سهمیه روزانه مشترک با آزمون (همان AI_USAGE_LS)
+ * دانش‌یار پرو - سرویس خلاصه‌سازی AI با Edge Function
  * @module services/AISummaryService
- * @version 1.0.0
  */
 import { getInstance as getLogger } from '@/core/Logger';
-import { AI_CONFIG, AI_KEYS_LS, AI_USAGE_LS } from '@/config/ai';
 import type { SummaryLevel } from '@/services/Summarizer';
-import { API_BASE } from '@/config/api';
 
 const logger = getLogger().module('AISummaryService');
 
+const EDGE_FUNCTION_URL = 'https://ueyuyyachmdjnbiteybp.supabase.co/functions/v1/ai-proxy';
+const DEVICE_ID_KEY = 'daneshyar_device_id';
 const CACHE_LS = 'daneshyar_ai_summary_cache';
 const CACHE_MAX = 20;
 
@@ -40,7 +32,9 @@ export interface AISummary {
 }
 
 export interface AISummaryResult extends AISummary {
-  engine: 'gemini' | 'groq' | 'cache';
+  engine: 'edge-function' | 'cache';
+  model?: string;
+  remaining?: number;
 }
 
 export interface AISummaryOptions {
@@ -49,33 +43,19 @@ export interface AISummaryOptions {
 }
 
 // ============================================================
-// کلیدها و سهمیه (مشترک با آزمون)
+// Device ID
 // ============================================================
-function readUserKeys(): { gemini: string; groq: string } {
+function getOrCreateDeviceId(): string {
   try {
-    const raw = localStorage.getItem(AI_KEYS_LS);
-    if (raw) {
-      const d = JSON.parse(raw) as { gemini?: string; groq?: string };
-      return { gemini: d.gemini ?? '', groq: d.groq ?? '' };
+    let deviceId = localStorage.getItem(DEVICE_ID_KEY);
+    if (!deviceId) {
+      deviceId = `device-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+      localStorage.setItem(DEVICE_ID_KEY, deviceId);
     }
-  } catch { /* ignore */ }
-  return { gemini: '', groq: '' };
-}
-
-function readUsage(): number {
-  try {
-    const raw = localStorage.getItem(AI_USAGE_LS);
-    if (raw) {
-      const u = JSON.parse(raw) as { date: string; count: number };
-      if (u.date === new Date().toDateString()) return u.count;
-    }
-  } catch { /* ignore */ }
-  return 0;
-}
-function consumeQuota(): void {
-  try {
-    localStorage.setItem(AI_USAGE_LS, JSON.stringify({ date: new Date().toDateString(), count: readUsage() + 1 }));
-  } catch { /* ignore */ }
+    return deviceId;
+  } catch {
+    return `device-${Date.now()}`;
+  }
 }
 
 // ============================================================
@@ -86,15 +66,18 @@ function hashText(t: string): string {
   for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0;
   return String(h >>> 0);
 }
+
 function cacheKey(text: string, opts: AISummaryOptions): string {
   return `${opts.level}|${opts.forExam ? 1 : 0}|${hashText(text.slice(0, 2000))}|${text.length}`;
 }
+
 function readCache(): Record<string, AISummary> {
   try {
     const raw = localStorage.getItem(CACHE_LS);
     return raw ? (JSON.parse(raw) as Record<string, AISummary>) : {};
   } catch { return {}; }
 }
+
 function writeCache(key: string, value: AISummary): void {
   try {
     const cache = readCache();
@@ -106,44 +89,7 @@ function writeCache(key: string, value: AISummary): void {
 }
 
 // ============================================================
-// پرامپت تطبیقی
-// ============================================================
-function buildPrompt(text: string, opts: AISummaryOptions): string {
-  const levelDesc =
-    opts.level === 'short' ? 'خیلی کوتاه و فشرده (حداکثر ۵ نکته)' :
-    opts.level === 'long' ? 'کامل و با جزئیات کافی' : 'متوسط و متعادل';
-  return `تو یک معلم خصوصی حرفه‌ای ایرانی هستی که متن درسی را برای «حفظ سریع و ماندگار» آماده می‌کند.
-
-── گام ۱: تشخیص نوع متن ──
-نوع متن را تشخیص بده: [ادبی/شعر] [زبان/لغت] [ریاضی/فرمول] [علوم/تعریفی] [تاریخ/معلومات عمومی] [ترکیبی]
-
-── گام ۲: قانون لحن بر اساس نوع ──
-• ادبی/شعر و زبان: لحن نیمه‌رسمی و محترمانه بماند؛ فقط جملات توضیحی/ربطی ساده شود. ابیات، آرایه‌ها، لغت‌ها و معانی دقیق دست‌نخورده بمانند.
-• ریاضی/علوم: توضیح‌ها ساده شود، ولی تعریف، قضیه، فرمول و نمادها عیناً حفظ شوند.
-• تاریخ/عمومی: می‌تواند خودمانی‌تر شود، ولی اسامی، تاریخ‌ها و اعداد دقیقاً حفظ شوند.
-
-── گام ۳: قانون طلایی حفاظت (هرگز تغییر نده، عیناً در preserved بیاور) ──
-) ابیات و عبارات ادبی  ۲) لغت و معنی دقیق  ۳) فرمول و نماد  ۴) تعریف رسمی  ۵) اسامی خاص، تاریخ‌ها و اعداد
-
-── گام ۴: خلاصه‌سازی ──
-سطح خلاصه: ${levelDesc}
-${opts.forExam ? 'حالت کنکوری: روی تعاریف، اعداد، فرمول‌ها و نکات تست‌خیز تمرکز کن.' : 'حالت عادی: برای یادگیری و حفظ آسان.'}
-بقیه‌ی متن را ساده، کوتاه و قابل‌حفظ کن؛ با سرفصل و دسته‌بندی.
-تشبیه/مثال روزمره فقط برای مفاهیم انتزاعیِ غیرادبی. برای لیست‌ها و ترتیب‌ها یک قلاب حافظه بساز.
-
-── گام ۵: خودآزمایی ──
-۲ تا ۳ سوال کوتاه برای مرور فعال.
-
-قانون سخت: فقط بر اساس متن کاربر جواب بده؛ هیچ چیزی اختراع نکن.
-خروجی فقط JSON معتبر با این ساختار:
-{"domain":"...","tone":"...","simple_summary":"...","sections":[{"title":"...","points":["..."]}],"preserved":[{"text":"...","why":"..."}],"analogy":"...","mnemonic":"...","self_test":[{"q":"...","a":"..."}],"keywords":["..."]}
-
-متن کاربر:
-${text.slice(0, 6000)}`;
-}
-
-// ============================================================
-// پارس و نرمال‌سازی
+// پارس JSON
 // ============================================================
 function parseSummary(raw: string): AISummary {
   const start = raw.indexOf('{');
@@ -188,46 +134,6 @@ function parseSummary(raw: string): AISummary {
 }
 
 // ============================================================
-// فراخوانی ارائه‌دهنده‌ها
-// ============================================================
-async function callGemini(key: string, prompt: string): Promise<AISummary> {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${AI_CONFIG.GEMINI_MODEL}:generateContent?key=${key}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.4 },
-      }),
-    }
-  );
-  if (!res.ok) throw new Error('Gemini error ' + res.status);
-  const data = (await res.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-  return parseSummary(text);
-}
-
-async function callGroq(key: string, prompt: string): Promise<AISummary> {
-  const res = await fetch(`${API_BASE.groq}/chat/completions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model: AI_CONFIG.GROQ_MODEL,
-      messages: [
-        { role: 'system', content: 'فقط JSON معتبر برگردان، بدون توضیح اضافه.' },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 0.4,
-    }),
-  });
-  if (!res.ok) throw new Error('Groq error ' + res.status);
-  const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-  const text = data.choices?.[0]?.message?.content ?? '';
-  return parseSummary(text);
-}
-
-// ============================================================
 // API عمومی
 // ============================================================
 export async function getAISummary(text: string, opts: AISummaryOptions): Promise<AISummaryResult> {
@@ -239,28 +145,44 @@ export async function getAISummary(text: string, opts: AISummaryOptions): Promis
     return { ...cached, engine: 'cache' };
   }
 
-  const user = readUserKeys();
-  const geminiKey = user.gemini || AI_CONFIG.DEV_GEMINI_KEY;
-  const groqKey = user.groq || AI_CONFIG.DEV_GROQ_KEY;
-  const prompt = buildPrompt(text, opts);
+  const deviceId = getOrCreateDeviceId();
+  
+  logger.info(`درخواست AI Summary از Edge Function (deviceId: ${deviceId})`);
 
-  // ۲) Gemini
-  if (geminiKey) {
-    try {
-      const s = await callGemini(geminiKey, prompt);
-      writeCache(key, s);
-      consumeQuota();
-      return { ...s, engine: 'gemini' };
-    } catch (e) { logger.warn('Gemini شکست', e); }
+  // ۲) Edge Function
+  try {
+    const res = await fetch(EDGE_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        task: 'summary',
+        text,
+        level: opts.level,
+        forExam: opts.forExam,
+        deviceId,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      logger.error('Edge Function خطا داد', data);
+      throw new Error(data.error || 'خطا در Edge Function');
+    }
+
+    const summary = parseSummary(data.output);
+    writeCache(key, summary);
+
+    logger.info(`✅ AI Summary موفق با مدل ${data.model} (${data.remaining} باقی‌مانده)`);
+
+    return {
+      ...summary,
+      engine: 'edge-function',
+      model: data.model,
+      remaining: data.remaining,
+    };
+  } catch (err) {
+    logger.error('Edge Function شکست', err);
+    throw new Error(err instanceof Error ? err.message : 'AI در دسترس نیست');
   }
-  // ۳) Groq
-  if (groqKey) {
-    try {
-      const s = await callGroq(groqKey, prompt);
-      writeCache(key, s);
-      consumeQuota();
-      return { ...s, engine: 'groq' };
-    } catch (e) { logger.warn('Groq شکست', e); }
-  }
-  throw new Error('AI در دسترس نیست');
 }

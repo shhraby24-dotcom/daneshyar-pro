@@ -1,8 +1,8 @@
 /**
  * دانش‌یار پرو - پیکربندی AI
- * 🔒 کلیدها از env خوانده می‌شوند (اگر نباشد، خالی می‌ماند)
- * ✅ BYOK: کاربر کلید خودش را در تنظیمات می‌گذارد
- * 🔮 Edge Function: بعد از اینماد اضافه می‌شود
+ * ⚠️ کلیدهای VITE_* در bundle ظاهر می‌شوند — فقط برای تست/دمو
+ * ✅ راه اصلی: BYOK (کاربر کلید خودش را در تنظیمات می‌گذارد)
+ * 🔒 راه آینده: Edge Function (بعد از اینماد)
  * @module config/ai
  */
 
@@ -13,7 +13,7 @@ const envGroqKey = (import.meta.env as Record<string, string | undefined>).VITE_
 export const AI_CONFIG = {
   DEV_GEMINI_KEY: envGeminiKey,
   DEV_GROQ_KEY: envGroqKey,
-  GEMINI_MODEL: 'gemini-2.0-flash',
+  GEMINI_MODEL: 'gemini-2.5-flash',  // ✅ مدل صحیح
   GROQ_MODEL: 'llama-3.3-70b-versatile',
 };
 
