@@ -41,11 +41,26 @@ export function getPremiumPlan(): string | null {
 export function activatePremium(planId: string, customDays?: number): void {
   const plan = PLANS.find((p) => p.id === planId);
   const days = customDays ?? (plan ? plan.months * 30 : 30);
-  const exp = new Date(Date.now() + days * 86400000).toISOString();
+  const now = Date.now();
+  const newExp = now + days * 86400000;
+  
+  let exp: string;
+  try {
+    const currentExp = localStorage.getItem(EXPIRY_LS);
+    if (currentExp) {
+      const currentExpMs = new Date(currentExp).getTime();
+      exp = new Date(Math.max(currentExpMs, newExp)).toISOString();
+    } else {
+      exp = new Date(newExp).toISOString();
+    }
+  } catch {
+    exp = new Date(newExp).toISOString();
+  }
+  
   localStorage.setItem(PREMIUM_LS, '1');
   localStorage.setItem(PLAN_LS, planId);
   localStorage.setItem(EXPIRY_LS, exp);
-  logger.info('💎 پریمیوم فعال شد', { planId, exp });
+  logger.info('💎 پریمیوم فعال شد', { planId, exp, days });
 }
 
 export function deactivatePremium(): void {
