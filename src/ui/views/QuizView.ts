@@ -15,7 +15,7 @@ import { getInstance as getLogger } from '@/core/Logger';
 import { getDatabase, type DbNote, type DbFlashcard } from '@/core/Database';
 import { getRouter } from '@/core/Router';
 import { getQuizGenerator, type Question, type QuestionType } from '@/services/QuizGenerator';
-import { getAIQuizService, getRemainingQuota, getTier } from '@/services/AIQuizService';
+import { getAIQuizService, getRemainingQuota, getTier, friendlyAIError } from '@/services/AIQuizService';
 import { getSRS } from '@/services/SRS';
 import { createButton, BUTTON_VARIANTS, BUTTON_SIZES } from '@/ui/components/Button';
 import { getModal } from '@/ui/components/Modal';
@@ -57,15 +57,24 @@ const formatTime = (s: number): string => {
 function getXP(): number { try { return parseInt(localStorage.getItem(XP_KEY) || '0', 10) || 0; } catch { return 0; } }
 function addXP(n: number): number { const x = getXP() + n; try { localStorage.setItem(XP_KEY, String(x)); } catch { /* ignore */ } return x; }
 
+/** نرمال‌سازی فارسی: نیم‌فاصله، ي/ك عربی، اعراب، علائم — تا «چرخه اب» = «چرخه آب» */
+function normalizeFa(s: string): string {
+  return s
+    .replace(/[\u200c\u200f\u200e]/g, ' ')
+    .replace(/[يى]/g, 'ی')
+    .replace(/[كک]/g, 'ک')
+    .replace(/[ًٌٍَُِّْـ]/g, '')
+    .replace(/[«»"'()\[\]{}،,؛;:.!?؟]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
 function isCorrect(q: Question, a: number | string | null | undefined): boolean {
   if (a === undefined || a === null || a === '') return false;
   if (q.type === 'mc' || q.type === 'tf') return a === q.correctIndex;
-  const norm = String(a).trim().toLowerCase();
+  const norm = normalizeFa(String(a));
   const acc = (q.acceptableAnswers ?? (q.answer ? [q.answer] : [])) as string[];
-  return acc.some((x: string) =>
-    x.trim().toLowerCase() === norm ||
-    x.replace(/\s+/g, '') === norm.replace(/\s+/g, '')
-  );
+  return acc.some((x: string) => normalizeFa(x) === norm);
 }
 function correctAnswerText(q: Question): string {
   if (q.options && q.correctIndex !== undefined) return q.options[q.correctIndex] ?? q.answer ?? '';
@@ -128,7 +137,7 @@ export async function createQuizView(_params: Record<string, unknown> = {}): Pro
     startTime: 0,
     timeLeft: 0,
     timer: null as number | null,
-    engine: 'local' as 'ai' | 'local',
+    engine: 'local' as 'ai' | 'local' | 'cache',
     xpGained: 0,
     analysis: null as null | {
       correct: number; wrong: number; unanswered: number;
@@ -397,17 +406,57 @@ export async function createQuizView(_params: Record<string, unknown> = {}): Pro
       }
     }
 
-    const close = getModal().loading('در حال ساخت آزمون...');
+    const ctrl = new AbortController();
+    const modalBox = document.createElement('div');
+    modalBox.className = 'space-y-4 text-center py-2';
+    const spin = document.createElement('div');
+    spin.className = 'mx-auto w-10 h-10 rounded-full border-4 border-primary-500/30 border-t-primary-400 animate-spin';
+    modalBox.appendChild(spin);
+    const msgEl = document.createElement('p');
+    msgEl.className = 'text-sm font-bold text-slate-100';
+    msgEl.textContent = 'در حال ساخت آزمون...';
+    modalBox.appendChild(msgEl);
+    const hintEl = document.createElement('p');
+    hintEl.className = 'text-xs text-slate-400';
+    hintEl.textContent = 'معمولاً ۲۰ تا ۴۰ ثانیه؛ هر وقت خواستی می‌توانی لغو کنی.';
+    modalBox.appendChild(hintEl);
+    const cancelBtn = createButton({
+      label: 'لغو ساخت آزمون',
+      variant: BUTTON_VARIANTS.GHOST,
+      size: BUTTON_SIZES.SM,
+      onClick: () => { ctrl.abort(new DOMException('cancelled', 'AbortError')); },
+    });
+    cancelBtn.classList.add('mx-auto');
+    modalBox.appendChild(cancelBtn);
+    getModal().open({ title: null, content: modalBox, size: 'sm', buttons: [], closeOnOverlay: false, closeOnEscape: false });
+    const close = (): void => getModal().close();
+    const t0 = Date.now();
+    const tick = window.setInterval(() => {
+      const s = Math.floor((Date.now() - t0) / 1000);
+      if (s >= 5) hintEl.textContent = `${toPersianDigits(String(s))} ثانیه گذشته — معمولاً تا ۴۰ ثانیه آماده می‌شود`;
+    }, 1000);
     const text = sel.map((n) => `# ${n.title}\n\n${n.content}`).join('\n\n---\n\n');
+    let aiFail: string | null = null;
     try {
       let questions: Question[] = [];
       st.engine = 'local';
       if (st.settings.useAI && getRemainingQuota() > 0) {
         try {
-          const r = await ai.generate(text, { count: st.settings.count, types: st.settings.types, forExam: st.settings.forExam });
+          const r = await ai.generate(text, { count: st.settings.count, types: st.settings.types, forExam: st.settings.forExam }, { signal: ctrl.signal });
           questions = r.questions;
-          st.engine = 'ai';
-        } catch (e) { logger.warn('AI شکست، رفتن به محلی', e); }
+          st.engine = r.engine === 'cache' ? 'cache' : 'ai';
+        } catch (e) {
+          if (ctrl.signal.aborted) {
+            window.clearInterval(tick);
+            close();
+            getToast().info('ساخت آزمون لغو شد');
+            return;
+          }
+          aiFail = friendlyAIError(e);
+          logger.warn('AI شکست، رفتن به محلی', e);
+        }
+      } else if (st.settings.useAI) {
+        aiFail = 'quota';
       }
       if (questions.length === 0) {
         questions = generator.generate(text, { count: st.settings.count, types: st.settings.types, forExam: st.settings.forExam }).questions;
@@ -421,16 +470,20 @@ export async function createQuizView(_params: Record<string, unknown> = {}): Pro
       st.timeLeft = st.settings.timeLimit * 60;
       st.analysis = null;
       st.xpGained = 0;
+      window.clearInterval(tick);
       close();
-      getToast().success(st.engine === 'ai'
-        ? `${toPersianDigits(String(questions.length))} سوال AI آماده شد`
-        : `${toPersianDigits(String(questions.length))} سوال آفلاین آماده شد`);
+      if (st.engine === 'ai') getToast().success(`${toPersianDigits(String(questions.length))} سوال AI آماده شد`);
+      else if (st.engine === 'cache') getToast().success('آزمون از حافظه آماده شد (آنی)');
+      else if (aiFail === 'quota') getToast().warning('سهمیه‌ی AI امروز تمام شد؛ این آزمون با موتور آفلاین ساخته شد');
+      else if (aiFail) getToast().warning(`${aiFail} این آزمون با موتور آفلاین ساخته شد`);
+      else getToast().success(`${toPersianDigits(String(questions.length))} سوال آفلاین آماده شد`);
       st.phase = 'play';
       render();
       startTimer();
     } catch (e) {
+      window.clearInterval(tick);
       close();
-      getToast().error('خطا در ساخت آزمون: ' + (e instanceof Error ? e.message : String(e)));
+      getToast().error(friendlyAIError(e));
     }
   }
 
@@ -751,6 +804,68 @@ export async function createQuizView(_params: Record<string, unknown> = {}): Pro
       });
       wrap.appendChild(wBox);
     }
+    // ── بررسی آزمون: پاسخ تو در برابر پاسخ درست (رفع باگ حالت کنکوری) ──
+    const reviewBox = document.createElement('div');
+    reviewBox.className = 'bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-3';
+    reviewBox.appendChild(sectionHead('بررسی آزمون', 'search'));
+    const reviewList = document.createElement('div');
+    reviewList.className = 'space-y-2 hidden';
+    st.questions.forEach((q, idx) => {
+      const a = st.answers[idx];
+      const ok = a !== undefined && isCorrect(q, a);
+      const exact = q.type === 'fill' && typeof a === 'string'
+        ? ((q.acceptableAnswers ?? (q.answer ? [q.answer] : [])) as string[]).some((x) => x.trim() === a.trim())
+        : true;
+      const item = document.createElement('div');
+      item.className = 'rounded-lg border border-slate-700 bg-slate-900/50 p-3 space-y-1.5';
+      const head = document.createElement('div');
+      head.className = 'flex items-start gap-2';
+      const ic = document.createElement('span');
+      ic.className = `flex flex-shrink-0 mt-0.5 ${ok ? 'text-green-400' : 'text-red-400'}`;
+      ic.innerHTML = iconHTML(ok ? 'check' : 'close', 14);
+      head.appendChild(ic);
+      const qt = document.createElement('div');
+      qt.className = 'flex-1 text-sm text-slate-200 whitespace-pre-wrap';
+      qt.textContent = `${toPersianDigits(String(idx + 1))}. ${q.question}`;
+      head.appendChild(qt);
+      item.appendChild(head);
+      const body = document.createElement('div');
+      body.className = 'space-y-1 ps-6 text-xs';
+      const u = document.createElement('div');
+      u.className = a === undefined ? 'text-slate-500' : ok ? 'text-green-300' : 'text-red-300';
+      u.textContent = `پاسخ تو: ${a === undefined ? 'بی‌پاسخ' : typeof a === 'number' ? (q.options?.[a] ?? String(a)) : String(a)}`;
+      body.appendChild(u);
+      if (!ok) {
+        const c = document.createElement('div');
+        c.className = 'text-green-300';
+        c.textContent = `پاسخ درست: ${correctAnswerText(q)}`;
+        body.appendChild(c);
+      } else if (q.type === 'fill' && !exact && q.answer) {
+        const sp = document.createElement('div');
+        sp.className = 'text-accent-300';
+        sp.textContent = `درست بود! املای استاندارد: ${q.answer}`;
+        body.appendChild(sp);
+      }
+      if (q.explanation) {
+        const ex = document.createElement('div');
+        ex.className = 'text-slate-400';
+        ex.textContent = `توضیح: ${q.explanation}`;
+        body.appendChild(ex);
+      }
+      item.appendChild(body);
+      reviewList.appendChild(item);
+    });
+    reviewBox.appendChild(reviewList);
+    const reviewToggle = document.createElement('button');
+    reviewToggle.type = 'button';
+    reviewToggle.className = 'w-full text-xs font-bold text-primary-300 hover:text-primary-200 py-1';
+    reviewToggle.textContent = 'نمایش بررسی آزمون (پاسخ تو در برابر پاسخ درست)';
+    reviewToggle.addEventListener('click', () => {
+      const hidden = reviewList.classList.toggle('hidden');
+      reviewToggle.textContent = hidden ? 'نمایش بررسی آزمون (پاسخ تو در برابر پاسخ درست)' : 'بستن بررسی آزمون';
+    });
+    reviewBox.appendChild(reviewToggle);
+    wrap.appendChild(reviewBox);
 
     // حلقه‌ی طلایی (با حذف تکراری‌ها)
     const wrongQs = st.questions.filter((q, idx) => st.answers[idx] !== undefined && !isCorrect(q, st.answers[idx]));
