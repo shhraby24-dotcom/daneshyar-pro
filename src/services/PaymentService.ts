@@ -4,7 +4,7 @@
  * @module services/PaymentService
  */
 import { getSupabaseClient, getSession } from '@/services/AuthService';
-import { activatePremium, type Plan } from '@/services/Premium';
+import { type Plan } from '@/services/Premium';
 import { getInstance as getLogger } from '@/core/Logger';
 const logger = getLogger().module('Payment');
 
@@ -43,7 +43,6 @@ export async function requestPayment(plan: Plan): Promise<PaymentResult> {
     return { ok: false, error: 'خطا: ' + msg };
   }
 
-  activatePremium(plan.id);
   logger.info('✅ پریمیوم فعال شد (از طریق Edge Function)', { plan: plan.id });
   return { ok: true, message: 'پرداخت (شبیه‌سازی بتا) موفق! پریمیوم فعال شد 💎' };
 }
