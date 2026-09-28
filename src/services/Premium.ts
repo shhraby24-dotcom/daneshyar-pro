@@ -15,6 +15,7 @@ export interface Plan {
   priceToman: number;
   period: string;
   months: number;
+  days?: number;
   badge?: string;
   highlight?: boolean;
 }
@@ -22,7 +23,7 @@ export interface Plan {
 export const PLANS: Plan[] = [
   { id: 'monthly', label: 'ماهانه', priceToman: 99000, period: 'ماه', months: 1 },
   { id: 'term', label: 'ترمیک', priceToman: 320000, period: 'ترم (۴ ماه)', months: 4, badge: 'ویژه ترم' },
-  { id: 'yearly', label: 'سالانه', priceToman: 890000, period: 'سال', months: 12, badge: '۳ ماه رایگان', highlight: true },
+  { id: 'yearly', label: 'سالانه', priceToman: 890000, period: 'سال', months: 12, days: 365, badge: '۳ ماه رایگان', highlight: true },
 ];
 
 export function isPremium(): boolean {
@@ -40,7 +41,7 @@ export function getPremiumPlan(): string | null {
 
 export function activatePremium(planId: string, customDays?: number): void {
   const plan = PLANS.find((p) => p.id === planId);
-  const days = customDays ?? (plan ? plan.months * 30 : 30);
+  const days = customDays ?? (plan?.days ?? (plan ? plan.months * 30 : 30));
   
   let baseMs: number;
   try {
