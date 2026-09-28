@@ -6,7 +6,7 @@ const STATIC = `daneshyar-static-${VERSION}`;
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CORE)
-      .then((c) => c.addAll(['/', '/index.html', '/manifest.webmanifest', '/icons/icon.svg']))
+      .then((c) => c.addAll(['./', './index.html', './manifest.webmanifest', './icons/icon.svg']))
       .then(() => self.skipWaiting())
   );
 });
@@ -35,10 +35,10 @@ self.addEventListener('fetch', (e) => {
       fetch(req)
         .then((res) => {
           const copy = res.clone();
-          caches.open(CORE).then((c) => c.put('/index.html', copy));
+          caches.open(CORE).then((c) => c.put('./index.html', copy));
           return res;
         })
-        .catch(() => caches.match('/index.html'))
+        .catch(() => caches.match('./index.html'))
     );
     return;
   }
