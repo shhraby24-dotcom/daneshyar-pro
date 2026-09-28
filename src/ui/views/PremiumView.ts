@@ -358,11 +358,12 @@ export async function createPremiumView(_params: Record<string, unknown> = {}): 
     const btn = createButton({
       label: 'اعمال کد',
       variant: BUTTON_VARIANTS.PRIMARY,
-      onClick: () => {
+      onClick: async () => {
         const code = input.value.trim();
         if (!code) { getToast().error('کد را وارد کن'); return; }
-        if (tryPromo(code)) { getToast().success('کد اعمال شد!'); render(); }
-        else { getToast().error('کد نامعتبر است'); }
+        const result = await tryPromo(code);
+        if (result.ok) { getToast().success('کد اعمال شد!'); render(); }
+        else { getToast().error(result.error ?? 'کد نامعتبر است'); }
       },
     });
     box.appendChild(btn);

@@ -69,17 +69,22 @@ export function deactivatePremium(): void {
   localStorage.removeItem(EXPIRY_LS);
 }
 
-const PROMO_CODES: Record<string, string> = {
-  'DANESHYAR-PRO': 'yearly',
-  'BETA-TESTER': 'yearly',
-  'LAUNCH1405': 'monthly',
-};
-
-export function tryPromo(code: string): boolean {
-  const planId = PROMO_CODES[code.trim().toUpperCase()];
-  if (!planId) return false;
-  activatePremium(planId);
-  return true;
+export async function tryPromo(code: string): Promise<{ ok: boolean; planId?: string; error?: string }> {
+  try {
+    const response = await fetch('https://ueyuyyachmdjnbiteybp.supabase.co/functions/v1/ai-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task: 'promo', code: code.trim().toUpperCase() }),
+    });
+    const data = await response.json();
+    if (data.ok && data.planId) {
+      activatePremium(data.planId);
+      return { ok: true, planId: data.planId };
+    }
+    return { ok: false, error: data.error ?? 'کد نامعتبر' };
+  } catch {
+    return { ok: false, error: 'خطا در ارتباط با سرور' };
+  }
 }
 
 /** تاریخ انقضای پریمیوم (برای نمایش در تنظیمات) */
