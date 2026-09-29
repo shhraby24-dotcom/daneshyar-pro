@@ -29,7 +29,7 @@ import { startAutoRewardWatcher } from '@/services/AutoRewardWatcher';
 import { savePendingRef } from '@/services/ReferralService';
 import { createLandingView } from '@/ui/views/LandingView';
 
-const logger = getLogger({ level: 'DEBUG', showTimestamp: true, persistToStorage: false });
+const logger = getLogger({ level: import.meta.env.PROD ? 'INFO' : 'DEBUG', showTimestamp: true, persistToStorage: false });
 getEventBus({ debug: false });
 const storage = getStorage();
 const state = getState();
