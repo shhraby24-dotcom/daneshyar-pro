@@ -224,26 +224,7 @@ export async function createFlashcardsView(_params: Record<string, unknown> = {}
     openReviewOverlay();
   }
 
-  function openReviewOverlay(): void {
-    closeReviewOverlay();
-    reviewOverlay = document.createElement('div');
-    reviewOverlay.className = 'fixed inset-0 z-[75] bg-slate-900 overflow-y-auto';
-    reviewOverlay.style.overscrollBehavior = 'contain';
-    document.body.appendChild(reviewOverlay);
-    document.body.style.overflow = 'hidden';
-    renderReviewFrame();
-  }
-  function closeReviewOverlay(): void {
-    if (reviewOverlay) { reviewOverlay.remove(); reviewOverlay = null; }
-    document.body.style.overflow = '';
-    currentCardEl = null; flipUI = null;
-  }
-  async function confirmExit(): Promise<void> {
-    const ok = await getModal().confirm('خروج از مرور', 'پیشرفت این جلسه ذخیره شد.', { confirmText: 'خروج' });
-    if (ok) { closeReviewOverlay(); phase = 'dashboard'; render(); }
-  }
-
-  document.addEventListener('keydown', (e) => {
+  const keyHandler = (e: KeyboardEvent) => {
     if (!reviewOverlay) return;
     const target = e.target as HTMLElement;
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
@@ -253,7 +234,28 @@ export async function createFlashcardsView(_params: Record<string, unknown> = {}
     else if (e.key === '1' && isFlipped) void rateCard(QUALITY_LEVELS.INCORRECT, 2, 'left');
     else if (e.key === '2' && isFlipped) void rateCard(QUALITY_LEVELS.CORRECT_HARD, 5, 'up');
     else if (e.key === '3' && isFlipped) void rateCard(QUALITY_LEVELS.PERFECT, 10, 'right');
-  });
+  };
+
+  function openReviewOverlay(): void {
+    closeReviewOverlay();
+    reviewOverlay = document.createElement('div');
+    reviewOverlay.className = 'fixed inset-0 z-[75] bg-slate-900 overflow-y-auto';
+    reviewOverlay.style.overscrollBehavior = 'contain';
+    document.body.appendChild(reviewOverlay);
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', keyHandler);
+    renderReviewFrame();
+  }
+  function closeReviewOverlay(): void {
+    if (reviewOverlay) { reviewOverlay.remove(); reviewOverlay = null; }
+    document.body.style.overflow = '';
+    currentCardEl = null; flipUI = null;
+    document.removeEventListener('keydown', keyHandler);
+  }
+  async function confirmExit(): Promise<void> {
+    const ok = await getModal().confirm('خروج از مرور', 'پیشرفت این جلسه ذخیره شد.', { confirmText: 'خروج' });
+    if (ok) { closeReviewOverlay(); phase = 'dashboard'; render(); }
+  }
 
   // ── داشبورد ──
   function renderDashboard(): HTMLElement {
