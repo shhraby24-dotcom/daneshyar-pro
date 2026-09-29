@@ -234,8 +234,10 @@ export class DatabaseService {
   }
 
   async deleteNote(id: string): Promise<boolean> {
-    const deleted = await this.db.notes.delete(id);
-    return deleted !== undefined;
+    const existing = await this.db.notes.get(id);
+    if (!existing) return false;
+    await this.db.notes.delete(id);
+    return true;
   }
 
   async searchNotes(query: string): Promise<DbNote[]> {
@@ -280,8 +282,10 @@ export class DatabaseService {
   }
 
   async deleteFlashcard(id: string): Promise<boolean> {
-    const deleted = await this.db.flashcards.delete(id);
-    return deleted !== undefined;
+    const existing = await this.db.flashcards.get(id);
+    if (!existing) return false;
+    await this.db.flashcards.delete(id);
+    return true;
   }
 
   /**
