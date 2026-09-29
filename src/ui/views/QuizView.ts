@@ -147,6 +147,13 @@ export async function createQuizView(_params: Record<string, unknown> = {}): Pro
   };
 
   const stopTimer = (): void => { if (st.timer) { clearInterval(st.timer); st.timer = null; } };
+
+  const onHashChange = (): void => {
+    if (!location.hash.includes('quiz')) {
+      stopTimer();
+      document.removeEventListener('hashchange', onHashChange);
+    }
+  };
   const render = (): void => {
     container.innerHTML = '';
     if (st.phase === 'setup') container.appendChild(renderSetup());
@@ -498,6 +505,7 @@ export async function createQuizView(_params: Record<string, unknown> = {}): Pro
       if (st.timeLeft <= 10 && st.timeLeft > 0) getToast().warning(`${toPersianDigits(String(st.timeLeft))} ثانیه!`);
       if (st.timeLeft <= 0) { stopTimer(); finish(true); }
     }, 1000);
+    document.addEventListener('hashchange', onHashChange);
   }
 
   // ============================================================
@@ -682,6 +690,7 @@ export async function createQuizView(_params: Record<string, unknown> = {}): Pro
 
   function finish(timeExpired: boolean): void {
     stopTimer();
+    document.removeEventListener('hashchange', onHashChange);
     let correct = 0, wrong = 0, unanswered = 0;
     st.questions.forEach((q, idx) => {
       const a = st.answers[idx];
@@ -936,7 +945,11 @@ export async function createQuizView(_params: Record<string, unknown> = {}): Pro
 
   // cleanup هنگام خروج از view
   const observer = new MutationObserver(() => {
-    if (!document.body.contains(container)) { stopTimer(); observer.disconnect(); }
+    if (!document.body.contains(container)) {
+      stopTimer();
+      document.removeEventListener('hashchange', onHashChange);
+      observer.disconnect();
+    }
   });
   observer.observe(document.body, { childList: true, subtree: true });
   return container;
