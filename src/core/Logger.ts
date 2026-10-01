@@ -110,7 +110,7 @@ export class Logger {
   constructor(options: LoggerOptions = {}) {
     // تنظیمات پیش‌فرض
     this.config = {
-      level: options.level ?? 'DEBUG',
+      level: options.level ?? (import.meta.env.PROD ? 'INFO' : 'DEBUG'),
       enabled: options.enabled !== false,
       showTimestamp: options.showTimestamp !== false,
       persistToStorage: options.persistToStorage ?? false,

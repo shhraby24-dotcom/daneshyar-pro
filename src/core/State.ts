@@ -160,7 +160,7 @@ const DEFAULT_STATE: AppState = {
   settings: {
     theme: 'dark',
     language: 'fa',
-    negativeMarking: true,
+    negativeMarking: false,
     defaultQuizCount: 10,
     pomodoroWorkMinutes: 25,
     pomodoroBreakMinutes: 5,

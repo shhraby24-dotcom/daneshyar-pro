@@ -25,6 +25,7 @@ import { toPersianDigits } from '@/utils/dateFormatter';
 import { checkAIQuota } from '@/services/QuotaGate';
 import { showPaywall } from '@/ui/components/PaywallModal';
 import { createIcon, iconHTML } from '@/services/IconService';
+import { getState } from '@/core/State';
 
 const logger = getLogger().module('QuizView');
 const generator = getQuizGenerator();
@@ -120,15 +121,16 @@ export async function createQuizView(_params: Record<string, unknown> = {}): Pro
   container.className = 'mx-auto max-w-3xl space-y-6';
 
   let notes: DbNote[] = await getDatabase().getNotes();
+  const userSettings = getState().get('settings');
   const st = {
     phase: 'setup' as 'setup' | 'play' | 'results',
     selectedIds: [] as string[],
     settings: {
-      count: 10,
+      count: userSettings?.defaultQuizCount ?? 10,
       types: ['mc', 'fill', 'tf'] as QuestionType[],
       forExam: false,
       timeLimit: 0,
-      negativeMarking: false,
+      negativeMarking: userSettings?.negativeMarking ?? false,
       useAI: true,
     },
     questions: [] as Question[],

@@ -22,17 +22,25 @@ export function startTrial(): void {
 }
 
 export function isTrialActive(): boolean {
-  const start = localStorage.getItem(TRIAL_START_LS);
-  if (!start) return false;
-  const elapsed = Date.now() - new Date(start).getTime();
-  return elapsed < TRIAL_DAYS * 86400000;
+  try {
+    const start = localStorage.getItem(TRIAL_START_LS);
+    if (!start) return false;
+    const elapsed = Date.now() - new Date(start).getTime();
+    return elapsed < TRIAL_DAYS * 86400000;
+  } catch {
+    return false;
+  }
 }
 
 export function getTrialDaysLeft(): number {
-  const start = localStorage.getItem(TRIAL_START_LS);
-  if (!start) return 0;
-  const elapsed = Date.now() - new Date(start).getTime();
-  return Math.max(0, Math.ceil((TRIAL_DAYS * 86400000 - elapsed) / 86400000));
+  try {
+    const start = localStorage.getItem(TRIAL_START_LS);
+    if (!start) return 0;
+    const elapsed = Date.now() - new Date(start).getTime();
+    return Math.max(0, Math.ceil((TRIAL_DAYS * 86400000 - elapsed) / 86400000));
+  } catch {
+    return 0;
+  }
 }
 
 export function checkTrialExpiry(): void {
