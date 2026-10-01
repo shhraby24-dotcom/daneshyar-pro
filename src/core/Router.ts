@@ -456,9 +456,12 @@ export class Router {
       query.split('&').forEach((pair) => {
         const [key, value] = pair.split('=');
         if (key) {
-          params[decodeURIComponent(key)] = value
-            ? decodeURIComponent(value)
-            : '';
+          const safeKey = decodeURIComponent(key).replace(/[^a-zA-Z0-9_]/g, '');
+          if (safeKey) {
+            params[safeKey] = value !== null && value !== undefined
+              ? String(value).trim()
+              : '';
+          }
         }
       });
     }

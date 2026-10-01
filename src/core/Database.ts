@@ -479,6 +479,15 @@ export class DatabaseService {
       }
     }
 
+    // اعتبارسنجی ساختار داخلی قبل از پاک کردن
+    const validateNote = (n: any): n is DbNote => {
+      return n && typeof n.id === 'string' && typeof n.title === 'string' && typeof n.content === 'string';
+    };
+
+    const validateQuiz = (q: any): q is DbQuizResult => {
+      return q && typeof q.id === 'string' && typeof q.title === 'string' && typeof q.percentage === 'number';
+    };
+
     await this.db.transaction(
       'rw',
       this.db.notes,
@@ -488,6 +497,9 @@ export class DatabaseService {
       this.db.achievements,
       async () => {
         if (Array.isArray(data.notes)) {
+          if (data.notes.some((n) => !validateNote(n))) {
+            throw new Error('فرمت کارهای پشتیبان نامعتبر است');
+          }
           await this.db.notes.clear();
           await this.db.notes.bulkAdd(data.notes);
         }
@@ -496,6 +508,9 @@ export class DatabaseService {
           await this.db.flashcards.bulkAdd(data.flashcards);
         }
         if (Array.isArray(data.quizHistory)) {
+          if (data.quizHistory.some((q) => !validateQuiz(q))) {
+            throw new Error('فرمت آزمون‌های پشتیبان نامعتبر است');
+          }
           await this.db.quizHistory.clear();
           await this.db.quizHistory.bulkAdd(data.quizHistory);
         }

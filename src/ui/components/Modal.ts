@@ -21,6 +21,20 @@ import { getInstance as getLogger } from '@/core/Logger';
 const logger = getLogger().module('Modal');
 const eventBus = getEventBus();
 
+/**
+ * Escape HTML special characters to prevent XSS
+ * ONLY use on content that comes from user input
+ * Content from iconHTML() is trusted and does not need escaping
+ */
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
+    .replace(/"/g, '"')
+    .replace(/'/g, '&#039;');
+}
+
 // ============================================================
 // Types
 // ============================================================
@@ -215,8 +229,8 @@ export class ModalManager {
     // ── Body (محتوا) ──
     const body = modal.querySelector<HTMLElement>('#modal-body');
     if (body) {
-      if (typeof content === 'string') {
-        body.innerHTML = content;
+if (typeof content === 'string') {
+      body.innerHTML = escapeHtml(content);
       } else if (content instanceof HTMLElement || content instanceof DocumentFragment) {
         body.appendChild(content);
       }
@@ -691,7 +705,7 @@ export class ModalManager {
     if (!body) return;
     body.innerHTML = '';
     if (typeof newContent === 'string') {
-      body.innerHTML = newContent;
+      body.innerHTML = escapeHtml(newContent);
     } else if (newContent instanceof HTMLElement) {
       body.appendChild(newContent);
     }
