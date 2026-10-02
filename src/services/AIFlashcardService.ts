@@ -4,6 +4,7 @@
  */
 import { getInstance as getLogger } from '@/core/Logger';
 import type { ConceptType } from '@/services/SRS';
+import { getSupabaseClient } from '@/services/AuthService';
 
 const logger = getLogger().module('AIFlashcard');
 
@@ -64,9 +65,17 @@ export async function estimateCardDifficulty(
   logger.info(`درخواست تخمین سختی از Edge Function (deviceId: ${deviceId})`);
 
   try {
+    const supabase = getSupabaseClient();
+    const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+    
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+
     const res = await fetch(EDGE_FUNCTION_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         task: 'difficulty',
         front,
@@ -113,9 +122,17 @@ export async function getWeakTopicInsight(
   logger.info(`درخواست تحلیل موضوع ضعیف از Edge Function (deviceId: ${deviceId})`);
 
   try {
+    const supabase = getSupabaseClient();
+    const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+    
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+
     const res = await fetch(EDGE_FUNCTION_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         task: 'insight',
         topics,

@@ -4,6 +4,7 @@
  */
 import { getInstance as getLogger } from '@/core/Logger';
 import type { SummaryLevel } from '@/services/Summarizer';
+import { getSupabaseClient } from '@/services/AuthService';
 
 const logger = getLogger().module('AISummaryService');
 
@@ -151,9 +152,17 @@ export async function getAISummary(text: string, opts: AISummaryOptions): Promis
 
   // ۲) Edge Function
   try {
+    const supabase = getSupabaseClient();
+    const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+    
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+
     const res = await fetch(EDGE_FUNCTION_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         task: 'summary',
         text,
