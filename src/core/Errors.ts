@@ -749,12 +749,13 @@ export function createValidationError(
 
 /**
  * wrapper برای توابع async که خطاها را خودکار مدیریت می‌کند
+ * در صورت خطا، handler صدا زده شده و null برمی‌گردانده می‌شود (نه throw)
  */
 export function withErrorHandling<TArgs extends unknown[], TReturn>(
   asyncFn: (...args: TArgs) => Promise<TReturn>,
   options: { operationName?: string } = {}
-): (...args: TArgs) => Promise<TReturn> {
-  return async (...args: TArgs): Promise<TReturn> => {
+): (...args: TArgs) => Promise<TReturn | null> {
+  return async (...args: TArgs): Promise<TReturn | null> => {
     try {
       return await asyncFn(...args);
     } catch (error) {
@@ -762,7 +763,7 @@ export function withErrorHandling<TArgs extends unknown[], TReturn>(
         operation: options.operationName ?? asyncFn.name,
         args,
       });
-      throw error;
+      return null;
     }
   };
 }

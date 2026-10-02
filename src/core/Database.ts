@@ -189,6 +189,15 @@ export class DatabaseService {
     } catch (error) {
       logger.error('خطا در مهاجرت (برنامه ادامه می‌یابد)', error);
       // پرتاب نمی‌کنیم — برنامه باید حتی اگر مهاجرت شکست خورد کار کند
+      // پیام به کاربر
+      const eventBus = (await import('@/core/EventBus')).getInstance();
+      eventBus.emit('ui:toast', {
+        type: 'warning',
+        title: 'مهاجرت داده',
+        message: 'مهاجرت انجام نشد، لطفاً بعداً دوباره تلاش کنید.',
+        duration: 7000,
+        dismissible: true,
+      });
     }
   }
 

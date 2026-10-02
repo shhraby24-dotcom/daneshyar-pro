@@ -91,9 +91,9 @@ async function bootstrap(): Promise<void> {
     logger.info('📦 مرحله ۵: شروع Router');
     await router.start();
 
-    void syncAll();
-    void loadSubscription();
-    void checkAndReward();
+    await syncAll();
+    await loadSubscription();
+    await checkAndReward();
     startAutoRewardWatcher();
     checkTrialExpiry();
     if (!hasUsedTrial() && !isPremium()) {
