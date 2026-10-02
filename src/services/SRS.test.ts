@@ -8,11 +8,14 @@ const baseCard = (): Flashcard => ({
 });
 
 describe('SRS (SM-2)', () => {
-  it('پاسخ غلط کارت را ریست می‌کند', () => {
+  it('پاسخ غلط کارت را به یادگیری مجدد درون‌روزی می‌فرستد', () => {
     const out = getSRS().schedule({ ...baseCard(), repetitions: 3, interval: 10 }, 1);
-    expect(out.repetitions).toBe(0);
-    expect(out.interval).toBe(1);
+    expect(out.relearnStep).toBe(0);
     expect(out.lapses).toBe(1);
+    expect(out.consecutiveCorrect).toBe(0);
+    expect(out.mature).toBe(false);
+    expect(new Date(out.nextReview).getTime()).toBeGreaterThan(Date.now());
+    expect(new Date(out.nextReview).getTime() - Date.now()).toBeLessThan(15 * 60 * 1000);
   });
   it('پاسخ عالی فاصله را افزایش می‌دهد', () => {
     const out = getSRS().schedule({ ...baseCard(), repetitions: 2, interval: 6 }, 5);
