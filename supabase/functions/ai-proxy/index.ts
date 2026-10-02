@@ -17,11 +17,16 @@ function json(body: Record<string, unknown>, status = 200) {
 const FREE_LIMIT = 3;
 const PREMIUM_LIMIT = 100;
 
-const deductQuota = async (deviceId: string, today: string, used: number) => {
+const deductQuota = async (quotaKey: string, today: string) => {
   await supabase
     .from("ai_usage")
-    .upsert({ device_id: quotaKey, usage_date: today, count: used + 1, updated_at: new Date().toISOString() },
-      { onConflict: "device_id,usage_date" });
+    .upsert({
+      device_id: quotaKey,
+      usage_date: today,
+      count: 1,
+      updated_at: new Date().toISOString()
+    },
+    { onConflict: "device_id,usage_date" });
 };
 
 Deno.serve(async (req) => {
@@ -98,7 +103,28 @@ Deno.serve(async (req) => {
 
   const limit = tier === "premium" ? PREMIUM_LIMIT : FREE_LIMIT;
   const today = new Date().toISOString().slice(0, 10);
-  let used = 0;
+
+  // چک سهمیه: نرخ‌طلبی ۶ ثانیه
+  const { data: row, error: qErr } = await supabase
+    .from("ai_usage")
+    .select("updated_at")
+    .eq("device_id", quotaKey)
+    .eq("usage_date", today)
+    .maybeSingle();
+  if (qErr) return json({ ok: false, error: "خطا در بررسی سهمیه" }, 500);
+
+  const RATE_LIMIT_MS = 6000; // ۶ ثانیه
+  const lastRequest = row?.updated_at ? new Date(row.updated_at).getTime() : 0;
+  const now = Date.now();
+  if (now - lastRequest < RATE_LIMIT_MS) {
+    const waitSeconds = Math.ceil((RATE_LIMIT_MS - (now - lastRequest)) / 1000);
+    return json({
+      ok: false,
+      error: `${waitSeconds} ثانیه‌ی دیگر دوباره امتحان کنید`,
+      error_code: "rate_limited",
+      wait_seconds: waitSeconds
+    }, 429);
+  }
 
   const count = Math.max(3, Math.min(30, Number(body.count ?? 5)));
   const types = Array.isArray(body.types) && body.types.length ? body.types : ["mc"];
@@ -244,13 +270,13 @@ ${shardText}`;
       return json({ ok: false, error: "ساخت آزمون ناموفق بود؛ دوباره تلاش کن" }, 502);
     }
 
-    await deductQuota(quotaKey, today, used);
+    await deductQuota(quotaKey, today);
     return json({
       ok: true,
       task: "quiz",
       output: JSON.stringify(merged.slice(0, count)),
       model: successfulModel,
-      remaining: limit - used - 1,
+      remaining: limit - 1,
       tier,
       partial: merged.length < count,
     });
@@ -276,8 +302,8 @@ ${shardText}`;
       const data = await res.json();
       const output = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
       if (!output) { lastError = new Error(`${model}: پاسخ خالی`); continue; }
-      await deductQuota(quotaKey, today, used);
-      return json({ ok: true, task, output, model, remaining: limit - used - 1, tier });
+      await deductQuota(quotaKey, today);
+      return json({ ok: true, task, output, model, remaining: limit - 1, tier });
     } catch (err) {
       lastError = err as Error;
       console.warn(`${model} شکست، تلاش با مدل بعدی...`);
