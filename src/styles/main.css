@@ -1066,7 +1066,7 @@ button:not(:disabled):not(.no-press):is(.rounded-full, .btn-square, [class*="rou
   .btn:hover:hover { transform: none; }
 }
 /* ============================================================
-   29. CATEGORY CHIPS - انتخابگر لمسی دسته‌بندی
+   30. RESPONSIVE VISIBILITY - کنترل نمایش موبایل/دسکتاپ
    ============================================================ */
 .cat-chip {
   padding: 10px 16px;
