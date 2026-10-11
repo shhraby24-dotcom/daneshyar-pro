@@ -1,6 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// تنظیمات عمومی
+// ─────────────────────────────────────────────────────────────────────────────
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -14,16 +17,39 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
-const FREE_LIMIT = 3;
-const PREMIUM_LIMIT = 100;
+// ─────────────────────────────────────────────────────────────────────────────
+// محدودیت‌ها
+// ─────────────────────────────────────────────────────────────────────────────
+const FREE_LIMIT = 3;         // کاربران رایگان: ۳ درخواست در روز
+const PREMIUM_LIMIT = 100;    // کاربران پریمیوم: ۱۰۰ درخواست در روز
+const RATE_LIMIT_MS = 6000;   // فاصله بین درخواست‌ها: ۶ ثانیه
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ ok: false, error: "Method not allowed" }, 405);
+// ─────────────────────────────────────────────────────────────────────────────
+// مدل‌های هوش مصنوعی (ترتیب = اولویت)
+// ─────────────────────────────────────────────────────────────────────────────
+const PRIMARY_MODEL = "gemini-3-flash-preview";
+const FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Handler اصلی
+// ─────────────────────────────────────────────────────────────────────────────
+Deno.serve(async (req: Request) => {
+  // ── CORS Preflight ──
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return json({ ok: false, error: "Method not allowed" }, 405);
+  }
+
+  // ── چک کلید Gemini ──
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
-  if (!geminiKey) return json({ ok: false, error: "کلید AI روی سرور تنظیم نشده است" }, 500);
+  if (!geminiKey) {
+    return json({ ok: false, error: "کلید AI روی سرور تنظیم نشده است" }, 500);
+  }
 
+  // ── پارس بدنه درخواست ──
   let body: {
     task?: string;
     text?: string;
@@ -36,12 +62,21 @@ Deno.serve(async (req) => {
     back?: string;
     topics?: string;
   };
-  try { body = await req.json(); } catch { return json({ ok: false, error: "JSON نامعتبر" }, 400); }
 
+  try {
+    body = await req.json();
+  } catch {
+    return json({ ok: false, error: "JSON نامعتبر است" }, 400);
+  }
+
+  // ── اعتبارسنجی deviceId ──
   const deviceId = String(body.deviceId ?? "").trim();
-  if (!/^[a-zA-Z0-9-]{8,64}$/.test(deviceId)) return json({ ok: false, error: "deviceId نامعتبر" }, 400);
+  if (!/^[a-zA-Z0-9-]{8,64}$/.test(deviceId)) {
+    return json({ ok: false, error: "deviceId نامعتبر است" }, 400);
+  }
   let quotaKey = deviceId;
 
+  // ── تعیین نوع تسک ──
   const task = body.task === "summary"
     ? "summary"
     : body.task === "difficulty"
@@ -50,7 +85,9 @@ Deno.serve(async (req) => {
         ? "insight"
         : "quiz";
 
+  // ── اعتبارسنجی ورودی بر اساس نوع تسک ──
   const text = String(body.text ?? "").slice(0, 6000);
+
   if (task === "difficulty") {
     if (!String(body.front ?? "").trim() || !String(body.back ?? "").trim()) {
       return json({ ok: false, error: "front و back الزامی هستند" }, 400);
@@ -63,21 +100,28 @@ Deno.serve(async (req) => {
     return json({ ok: false, error: "متن خیلی کوتاه است" }, 400);
   }
 
+  // ── ساخت کلاینت Supabase ──
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     { auth: { persistSession: false } },
   );
 
+  // ── شناسایی کاربر و سطح اشتراک ──
   let tier: "free" | "premium" = "free";
   const authHeader = req.headers.get("Authorization");
+
   if (authHeader) {
     const anon = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } }, auth: { persistSession: false } },
+      {
+        global: { headers: { Authorization: authHeader } },
+        auth: { persistSession: false },
+      },
     );
     const { data: { user } } = await anon.auth.getUser();
+
     if (user) {
       quotaKey = user.id;
       const { data: sub } = await supabase
@@ -85,62 +129,102 @@ Deno.serve(async (req) => {
         .select("expires_at")
         .eq("user_id", user.id)
         .maybeSingle();
-      if (sub && new Date(sub.expires_at).getTime() > Date.now()) tier = "premium";
+
+      if (sub && new Date(sub.expires_at).getTime() > Date.now()) {
+        tier = "premium";
+      }
     }
   }
 
   const limit = tier === "premium" ? PREMIUM_LIMIT : FREE_LIMIT;
   const today = new Date().toISOString().slice(0, 10);
 
-  // تابع محلی برای کسر سهمیه (داخل Deno.serve)
-  const deductQuota = async () => {
+  // ── تابع محلی کسر سهمیه (با افزایش واقعی شمارنده) ──
+  const deductQuota = async (currentCount: number): Promise<void> => {
     await supabase
       .from("ai_usage")
-      .upsert({
-        device_id: quotaKey,
-        usage_date: today,
-        count: 1,
-        updated_at: new Date().toISOString()
-      },
-      { onConflict: "device_id,usage_date" });
+      .upsert(
+        {
+          device_id: quotaKey,
+          usage_date: today,
+          count: currentCount + 1,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "device_id,usage_date" },
+      );
   };
 
-  // چک سهمیه: نرخ‌طلبی ۶ ثانیه
+  // ── چک سهمیه روزانه ──
   const { data: row, error: qErr } = await supabase
     .from("ai_usage")
-    .select("updated_at")
+    .select("count, updated_at")
     .eq("device_id", quotaKey)
     .eq("usage_date", today)
     .maybeSingle();
-  if (qErr) return json({ ok: false, error: "خطا در بررسی سهمیه" }, 500);
 
-  const RATE_LIMIT_MS = 6000; // ۶ ثانیه
-  const lastRequest = row?.updated_at ? new Date(row.updated_at).getTime() : 0;
-  const now = Date.now();
-  if (now - lastRequest < RATE_LIMIT_MS) {
-    const waitSeconds = Math.ceil((RATE_LIMIT_MS - (now - lastRequest)) / 1000);
-    return json({
-      ok: false,
-      error: `${waitSeconds} ثانیه‌ی دیگر دوباره امتحان کنید`,
-      error_code: "rate_limited",
-      wait_seconds: waitSeconds
-    }, 429);
+  if (qErr) {
+    return json({ ok: false, error: "خطا در بررسی سهمیه" }, 500);
   }
 
+  const currentCount = row?.count ?? 0;
+
+  // چک سقف روزانه
+  if (currentCount >= limit) {
+    return json(
+      {
+        ok: false,
+        error: tier === "free"
+          ? "سهمیه رایگان روزانه شما تمام شد. فردا دوباره امتحان کنید یا اشتراک تهیه کنید."
+          : "سهمیه روزانه شما تمام شد. فردا دوباره امتحان کنید.",
+        error_code: "quota_exceeded",
+        remaining: 0,
+        tier,
+      },
+      429,
+    );
+  }
+
+  // چک فاصله بین درخواست‌ها (۶ ثانیه)
+  const lastRequest = row?.updated_at ? new Date(row.updated_at).getTime() : 0;
+  const now = Date.now();
+
+  if (now - lastRequest < RATE_LIMIT_MS) {
+    const waitSeconds = Math.ceil((RATE_LIMIT_MS - (now - lastRequest)) / 1000);
+    return json(
+      {
+        ok: false,
+        error: `${waitSeconds} ثانیه‌ی دیگر دوباره امتحان کنید`,
+        error_code: "rate_limited",
+        wait_seconds: waitSeconds,
+        remaining: limit - currentCount,
+        tier,
+      },
+      429,
+    );
+  }
+
+  // ── پارامترهای عمومی ──
   const count = Math.max(3, Math.min(30, Number(body.count ?? 5)));
-  const types = Array.isArray(body.types) && body.types.length ? body.types : ["mc"];
+  const types = Array.isArray(body.types) && body.types.length > 0 ? body.types : ["mc"];
   const forExam = Boolean(body.forExam);
 
-  const prompt = task === "difficulty"
-    ? `تو یک معلم ایرانی هستی. سختیِ‌ادگیرِی این فلش‌کارت را برای یک دانش‌آموز ایرانی بین 0 (خیلی آسان) و 1 (خیلی سخت) تخمین بزن.
+  // ───────────────────────────────────────────────────────────────────────────
+  // ساخت پرامپت بر اساس نوع تسک
+  // ───────────────────────────────────────────────────────────────────────────
+  let prompt: string;
+
+  if (task === "difficulty") {
+    prompt = `تو یک معلم ایرانی هستی. سختیِ‌یادگیری این فلش‌کارت را برای یک دانش‌آموز ایرانی بین 0 (خیلی آسان) و 1 (خیلی سخت) تخمین بزن.
 فقط یک عدد اعشاری برگردان، بدون هیچ توضیح.
-سوال: ${body.front ?? ''}
-پاسخ: ${body.back ?? ''}`
-    : task === "insight"
-      ? `تو یک مربی دلسوز ایرانی هستی. دانش‌آموز در این موضوع‌ها بیشتر اشتباه کرده: ${body.topics ?? ''}.
-در یک تا دو جمله‌ی کوتاه و انگیزشی به فارسی بگو روی چه چیزی تمرکز کند و چرا. فقط متن؛ بدون JSON.`
-      : task === "quiz"
-        ? `تو یک معلم ایرانی هستی. از متن زیر دقیقاً ${count} سوال آموزشی به زبان فارسی بساز.
+سوال: ${body.front ?? ""}
+پاسخ: ${body.back ?? ""}`;
+
+  } else if (task === "insight") {
+    prompt = `تو یک مربی دلسوز ایرانی هستی. دانش‌آموز در این موضوع‌ها بیشتر اشتباه کرده: ${body.topics ?? ""}.
+در یک تا دو جمله‌ی کوتاه و انگیزشی به فارسی بگو روی چه چیزی تمرکز کند و چرا. فقط متن؛ بدون JSON.`;
+
+  } else if (task === "quiz") {
+    prompt = `تو یک معلم ایرانی هستی. از متن زیر دقیقاً ${count} سوال آموزشی به زبان فارسی بساز.
 انواع مجاز: ${types.join(", ")} (mc=چندگزینه‌ای، fill=جاخالی، tf=درست/غلط).
 ${forExam ? "سوالات سخت و کنکوری باشند." : "سوالات متعادل باشند."}
 خروجی را فقط به صورت یک آرایه JSON معتبر برگردان با این ساختار دقیق (هیچ متن اضافه‌ای قبل یا بعد از آرایه ننویس):
@@ -149,8 +233,11 @@ ${forExam ? "سوالات سخت و کنکوری باشند." : "سوالات م
 برای نوع tf گزینه‌ها را دقیقاً ["صحیح","غلط"] بگذار و correctIndex عدد 0 یا 1 باشد.
 هر سوال باید id نداشته باشد؛ id در کلاینت تولید می‌شود.
 متن:
-${text}`
-        : `تو یک معلم خصوصی حرفه‌ای ایرانی هستی که متن درسی را برای «حفظ سریع و ماندگار» آماده می‌کند.
+${text}`;
+
+  } else {
+    // summary
+    prompt = `تو یک معلم خصوصی حرفه‌ای ایرانی هستی که متن درسی را برای «حفظ سریع و ماندگار» آماده می‌کند.
 
 ── گام ۱: تشخیص نوع متن ──
 نوع متن را تشخیص بده: [ادبی/شعر] [زبان/لغت] [ریاضی/فرمول] [علوم/تعریفی] [تاریخ/اطلاعات عمومی] [ترکیبی]
@@ -164,8 +251,8 @@ ${text}`
 ۱) ابیات و عبارات ادبی  ۲) لغت و معنی دقیق  ۳) فرمول و نماد  ۴) تعریف رسمی  ۵) اسامی خاص، تاریخ‌ها و اعداد
 
 ── گام ۴: خلاصه‌سازی ──
-${body.level === 'short' ? 'سطح خلاصه: خیلی کوتاه و فشرده (حداکثر ۵ نکته)' : body.level === 'long' ? 'سطح خلاصه: کامل و با جزئیات کافی' : 'سطح خلاصه: متوسط و متعادل'}
-${body.forExam ? 'حالت کنکوری: روی تعاریف، اعداد، فرمول‌ها و نکات تست‌خیز تمرکز کن.' : 'حالت عادی: برای یادگیری و حفظ آسان.'}
+${body.level === "short" ? "سطح خلاصه: خیلی کوتاه و فشرده (حداکثر ۵ نکته)" : body.level === "long" ? "سطح خلاصه: کامل و با جزئیات کافی" : "سطح خلاصه: متوسط و متعادل"}
+${body.forExam ? "حالت کنکوری: روی تعاریف، اعداد، فرمول‌ها و نکات تست‌خیز تمرکز کن." : "حالت عادی: برای یادگیری و حفظ آسان."}
 بقیه‌ی متن را ساده، کوتاه و قابل‌حفظ کن؛ با سرفصل و دسته‌بندی.
 تشبیه/مثال روزمره فقط برای مفاهیم انتزاعی. برای لیست‌ها و ترتیب‌ها یک قلاب حافظه بساز.
 
@@ -178,16 +265,21 @@ ${body.forExam ? 'حالت کنکوری: روی تعاریف، اعداد، فر
 
 متن:
 ${text}`;
+  }
 
-  // قوی‌ترین مدل اول + fallback
+  // ───────────────────────────────────────────────────────────────────────────
+  // تسک Quiz با شاردینگ و ترکیب
+  // ───────────────────────────────────────────────────────────────────────────
   if (task === "quiz") {
     const shardTexts = (input: string, n: number): string[] => {
       const sentences = input.split(/(?<=[.!?؟])\s+|\n+/).map(s => s.trim()).filter(Boolean);
       if (sentences.length < 12 || n === 1) return [input];
+
       const shards: string[] = [];
       const base = Math.floor(sentences.length / n);
       const extra = sentences.length % n;
       let offset = 0;
+
       for (let i = 0; i < n; i++) {
         const size = base + (i < extra ? 1 : 0);
         shards.push(sentences.slice(offset, offset + size).join(" "));
@@ -196,20 +288,21 @@ ${text}`;
       return shards;
     };
 
-    const normalizeQuestion = (question: unknown) => String(question ?? "")
-      .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .toLowerCase();
+    const normalizeQuestion = (question: unknown): string =>
+      String(question ?? "")
+        .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
 
     const shardCount = Math.ceil(count / 10);
     const shards = shardTexts(text, shardCount);
     const requestedPerShard = Math.ceil(count / shards.length);
 
-    const runQuizModel = async (model: string) => {
+    const runQuizModel = async (model: string): Promise<unknown[]> => {
       const results = await Promise.allSettled(
         shards.map(async (shardText, index) => {
-          const prompt = `تو یک معلم ایرانی هستی. از متن زیر دقیقاً ${requestedPerShard} سوال آموزشی به زبان فارسی بساز.
+          const shardPrompt = `تو یک معلم ایرانی هستی. از متن زیر دقیقاً ${requestedPerShard} سوال آموزشی به زبان فارسی بساز.
 انواع مجاز: ${types.join(", ")} (mc=چندگزینه‌ای، fill=جاخالی، tf=درست/غلط).
 ${forExam ? "سوالات سخت و کنکوری باشند." : "سوالات متعادل باشند."}
 این متن، بخش ${index + 1} از ${shards.length} بخشِ جزوه است؛ فقط از همین بخش سوال بساز و با بخش‌های دیگر تکراری نباش.
@@ -229,15 +322,18 @@ ${shardText}`;
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
+                contents: [{ parts: [{ text: shardPrompt }] }],
                 generationConfig: { responseMimeType: "application/json", maxOutputTokens: 4096 },
               }),
             },
           );
+
           if (!res.ok) throw new Error(`${model} error: ${res.status}`);
+
           const data = await res.json();
           const output = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
           if (!output) throw new Error(`${model}: پاسخ خالی`);
+
           const parsed = JSON.parse(output);
           return Array.isArray(parsed) ? parsed : [];
         }),
@@ -249,7 +345,7 @@ ${shardText}`;
     let merged: unknown[] = [];
     const seen = new Set<string>();
 
-    const addUnique = (items: unknown[]) => {
+    const addUnique = (items: unknown[]): void => {
       for (const item of items) {
         if (merged.length >= count) break;
         const key = normalizeQuestion((item as { question?: unknown })?.question);
@@ -259,34 +355,47 @@ ${shardText}`;
       }
     };
 
-    addUnique(await runQuizModel("gemini-3-flash-preview"));
-    let successfulModel = merged.length > 0 ? "gemini-3-flash-preview" : "";
+    // امتحان مدل‌ها به ترتیب اولویت
+    let successfulModel = "";
+    const allModels = [PRIMARY_MODEL, ...FALLBACK_MODELS];
 
-    if (merged.length < 3) {
-      addUnique(await runQuizModel("gemini-2.5-flash"));
-      if (merged.length > 0) successfulModel = "gemini-2.5-flash";
+    for (const model of allModels) {
+      try {
+        addUnique(await runQuizModel(model));
+        if (merged.length > 0) {
+          successfulModel = model;
+          if (merged.length >= count) break;
+        }
+      } catch (err) {
+        console.warn(`${model} شکست: ${(err as Error).message}`);
+        continue;
+      }
     }
 
     if (merged.length === 0) {
       return json({ ok: false, error: "ساخت آزمون ناموفق بود؛ دوباره تلاش کن" }, 502);
     }
 
-    await deductQuota();
+    await deductQuota(currentCount);
+
     return json({
       ok: true,
       task: "quiz",
       output: JSON.stringify(merged.slice(0, count)),
       model: successfulModel,
-      remaining: limit - 1,
+      remaining: limit - currentCount - 1,
       tier,
       partial: merged.length < count,
     });
   }
 
-  const models = ["gemini-3-flash-preview", "gemini-2.5-flash"];
+  // ───────────────────────────────────────────────────────────────────────────
+  // تسک‌های دیگر (summary, difficulty, insight) با فالبک
+  // ───────────────────────────────────────────────────────────────────────────
+  const modelsToTry = [PRIMARY_MODEL, ...FALLBACK_MODELS];
   let lastError: Error | null = null;
 
-  for (const model of models) {
+  for (const model of modelsToTry) {
     try {
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
@@ -295,16 +404,36 @@ ${shardText}`;
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: task === "quiz" || task === "summary" ? { responseMimeType: "application/json" } : {},
+            generationConfig: task === "quiz" || task === "summary"
+              ? { responseMimeType: "application/json" }
+              : {},
           }),
         },
       );
-      if (!res.ok) { lastError = new Error(`${model} error: ${res.status}`); continue; }
+
+      if (!res.ok) {
+        lastError = new Error(`${model} error: ${res.status}`);
+        continue;
+      }
+
       const data = await res.json();
       const output = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-      if (!output) { lastError = new Error(`${model}: پاسخ خالی`); continue; }
-      await deductQuota();
-      return json({ ok: true, task, output, model, remaining: limit - 1, tier });
+
+      if (!output) {
+        lastError = new Error(`${model}: پاسخ خالی`);
+        continue;
+      }
+
+      await deductQuota(currentCount);
+
+      return json({
+        ok: true,
+        task,
+        output,
+        model,
+        remaining: limit - currentCount - 1,
+        tier,
+      });
     } catch (err) {
       lastError = err as Error;
       console.warn(`${model} شکست، تلاش با مدل بعدی...`);
@@ -312,5 +441,11 @@ ${shardText}`;
     }
   }
 
-  return json({ ok: false, error: "همه مدل‌های AI شکست خوردند: " + (lastError?.message ?? "خطای ناشناخته") }, 502);
+  return json(
+    {
+      ok: false,
+      error: "همه مدل‌های AI شکست خوردند: " + (lastError?.message ?? "خطای ناشناخته"),
+    },
+    502,
+  );
 });
