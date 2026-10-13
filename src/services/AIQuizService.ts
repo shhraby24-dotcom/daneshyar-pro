@@ -1,14 +1,15 @@
 /**
  * ============================================================
- * دانش‌یار پرو - سرویس آزمون AI با Edge Function (نسخه ۳.۱)
+ * دانش‌یار پرو - سرویس آزمون AI با Edge Function (نسخه ۳.۲)
  * ============================================================
  * ✅ تک‌درخواستی: هر آزمون = ۱ درخواست = ۱ واحد سهمیه
  * ✅ سرعت واقعی سمت سرور (shard موازی) — کلاینت ساده می‌ماند
  * ✅ کش هوشمند روزانه (آزمون تکراری آنی)
  * ✅ لغو با AbortSignal + timeout کلاینت ۱۲۰ ثانیه
- * ✅ خطای کاربرپسند (friendlyAIError)
+ * ✅ خطای کاربرپسند (friendlyAIError) با تشخیص quota_exceeded و rate_limited
+ * ✅ فیلتر نوع سوالات بر اساس انتخاب کاربر
  * @module services/AIQuizService
- * @version 3.1.0
+ * @version 3.2.0
  */
 import { getInstance as getLogger } from '@/core/Logger';
 import type { Question as QuizQuestion, QuestionType } from '@/services/QuizGenerator';
@@ -135,19 +136,26 @@ function writeCache(key: string, questions: QuizQuestion[]): void {
 }
 
 // ============================================================
-// پارس
+// پارس (با فیلتر نوع سوالات)
 // ============================================================
-function parseQuestions(output: string): QuizQuestion[] {
+function parseQuestions(output: string, allowedTypes: QuestionType[]): QuizQuestion[] {
   const start = output.indexOf('[');
   const end = output.lastIndexOf(']');
   if (start === -1 || end === -1) throw new Error('خروجی JSON نامعتبر');
 
   const arr = JSON.parse(output.slice(start, end + 1)) as Array<Record<string, unknown>>;
   const out: QuizQuestion[] = [];
+  let filteredCount = 0;
 
   for (const item of arr) {
     const type = (item.type as QuestionType) ?? 'mc';
     if (!['mc', 'fill', 'tf'].includes(type)) continue;
+
+    // فقط نوع‌هایی پذیرفته شوند که کاربر انتخاب کرده است
+    if (!allowedTypes.includes(type)) {
+      filteredCount++;
+      continue;
+    }
 
     const q = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
@@ -169,7 +177,17 @@ function parseQuestions(output: string): QuizQuestion[] {
     out.push(q as unknown as QuizQuestion);
   }
 
-  if (out.length === 0) throw new Error('سوال معتبری پارس نشد');
+  if (out.length === 0) {
+    const msg = filteredCount > 0
+      ? `سوال معتبری از نوع انتخاب‌شده پارس نشد (${filteredCount} سوال با نوع نامناسب فیلتر شد)`
+      : 'سوال معتبری پارس نشد';
+    throw new Error(msg);
+  }
+
+  if (filteredCount > 0) {
+    logger.warn(`${filteredCount} سوال به دلیل نامناسب بودن نوع فیلتر شد`);
+  }
+
   return out;
 }
 
@@ -179,6 +197,17 @@ function parseQuestions(output: string): QuizQuestion[] {
 export function friendlyAIError(err: unknown): string {
   if (err instanceof DOMException && err.name === 'AbortError') return 'ساخت آزمون لغو شد.';
   const m = err instanceof Error ? err.message : String(err);
+
+  // تشخیص صریح quota_exceeded
+  if (/quota_exceeded/i.test(m)) {
+    return 'سهمیه‌ی هوش مصنوعی امروزت تمام شده؛ فردا دوباره بیا یا پریمیوم شو.';
+  }
+
+  // تشخیص صریح rate_limited
+  if (/rate_limited/i.test(m)) {
+    return 'درخواست‌ها خیلی سریع ارسال شده‌اند؛ چند ثانیه صبر کن و دوباره تلاش کن.';
+  }
+
   if (/timeout/i.test(m) || (err instanceof DOMException && err.name === 'TimeoutError')) {
     return 'ساخت آزمون بیش از حد طول کشید؛ اتصال اینترنت را بررسی کن و دوباره تلاش کن.';
   }
@@ -226,7 +255,7 @@ export class AIQuizService {
     try {
       const supabase = getSupabaseClient();
       const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
-      
+
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (session?.access_token) {
         headers['Authorization'] = `Bearer ${session.access_token}`;
@@ -247,12 +276,32 @@ export class AIQuizService {
       });
 
       const data = (await res.json()) as Record<string, unknown>;
-      if (!data.ok) {
-        if (/quota|سهمیه/i.test(String(data.error ?? ''))) syncRemaining(0);
-        throw new Error(String(data.error ?? 'خطا در Edge Function'));
+
+      // بررسی جامع پاسخ
+      if (!res.ok || data.ok !== true) {
+        const errorCode = String(data.error_code ?? '');
+        const errorMessage = String(data.error ?? 'خطا در Edge Function');
+
+        if (errorCode === 'quota_exceeded') {
+          syncRemaining(0);
+          throw new Error(`quota_exceeded: ${errorMessage}`);
+        }
+
+        if (errorCode === 'rate_limited') {
+          throw new Error(`rate_limited: ${errorMessage}`);
+        }
+
+        // fallback برای پیام‌های فارسی
+        if (/quota|سهمیه/i.test(`${errorCode} ${errorMessage}`)) {
+          syncRemaining(0);
+        }
+
+        throw new Error(
+          errorCode ? `${errorCode}: ${errorMessage}` : errorMessage,
+        );
       }
 
-      const questions = parseQuestions(String(data.output ?? ''));
+      const questions = parseQuestions(String(data.output ?? ''), opts.types);
       const remaining = typeof data.remaining === 'number' ? data.remaining : getRemainingQuota();
       const partial = data.partial === true;
 
