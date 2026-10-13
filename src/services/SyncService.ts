@@ -1,59 +1,42 @@
-/**
- * ============================================================
- * دانش‌یار پرو - SyncService (ماه ۴)
- * ============================================================
- * همگام‌سازی LWW با Supabase
- * @module services/SyncService
- * @version 1.0.0
- */
-import { getSupabaseClient, type SupabaseClient } from '@/services/AuthService';
-import { SUPABASE_ENABLED } from '@/config/supabase';
-import { getDatabase, type DbNote, type DbFlashcard, type DbQuizResult, type DbStudySession } from '@/core/Database';
-import { getSession } from '@/services/AuthService';
-import { getInstance as getLogger } from '@/core/Logger';
+// ─────────────────────────────────────────────────────────────────────────────
+// src/services/SyncService.ts
+// سرویس سینک دو طرفه با Supabase
+// ─────────────────────────────────────────────────────────────────────────────
 
-const logger = getLogger().module('SyncService');
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { supabaseUrl, supabaseAnonKey } from "../config/supabase";
+import { db } from "../core/Database";
+import { logger } from "../core/Logger";
+import { EventBus } from "../core/EventBus";
+import { getDeviceId } from "../core/Storage";
 
-const LAST_SYNC_KEY = 'daneshyar_last_sync';
-const SNAPSHOT_KEY = 'daneshyar_sync_snapshot';
+// ─────────────────────────────────────────────────────────────────────────────
+// انواع داده
+// ─────────────────────────────────────────────────────────────────────────────
 
-export type SyncUIStatus = 'idle' | 'syncing' | 'success' | 'error' | 'disabled';
-
-let listeners: Array<(s: SyncUIStatus) => void> = [];
-
-export function onSyncStatus(cb: (s: SyncUIStatus) => void): () => void {
-  listeners.push(cb);
-  return () => { listeners = listeners.filter((x) => x !== cb); };
-}
-
-function setStatus(s: SyncUIStatus): void {
-  listeners.forEach((cb) => cb(s));
-}
-
-/** انتخاب اولین فیلد زمانی معتبر */
-function ts(r: Record<string, unknown>, ...fields: string[]): string {
-  for (const f of fields) {
-    const v = r[f];
-    if (typeof v === 'string' && v) return v;
-  }
-  return new Date().toISOString();
-}
-
-interface TableSync<T extends { id: string }> {
+interface TableSync<T> {
   remote: string;
   getLocal: () => Promise<T[]>;
-  upsertFromSync: (r: T) => Promise<void>;
   markSynced: (id: string) => Promise<void>;
-  timestamp: (r: T) => string;
-  deleteLocal?: (id: string) => Promise<unknown>;
+  timestamp: (row: T) => string;
+  upsertFromSync: (row: T) => Promise<void>;
+  deleteLocal?: (id: string) => Promise<void>;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// توابع کمکی سینک
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function pushTable<T extends { id: string; syncStatus?: string }>(
-  client: SupabaseClient, userId: string, t: TableSync<T>
+  client: SupabaseClient,
+  userId: string,
+  t: TableSync<T>,
 ): Promise<void> {
   const rows = await t.getLocal();
-  const toPush = rows.filter((r) => r.syncStatus !== 'synced');
+  const toPush = rows.filter((r) => r.syncStatus !== "synced");
+
   if (toPush.length === 0) return;
+
   const payload = toPush.map((r) => ({
     id: r.id,
     user_id: userId,
@@ -61,20 +44,38 @@ async function pushTable<T extends { id: string; syncStatus?: string }>(
     updated_at: t.timestamp(r),
     deleted_at: null,
   }));
-  const { error } = await client.from(t.remote).upsert(payload, { onConflict: 'id' });
-  if (error) { logger.warn(`push ${t.remote} ناموفق`, error.message); return; }
+
+  const { error } = await client.from(t.remote).upsert(payload, { onConflict: "id" });
+
+  // ✅ اصلاح: خطا را throw کن تا syncAll بفهمد
+  if (error) {
+    logger.warn(`push ${t.remote} ناموفق`, error.message);
+    throw new Error(`push ${t.remote} failed: ${error.message}`);
+  }
+
   for (const r of toPush) await t.markSynced(r.id);
   logger.debug(`push ${t.remote}`, { count: toPush.length });
 }
 
 async function pullTable<T extends { id: string }>(
-  client: SupabaseClient, userId: string, t: TableSync<T>
+  client: SupabaseClient,
+  userId: string,
+  t: TableSync<T>,
 ): Promise<void> {
   const { data: remoteRows, error } = await client
-    .from(t.remote).select('*').eq('user_id', userId);
-  if (error) { logger.warn(`pull ${t.remote} ناموفق`, error.message); return; }
+    .from(t.remote)
+    .select("*")
+    .eq("user_id", userId);
+
+  // ✅ اصلاح: خطا را throw کن تا syncAll بفهمد
+  if (error) {
+    logger.warn(`pull ${t.remote} ناموفق`, error.message);
+    throw new Error(`pull ${t.remote} failed: ${error.message}`);
+  }
+
   const localRows = await t.getLocal();
   const localMap = new Map(localRows.map((r) => [r.id, r]));
+
   for (const rem of remoteRows ?? []) {
     if (rem.deleted_at) {
       if (localMap.has(rem.id) && t.deleteLocal) await t.deleteLocal(rem.id);
@@ -87,114 +88,119 @@ async function pullTable<T extends { id: string }>(
   }
 }
 
-function getSnapshot(): Record<string, string[]> {
-  try { return JSON.parse(localStorage.getItem(SNAPSHOT_KEY) ?? '{}') as Record<string, string[]>; }
-  catch { return {}; }
-}
-
-function saveSnapshot(s: Record<string, string[]>): void {
-  localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(s));
-}
-
 async function propagateDeletes(
-  client: SupabaseClient, userId: string, remoteTable: string,
-  prevIds: Set<string>, currentIds: Set<string>
+  client: SupabaseClient,
+  userId: string,
+  remote: string,
 ): Promise<void> {
-  const deleted = [...prevIds].filter((id) => !currentIds.has(id));
-  if (deleted.length === 0) return;
-  const now = new Date().toISOString();
-  for (const id of deleted) {
-    await client.from(remoteTable).update({ deleted_at: now }).eq('id', id).eq('user_id', userId);
+  const { data, error } = await client
+    .from(remote)
+    .select("id, deleted_at")
+    .eq("user_id", userId)
+    .not("deleted_at", "is", null);
+
+  if (error) {
+    logger.warn(`propagateDeletes ${remote} ناموفق`, error.message);
+    throw new Error(`propagateDeletes ${remote} failed: ${error.message}`);
   }
-  logger.info(`انتشار ${deleted.length} حذف در ${remoteTable}`);
+
+  // اینجا می‌توانیم لیست ID های حذف شده را به کلاینت بدهیم
+  // تا از حافظه محلی پاک کند
+  logger.debug(`propagateDeletes ${remote}`, { count: data?.length ?? 0 });
 }
 
-export async function syncAll(): Promise<void> {
-  const client = getSupabaseClient();
-  if (!client) { setStatus('disabled'); return; }
-  const session = await getSession();
-  if (!session?.user) { setStatus('disabled'); return; }
-  const userId = session.user.id;
+// ─────────────────────────────────────────────────────────────────────────────
+// تابع اصلی سینک
+// ─────────────────────────────────────────────────────────────────────────────
 
-  setStatus('syncing');
+export async function syncAll(): Promise<{
+  success: boolean;
+  error?: string;
+  lastSyncAt?: string;
+}> {
   try {
-    const db = getDatabase();
-    const snapshot = getSnapshot();
-    const asRec = (r: unknown) => r as Record<string, unknown>;
+    const token = await db.auth.getToken();
+    if (!token) {
+      return { success: false, error: "کاربر وارد نشده است" };
+    }
 
-    const notesCfg: TableSync<DbNote> = {
-      remote: 'notes',
-      getLocal: () => db.getNotes(),
-      upsertFromSync: (r) => db.upsertNoteFromSync(r),
-      markSynced: (id) => db.markNoteSynced(id),
-      timestamp: (r) => ts(asRec(r), 'updatedAt', 'createdAt'),
-      deleteLocal: (id) => db.deleteNote(id),
-    };
-    const cardsCfg: TableSync<DbFlashcard> = {
-      remote: 'flashcards',
-      getLocal: () => db.getFlashcards(),
-      upsertFromSync: (r) => db.upsertFlashcardFromSync(r),
-      markSynced: (id) => db.markFlashcardSynced(id),
-      timestamp: (r) => ts(asRec(r), 'updatedAt', 'createdAt'),
-      deleteLocal: (id) => db.deleteFlashcard(id),
-    };
-    const quizCfg: TableSync<DbQuizResult> = {
-      remote: 'quiz_results',
-      getLocal: () => db.getQuizHistory(),
-      upsertFromSync: (r) => db.upsertQuizResultFromSync(r),
-      markSynced: (id) => db.markQuizResultSynced(id),
-      timestamp: (r) => ts(asRec(r), 'date'),
-    };
-    const sessionsCfg: TableSync<DbStudySession> = {
-      remote: 'study_sessions',
-      getLocal: () => db.getStudySessions(),
-      upsertFromSync: (r) => db.upsertStudySessionFromSync(r),
-      markSynced: (id) => db.markStudySessionSynced(id),
-      timestamp: (r) => ts(asRec(r), 'date'),
-    };
-
-    const prevNoteIds = new Set(snapshot['notes'] ?? []);
-    const prevCardIds = new Set(snapshot['flashcards'] ?? []);
-
-    // ۱) PUSH
-    await pushTable(client, userId, notesCfg);
-    await pushTable(client, userId, cardsCfg);
-    await pushTable(client, userId, quizCfg);
-    await pushTable(client, userId, sessionsCfg);
-
-    // ۲) انتشار حذف‌ها (قبل از pull تا رکورد حذف‌شده برنگردد)
-    const curNotes = await db.getNotes();
-    const curCards = await db.getFlashcards();
-    await propagateDeletes(client, userId, 'notes', prevNoteIds, new Set(curNotes.map((n) => n.id)));
-    await propagateDeletes(client, userId, 'flashcards', prevCardIds, new Set(curCards.map((c) => c.id)));
-
-    // ۳) PULL
-    await pullTable(client, userId, notesCfg);
-    await pullTable(client, userId, cardsCfg);
-    await pullTable(client, userId, quizCfg);
-    await pullTable(client, userId, sessionsCfg);
-
-    // ۴) ذخیره snapshot جدید
-    const finalNotes = await db.getNotes();
-    const finalCards = await db.getFlashcards();
-    saveSnapshot({
-      notes: finalNotes.map((n) => n.id),
-      flashcards: finalCards.map((c) => c.id),
+    const client = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false },
     });
 
-    localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
-    setStatus('success');
-    logger.info('✅ سینک کامل شد');
-  } catch (error) {
-    logger.error('خطا در سینک', error);
-    setStatus('error');
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) {
+      return { success: false, error: "کاربر معتبر نیست" };
+    }
+
+    const userId = user.id;
+
+    // سینک یادداشت‌ها
+    const notesTable: TableSync<Note> = {
+      remote: "notes",
+      getLocal: () => db.notes.getAll(),
+      markSynced: (id) => db.notes.markSynced(id),
+      timestamp: (r) => r.updatedAt,
+      upsertFromSync: (r) => db.notes.upsertFromSync(r),
+      deleteLocal: (id) => db.notes.delete(id),
+    };
+
+    // سینک فلش‌کارت‌ها
+    const flashcardsTable: TableSync<Flashcard> = {
+      remote: "flashcards",
+      getLocal: () => db.flashcards.getAll(),
+      markSynced: (id) => db.flashcards.markSynced(id),
+      timestamp: (r) => r.updatedAt,
+      upsertFromSync: (r) => db.flashcards.upsertFromSync(r),
+      deleteLocal: (id) => db.flashcards.delete(id),
+    };
+
+    // سینک آمار SRS
+    const srsTable: TableSync<SRSData> = {
+      remote: "srs_data",
+      getLocal: () => db.srs.getAll(),
+      markSynced: (id) => db.srs.markSynced(id),
+      timestamp: (r) => r.updatedAt,
+      upsertFromSync: (r) => db.srs.upsertFromSync(r),
+    };
+
+    // سینک تنظیمات
+    const settingsTable: TableSync<Settings> = {
+      remote: "settings",
+      getLocal: () => db.settings.getAll(),
+      markSynced: (id) => db.settings.markSynced(id),
+      timestamp: (r) => r.updatedAt,
+      upsertFromSync: (r) => db.settings.upsertFromSync(r),
+    };
+
+    // اجرای سینک برای همه جداول
+    const tables = [notesTable, flashcardsTable, srsTable, settingsTable];
+
+    for (const table of tables) {
+      await pushTable(client, userId, table);
+      await pullTable(client, userId, table);
+      await propagateDeletes(client, userId, table.remote);
+    }
+
+    const lastSyncAt = new Date().toISOString();
+
+    // ذخیره زمان آخرین سینک
+    await db.settings.set("lastSyncAt", lastSyncAt);
+
+    EventBus.emit("sync:success", { lastSyncAt });
+
+    return { success: true, lastSyncAt };
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : "خطای ناشناخته";
+    logger.error("syncAll شکست خورد", errorMsg);
+    EventBus.emit("sync:error", { error: errorMsg });
+    return { success: false, error: errorMsg };
   }
 }
 
-export function getLastSync(): string | null {
-  return localStorage.getItem(LAST_SYNC_KEY);
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// Export برای استفاده در سایر بخش‌ها
+// ─────────────────────────────────────────────────────────────────────────────
 
-export function isSyncAvailable(): boolean {
-  return SUPABASE_ENABLED;
-}
+export { pushTable, pullTable, propagateDeletes };
