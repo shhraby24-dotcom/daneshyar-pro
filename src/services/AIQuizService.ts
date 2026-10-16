@@ -1,15 +1,15 @@
 /**
  * ============================================================
- * دانش‌یار پرو - سرویس آزمون AI با Edge Function (نسخه ۳.۲)
+ * دانش‌یار پرو - سرویس آزمون AI با Edge Function (نسخه ۳.۳)
  * ============================================================
  * ✅ تک‌درخواستی: هر آزمون = ۱ درخواست = ۱ واحد سهمیه
  * ✅ سرعت واقعی سمت سرور (shard موازی) — کلاینت ساده می‌ماند
  * ✅ کش هوشمند روزانه (آزمون تکراری آنی)
  * ✅ لغو با AbortSignal + timeout کلاینت ۱۲۰ ثانیه
  * ✅ خطای کاربرپسند (friendlyAIError) با تشخیص quota_exceeded و rate_limited
- * ✅ فیلتر نوع سوالات بر اساس انتخاب کاربر
+ * ✅ لایه محافظ: فیلتر نوع سوالات به عنوان safety net
  * @module services/AIQuizService
- * @version 3.2.0
+ * @version 3.3.0
  */
 import { getInstance as getLogger } from '@/core/Logger';
 import type { Question as QuizQuestion, QuestionType } from '@/services/QuizGenerator';
@@ -30,12 +30,17 @@ const CACHE_MAX = 8;
 
 export type AITier = 'free' | 'byok' | 'premium';
 
+/** سقف سهمیه روزانه برای هر سطح */
+const TIER_LIMITS: Record<AITier, number> = { free: 3, byok: 20, premium: 100 };
+
 export interface AIResult {
   questions: QuizQuestion[];
   engine: 'edge-function' | 'cache';
   model: string;
   remaining: number;
   partial?: boolean;
+  /** تعداد سوال‌هایی که سرور جایگزین کرد (اگر لایه محافظ فعال شد) */
+  replaced?: number;
 }
 
 export interface GenerateHooks {
@@ -76,17 +81,16 @@ export function getTier(): AITier {
 }
 
 export function getRemainingQuota(): number {
-  const limits: Record<AITier, number> = { free: 3, byok: 20, premium: 100 };
   const tier = getTier();
   try {
     const raw = localStorage.getItem(AI_USAGE_LS);
     if (raw) {
       const u = JSON.parse(raw) as { date: string; count: number };
       const today = new Date().toDateString();
-      if (u.date === today) return Math.max(0, limits[tier] - u.count);
+      if (u.date === today) return Math.max(0, TIER_LIMITS[tier] - u.count);
     }
   } catch { /* ignore */ }
-  return limits[tier];
+  return TIER_LIMITS[tier];
 }
 
 export function saveUserKeys(gemini: string, groq: string): void {
@@ -118,8 +122,7 @@ function readCache(key: string): QuizQuestion[] | null {
 /** همگام‌سازی عدد سهمیه با سرور تا بج UI عدد درست نشان دهد */
 function syncRemaining(remaining: number): void {
   try {
-    const limits: Record<AITier, number> = { free: 3, byok: 20, premium: 100 };
-    const used = Math.max(0, limits[getTier()] - remaining);
+    const used = Math.max(0, TIER_LIMITS[getTier()] - remaining);
     localStorage.setItem(AI_USAGE_LS, JSON.stringify({ date: new Date().toDateString(), count: used }));
   } catch { /* ignore */ }
 }
@@ -136,7 +139,7 @@ function writeCache(key: string, questions: QuizQuestion[]): void {
 }
 
 // ============================================================
-// پارس (با فیلتر نوع سوالات)
+// پارس (با لایه محافظ: فیلتر نوع به عنوان safety net)
 // ============================================================
 function parseQuestions(output: string, allowedTypes: QuestionType[]): QuizQuestion[] {
   const start = output.indexOf('[');
@@ -146,12 +149,18 @@ function parseQuestions(output: string, allowedTypes: QuestionType[]): QuizQuest
   const arr = JSON.parse(output.slice(start, end + 1)) as Array<Record<string, unknown>>;
   const out: QuizQuestion[] = [];
   let filteredCount = 0;
+  let invalidCount = 0;
 
   for (const item of arr) {
     const type = (item.type as QuestionType) ?? 'mc';
-    if (!['mc', 'fill', 'tf'].includes(type)) continue;
 
-    // فقط نوع‌هایی پذیرفته شوند که کاربر انتخاب کرده است
+    // نوع‌های ناشناخته را رد کن
+    if (!['mc', 'fill', 'tf'].includes(type)) {
+      invalidCount++;
+      continue;
+    }
+
+    // لایه محافظ: فقط نوع‌های انتخاب‌شده توسط کاربر (safety net)
     if (!allowedTypes.includes(type)) {
       filteredCount++;
       continue;
@@ -170,9 +179,9 @@ function parseQuestions(output: string, allowedTypes: QuestionType[]): QuizQuest
       concept: item.concept ? String(item.concept) : 'general',
     };
 
-    if (!q.question) continue;
-    if ((type === 'mc' || type === 'tf') && (!q.options || q.correctIndex === undefined)) continue;
-    if (type === 'fill' && !q.answer) continue;
+    if (!q.question) { invalidCount++; continue; }
+    if ((type === 'mc' || type === 'tf') && (!q.options || q.correctIndex === undefined)) { invalidCount++; continue; }
+    if (type === 'fill' && !q.answer) { invalidCount++; continue; }
 
     out.push(q as unknown as QuizQuestion);
   }
@@ -184,30 +193,30 @@ function parseQuestions(output: string, allowedTypes: QuestionType[]): QuizQuest
     throw new Error(msg);
   }
 
-  if (filteredCount > 0) {
-    logger.warn(`${filteredCount} سوال به دلیل نامناسب بودن نوع فیلتر شد`);
+  // لاگ برای دیباگ: اگر سرور سوال نامناسب فرستاد، ما مطلع شویم
+  if (filteredCount > 0 || invalidCount > 0) {
+    logger.warn(`لایه محافظ فعال شد: ${filteredCount} سوال فیلتر شد (نوع نامناسب), ${invalidCount} سوال نامعتبر بود`);
   }
 
   return out;
 }
 
 // ============================================================
-// خطای کاربرپسند
+// خطای کاربرپسند (با تشخیص صریح error_code)
 // ============================================================
 export function friendlyAIError(err: unknown): string {
   if (err instanceof DOMException && err.name === 'AbortError') return 'ساخت آزمون لغو شد.';
   const m = err instanceof Error ? err.message : String(err);
 
-  // تشخیص صریح quota_exceeded
+  // تشخیص صریح خطاها بر اساس error_code سرور
   if (/quota_exceeded/i.test(m)) {
     return 'سهمیه‌ی هوش مصنوعی امروزت تمام شده؛ فردا دوباره بیا یا پریمیوم شو.';
   }
-
-  // تشخیص صریح rate_limited
   if (/rate_limited/i.test(m)) {
     return 'درخواست‌ها خیلی سریع ارسال شده‌اند؛ چند ثانیه صبر کن و دوباره تلاش کن.';
   }
 
+  // تشخیص بر اساس متن (برای سازگاری با نسخه‌های قدیمی)
   if (/timeout/i.test(m) || (err instanceof DOMException && err.name === 'TimeoutError')) {
     return 'ساخت آزمون بیش از حد طول کشید؛ اتصال اینترنت را بررسی کن و دوباره تلاش کن.';
   }
@@ -242,7 +251,7 @@ export class AIQuizService {
 
     // ۲) تک‌درخواست به Edge Function (سرور خودش موازی می‌کند)
     const deviceId = getOrCreateDeviceId();
-    logger.info(`درخواست AI Quiz: ${opts.count} سوال (تک‌درخواست)`);
+    logger.info(`درخواست AI Quiz: ${opts.count} سوال از نوع‌های [${opts.types.join(', ')}]`);
 
     const ctrl = new AbortController();
     const timer = window.setTimeout(() => ctrl.abort(new DOMException('quiz timeout', 'TimeoutError')), AI_TIMEOUT_MS);
@@ -277,7 +286,7 @@ export class AIQuizService {
 
       const data = (await res.json()) as Record<string, unknown>;
 
-      // بررسی جامع پاسخ
+      // بررسی جامع پاسخ سرور
       if (!res.ok || data.ok !== true) {
         const errorCode = String(data.error_code ?? '');
         const errorMessage = String(data.error ?? 'خطا در Edge Function');
@@ -291,7 +300,7 @@ export class AIQuizService {
           throw new Error(`rate_limited: ${errorMessage}`);
         }
 
-        // fallback برای پیام‌های فارسی
+        // fallback برای پیام‌های فارسی (سازگاری با نسخه‌های قدیمی سرور)
         if (/quota|سهمیه/i.test(`${errorCode} ${errorMessage}`)) {
           syncRemaining(0);
         }
@@ -301,15 +310,28 @@ export class AIQuizService {
         );
       }
 
+      // پارس سوالات با لایه محافظ
       const questions = parseQuestions(String(data.output ?? ''), opts.types);
       const remaining = typeof data.remaining === 'number' ? data.remaining : getRemainingQuota();
       const partial = data.partial === true;
+      const replaced = typeof data.replaced === 'number' ? data.replaced : undefined;
 
       writeCache(key, questions);
       syncRemaining(remaining);
-      logger.info(`✅ AI Quiz موفق: ${questions.length} سوال (مدل ${String(data.model ?? '?')}${partial ? ' · جزئی' : ''})`);
 
-      return { questions, engine: 'edge-function', model: String(data.model ?? 'unknown'), remaining, partial };
+      const logMsg = `✅ AI Quiz موفق: ${questions.length} سوال (مدل ${String(data.model ?? '?')}` +
+        `${partial ? ' · جزئی' : ''}` +
+        `${replaced ? ` · ${replaced} سوال جایگزین شد` : ''})`;
+      logger.info(logMsg);
+
+      return {
+        questions,
+        engine: 'edge-function',
+        model: String(data.model ?? 'unknown'),
+        remaining,
+        partial,
+        replaced,
+      };
     } finally {
       window.clearTimeout(timer);
       if (hooks.signal) hooks.signal.removeEventListener('abort', onExternalAbort);
