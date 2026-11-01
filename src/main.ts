@@ -27,6 +27,7 @@ import { isPremium } from '@/services/Premium';
 import { checkAndReward } from '@/services/RewardEngine';
 import { startAutoRewardWatcher } from '@/services/AutoRewardWatcher';
 import { savePendingRef } from '@/services/ReferralService';
+import { seedDemoData, purgeDemoData } from '@/services/DemoDataService';
 import { createLandingView } from '@/ui/views/LandingView';
 
 const logger = getLogger({ level: import.meta.env.PROD ? 'INFO' : 'DEBUG', showTimestamp: true, persistToStorage: false });
@@ -170,41 +171,7 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   });
 }
 
-// ── داده‌ی دمو (فقط DEV یا با ?demo=1) ──
-async function seedDemoData(): Promise<void> {
-  const db = getDatabase();
-  await db.init();
-  if ((await db.getNotes()).length > 0) return;
-  logger.info('🌱 کاشت داده دمو...');
-  const now = Date.now();
-  const DAY = 86400000;
-  const notes = [
-    { title: 'جزوه ریاضی — مشتق', content: 'مشتق تابع y=x^n برابر است با y\'=nx^(n-1). برای توابع مرکب از قاعده زنجیره‌ای استفاده می‌کنیم.' },
-    { title: 'خلاصه فصل ۳ فیزیک', content: 'قانون دوم نیوتن: F=ma. نیروی خالص وارد بر جسم برابر است با جرم ضرب در شتاب.' },
-    { title: 'لغات انگلیسی — درس ۵', content: 'abundant: فراوان، benevolent: خیرخواه، candid: صریح و صادق.' },
-  ];
-  for (let i = 0; i < notes.length; i++) {
-    const s = notes[i]!;
-    await db.addNote({
-      id: `demo-note-${i}`,
-      title: s.title,
-      content: s.content,
-      createdAt: new Date(now - i * DAY).toISOString(),
-      updatedAt: new Date(now - i * DAY).toISOString(),
-    });
-  }
-}
-
-// ⭐ پاک‌سازی یک‌باره‌ی نوت‌های دموی قدیمی (روی همه‌ی دستگاه‌ها)
-async function purgeDemoData(): Promise<void> {
-  const db = getDatabase();
-  await db.init();
-  const notes = await db.getNotes();
-  for (const n of notes) {
-    if (n.id.startsWith('demo-note-')) await db.deleteNote(n.id);
-  }
-}
-
+// ── داده‌ی دمو (فقط DEV یا با ?demo=1) — پیاده‌سازی در services/DemoDataService ──
 bootstrap();
 
 // پاک‌سازی همیشه اجرا می‌شود (نوت‌های دموی کاشته‌شده‌ی قبلی را می‌سوزاند)
