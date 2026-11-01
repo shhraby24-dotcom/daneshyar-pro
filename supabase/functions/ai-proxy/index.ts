@@ -23,6 +23,8 @@ function json(body: Record<string, unknown>, status = 200) {
 const FREE_LIMIT = 3;
 const PREMIUM_LIMIT = 100;
 const RATE_LIMIT_MS = 6000;
+/** حداکثر deviceId متفاوت برای هر user_id در روز (ضد چرخاندن سهمیه) */
+const MAX_DEVICES_PER_USER = 5;
 
 const PRIMARY_MODEL = "gemini-3-flash-preview";
 const FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"];
@@ -227,6 +229,8 @@ Deno.serve(async (req: Request) => {
     { auth: { persistSession: false } },
   );
 
+  const today = new Date().toISOString().slice(0, 10);
+
   let tier: "free" | "premium" = "free";
   const authHeader = req.headers.get("Authorization");
 
@@ -252,11 +256,47 @@ Deno.serve(async (req: Request) => {
       if (sub && new Date(sub.expires_at).getTime() > Date.now()) {
         tier = "premium";
       }
+
+      // ضد سوءاستفاده: هر user_id در روز حداکثر MAX_DEVICES_PER_USER deviceId متفاوت
+      // مارکرها با پیشوند «dev:» در همان جدول ai_usage ثبت می‌شوند (بدون تغییر schema)
+      const { error: markErr } = await supabase
+        .from("ai_usage")
+        .upsert(
+          {
+            device_id: `dev:${user.id}:${deviceId}`,
+            usage_date: today,
+            count: 1,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "device_id,usage_date", ignoreDuplicates: true },
+        );
+      if (markErr) {
+        return json({ ok: false, error: "خطا در ثبت دستگاه" }, 500);
+      }
+      const { count: deviceCount, error: devErr } = await supabase
+        .from("ai_usage")
+        .select("device_id", { count: "exact", head: true })
+        .like("device_id", `dev:${user.id}:%`)
+        .eq("usage_date", today);
+      if (devErr) {
+        return json({ ok: false, error: "خطا در بررسی دستگاه‌ها" }, 500);
+      }
+      if ((deviceCount ?? 0) > MAX_DEVICES_PER_USER) {
+        return json(
+          {
+            ok: false,
+            error: "فعالیت غیرعادی دستگاه‌ها برای این حساب شناسایی شد. فردا دوباره امتحان کنید.",
+            error_code: "device_limit_reached",
+            remaining: 0,
+            tier,
+          },
+          429,
+        );
+      }
     }
   }
 
   const limit = tier === "premium" ? PREMIUM_LIMIT : FREE_LIMIT;
-  const today = new Date().toISOString().slice(0, 10);
 
   const deductQuota = async (currentCount: number): Promise<void> => {
     await supabase

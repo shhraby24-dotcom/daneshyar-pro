@@ -19,6 +19,7 @@
 
 import { getInstance as getLogger } from '@/core/Logger';
 import { getInstance as getEventBus, EVENTS } from '@/core/EventBus';
+import { escapeHtml } from '@/ui/components/Modal';
 
 const logger = getLogger().module('Router');
 const eventBus = getEventBus();
@@ -577,7 +578,7 @@ export class Router {
           <div class="text-center">
             <div class="text-7xl mb-4">🔍</div>
             <h1 class="text-3xl font-bold mb-2">صفحه یافت نشد</h1>
-            <p class="text-slate-400 mb-6">مسیر "${routeName}" وجود ندارد</p>
+            <p class="text-slate-400 mb-6">مسیر "${escapeHtml(routeName)}" وجود ندارد</p>
             <button onclick="location.hash = '#/dashboard'" 
                     class="bg-primary-600 hover:bg-primary-700 text-slate-100 px-6 py-3 rounded-lg transition">
               بازگشت به داشبورد
@@ -599,7 +600,7 @@ export class Router {
           <div class="bg-red-900/20 border border-red-700 rounded-xl p-8 max-w-lg text-center">
             <div class="text-5xl mb-4">❌</div>
             <h2 class="text-xl font-bold text-red-400 mb-2">خطا در بارگذاری صفحه</h2>
-            <p class="text-slate-300 mb-4">${errorMessage || 'خطای ناشناخته'}</p>
+            <p class="text-slate-300 mb-4">${escapeHtml(errorMessage || 'خطای ناشناخته')}</p>
             <button onclick="location.reload()" 
                     class="bg-primary-600 hover:bg-primary-700 text-slate-100 px-6 py-2 rounded-lg transition">
               تلاش مجدد

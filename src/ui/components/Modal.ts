@@ -26,13 +26,13 @@ const eventBus = getEventBus();
  * ONLY use on content that comes from user input
  * Content from iconHTML() is trusted and does not need escaping
  */
-function escapeHtml(unsafe: string): string {
+export function escapeHtml(unsafe: string): string {
   return unsafe
-    .replace(/&/g, '&')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
-    .replace(/"/g, '"')
-    .replace(/'/g, '&#039;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // ============================================================
