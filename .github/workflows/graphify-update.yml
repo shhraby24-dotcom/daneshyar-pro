@@ -1,0 +1,53 @@
+name: Update Project Graph
+
+# GITHUB_TOKEN باید اجازه‌ی push داشته باشد
+permissions:
+  contents: write
+
+on:
+  # بعد از هر تغییر در برنچ اصلی
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'supabase/**'
+
+  # هر روز نیمه‌شب (حتی بدون تغییر)
+  schedule:
+    - cron: '0 0 * * *'
+
+  # امکان اجرای دستی
+  workflow_dispatch:
+
+jobs:
+  update-graph:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Graphify
+        run: |
+          pip install graphifyy
+          pip install "numpy==2.1.3"
+
+      - name: Generate graph
+        run: |
+          graphify . --code-only
+          # GRAPH_REPORT.md و graph.html فقط با cluster-only ساخته می‌شوند
+          graphify cluster-only . --no-label
+
+      - name: Commit graph changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add graphify-out/
+          git diff --staged --quiet || git commit -m "docs: auto-update project graph [skip ci]"
+          git push
