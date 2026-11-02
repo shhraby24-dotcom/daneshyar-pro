@@ -1,4 +1,4 @@
-# Graph Report - daneshyar-pro  (2026-11-01)
+# Graph Report - daneshyar-pro  (2026-11-02)
 
 ## Corpus Check
 - cluster-only mode — file stats not available
@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7e537e18`
+- Built from commit: `2ee605e4`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -261,7 +261,7 @@ Nodes (4): compilerOptions, strict, imports, @supabase/supabase-js
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `getInstance()` connect `Community 12` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 5`, `Community 8`, `Community 9`, `Community 10`, `Community 14`, `Community 16`, `Community 18`, `Community 19`, `Community 21`, `Community 22`, `Community 25`, `Community 27`, `Community 29`, `Community 32`, `Community 34`, `Community 35`, `Community 37`, `Community 38`, `Community 41`, `Community 42`, `Community 46`?**
-  _High betweenness centrality (0.146) - this node is a cross-community bridge._
+  _High betweenness centrality (0.147) - this node is a cross-community bridge._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.05267778753292362 - nodes in this community are weakly interconnected._
 - **Why does `DatabaseService` connect `Community 11` to `Community 32`, `Community 39`, `Community 51`, `Community 19`, `Community 57`, `Community 30`?**
