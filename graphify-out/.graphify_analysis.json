@@ -16,6 +16,19 @@
       "src_core_router_viewfactory",
       "src_core_router_viewfactoryresult",
       "src_services_focusaudioservice",
+      "src_services_focusaudioservice_focusaudioservice",
+      "src_services_focusaudioservice_focusaudioservice_buildpad",
+      "src_services_focusaudioservice_focusaudioservice_buildrain",
+      "src_services_focusaudioservice_focusaudioservice_buildwaves",
+      "src_services_focusaudioservice_focusaudioservice_constructor",
+      "src_services_focusaudioservice_focusaudioservice_ensurectx",
+      "src_services_focusaudioservice_focusaudioservice_ensurepill",
+      "src_services_focusaudioservice_focusaudioservice_noisebuffer",
+      "src_services_focusaudioservice_focusaudioservice_notify",
+      "src_services_focusaudioservice_focusaudioservice_play",
+      "src_services_focusaudioservice_focusaudioservice_setvolume",
+      "src_services_focusaudioservice_focusaudioservice_subscribe",
+      "src_services_focusaudioservice_focusaudioservice_teardown",
       "src_services_focusaudioservice_focustrack",
       "src_services_focusaudioservice_getfocusaudio",
       "src_services_focusaudioservice_tracks",
@@ -62,14 +75,21 @@
       "src_config_supabase_supabase_anon_key",
       "src_config_supabase_supabase_enabled",
       "src_config_supabase_supabase_url",
-      "src_services_aiflashcardservice",
-      "src_services_aiflashcardservice_difficultyresult",
-      "src_services_aiflashcardservice_estimatecarddifficulty",
-      "src_services_aiflashcardservice_getorcreatedeviceid",
-      "src_services_aiflashcardservice_getweaktopicinsight",
-      "src_services_aiflashcardservice_heuristicdifficulty",
-      "src_services_aiflashcardservice_logger",
-      "src_services_aiflashcardservice_parsescore",
+      "src_services_aisummaryservice",
+      "src_services_aisummaryservice_aipreserved",
+      "src_services_aisummaryservice_aiselftest",
+      "src_services_aisummaryservice_aisummary",
+      "src_services_aisummaryservice_aisummaryoptions",
+      "src_services_aisummaryservice_aisummaryresult",
+      "src_services_aisummaryservice_aisummarysection",
+      "src_services_aisummaryservice_cachekey",
+      "src_services_aisummaryservice_getaisummary",
+      "src_services_aisummaryservice_getorcreatedeviceid",
+      "src_services_aisummaryservice_hashtext",
+      "src_services_aisummaryservice_logger",
+      "src_services_aisummaryservice_parsesummary",
+      "src_services_aisummaryservice_readcache",
+      "src_services_aisummaryservice_writecache",
       "src_services_authservice",
       "src_services_authservice_getclient",
       "src_services_authservice_getcurrentuser",
@@ -96,6 +116,7 @@
       "src_services_referralservice_max_referrals",
       "src_services_referralservice_processreferralonsignup",
       "src_services_referralservice_reward_days",
+      "src_services_summarizer_summarylevel",
       "src_services_syncservice",
       "src_services_syncservice_getsnapshot",
       "src_services_syncservice_listeners",
@@ -114,6 +135,121 @@
       "src_ui_views_authview_logger"
     ],
     "2": [
+      "src_services_aiflashcardservice",
+      "src_services_aiflashcardservice_difficultyresult",
+      "src_services_aiflashcardservice_estimatecarddifficulty",
+      "src_services_aiflashcardservice_getorcreatedeviceid",
+      "src_services_aiflashcardservice_getweaktopicinsight",
+      "src_services_aiflashcardservice_heuristicdifficulty",
+      "src_services_aiflashcardservice_logger",
+      "src_services_aiflashcardservice_parsescore",
+      "src_services_srs",
+      "src_services_srs_concepttype",
+      "src_services_srs_content_multipliers",
+      "src_services_srs_createcarddata",
+      "src_services_srs_efficiencyanalysis",
+      "src_services_srs_flashcard",
+      "src_services_srs_forecastentry",
+      "src_services_srs_getsrs",
+      "src_services_srs_logger",
+      "src_services_srs_optimaltimeprediction",
+      "src_services_srs_quality_levels",
+      "src_services_srs_qualitylevel",
+      "src_services_srs_relearn_steps_min",
+      "src_services_srs_resetsrs",
+      "src_services_srs_spacedrepetitionsystem",
+      "src_services_srs_spacedrepetitionsystem_analyzeefficiency",
+      "src_services_srs_spacedrepetitionsystem_avgease",
+      "src_services_srs_spacedrepetitionsystem_avginterval",
+      "src_services_srs_spacedrepetitionsystem_buildsmartqueue",
+      "src_services_srs_spacedrepetitionsystem_constructor",
+      "src_services_srs_spacedrepetitionsystem_createcard",
+      "src_services_srs_spacedrepetitionsystem_daysfrom",
+      "src_services_srs_spacedrepetitionsystem_efficiencyscore",
+      "src_services_srs_spacedrepetitionsystem_getduecards",
+      "src_services_srs_spacedrepetitionsystem_getlearningcards",
+      "src_services_srs_spacedrepetitionsystem_getnewcards",
+      "src_services_srs_spacedrepetitionsystem_getretention",
+      "src_services_srs_spacedrepetitionsystem_getstats",
+      "src_services_srs_spacedrepetitionsystem_interleavetopics",
+      "src_services_srs_spacedrepetitionsystem_isweak",
+      "src_services_srs_spacedrepetitionsystem_maturity",
+      "src_services_srs_spacedrepetitionsystem_predictoptimaltime",
+      "src_services_srs_spacedrepetitionsystem_recommendations",
+      "src_services_srs_spacedrepetitionsystem_resetcard",
+      "src_services_srs_spacedrepetitionsystem_schedule",
+      "src_services_srs_srsconfig",
+      "src_services_srs_srsrecommendation",
+      "src_services_srs_srsstats",
+      "src_services_srs_test",
+      "src_services_srs_test_basecard",
+      "src_ui_views_flashcardsview",
+      "src_ui_views_flashcardsview_addxp",
+      "src_ui_views_flashcardsview_concept_styles",
+      "src_ui_views_flashcardsview_concept_types",
+      "src_ui_views_flashcardsview_getcardstatus",
+      "src_ui_views_flashcardsview_logger",
+      "src_ui_views_flashcardsview_phase",
+      "src_ui_views_flashcardsview_ratings",
+      "src_ui_views_flashcardsview_reviewmode",
+      "src_ui_views_flashcardsview_srs"
+    ],
+    "3": [
+      "src_core_router_router",
+      "src_core_router_router_aftereach",
+      "src_core_router_router_back",
+      "src_core_router_router_beforeeach",
+      "src_core_router_router_buildhashurl",
+      "src_core_router_router_constructor",
+      "src_core_router_router_destroy",
+      "src_core_router_router_getcurrentroute",
+      "src_core_router_router_getparams",
+      "src_core_router_router_getroutes",
+      "src_core_router_router_handlehashchange",
+      "src_core_router_router_hasroute",
+      "src_core_router_router_hideloading",
+      "src_core_router_router_navigate",
+      "src_core_router_router_parsehashurl",
+      "src_core_router_router_parseroutename",
+      "src_core_router_router_registerview",
+      "src_core_router_router_rendererror",
+      "src_core_router_router_rendernotfound",
+      "src_core_router_router_renderview",
+      "src_core_router_router_setcontainer",
+      "src_core_router_router_setdefaultroute",
+      "src_core_router_router_setnotfound",
+      "src_core_router_router_showloading",
+      "src_core_router_router_start",
+      "src_ui_components_modal",
+      "src_ui_components_modal_activemodal",
+      "src_ui_components_modal_confirmoptions",
+      "src_ui_components_modal_escapehtml",
+      "src_ui_components_modal_eventbus",
+      "src_ui_components_modal_logger",
+      "src_ui_components_modal_modalbutton",
+      "src_ui_components_modal_modalbuttontype",
+      "src_ui_components_modal_modalmanager",
+      "src_ui_components_modal_modalmanager_alert",
+      "src_ui_components_modal_modalmanager_close",
+      "src_ui_components_modal_modalmanager_confirm",
+      "src_ui_components_modal_modalmanager_constructor",
+      "src_ui_components_modal_modalmanager_createbutton",
+      "src_ui_components_modal_modalmanager_ensurecontainer",
+      "src_ui_components_modal_modalmanager_isopen",
+      "src_ui_components_modal_modalmanager_keyhandler",
+      "src_ui_components_modal_modalmanager_loading",
+      "src_ui_components_modal_modalmanager_open",
+      "src_ui_components_modal_modalmanager_prompt",
+      "src_ui_components_modal_modalmanager_trapfocus",
+      "src_ui_components_modal_modalmanager_updatecontent",
+      "src_ui_components_modal_modalmanager_updatetitle",
+      "src_ui_components_modal_modaloptions",
+      "src_ui_components_modal_modalsize",
+      "src_ui_components_modal_promptoptions",
+      "src_ui_components_modal_resetmodal",
+      "src_ui_components_modal_size_classes"
+    ],
+    "4": [
       "capacitor_config",
       "capacitor_config_config",
       "package",
@@ -152,64 +288,15 @@
       "ref_happy_dom",
       "ref_lottie_web",
       "ref_lucide",
-      "ref_path",
       "ref_supabase_supabase_js",
       "ref_tailwindcss",
       "ref_tailwindcss_vite",
       "ref_types_node",
       "ref_typescript",
       "ref_vite",
-      "ref_vitest",
-      "src_utils_dateformatter_test",
-      "vite_config",
-      "vitest_config"
+      "vite_config"
     ],
-    "3": [
-      "src_services_aisummaryservice",
-      "src_services_aisummaryservice_aipreserved",
-      "src_services_aisummaryservice_aiselftest",
-      "src_services_aisummaryservice_aisummary",
-      "src_services_aisummaryservice_aisummaryoptions",
-      "src_services_aisummaryservice_aisummaryresult",
-      "src_services_aisummaryservice_aisummarysection",
-      "src_services_aisummaryservice_cachekey",
-      "src_services_aisummaryservice_getaisummary",
-      "src_services_aisummaryservice_getorcreatedeviceid",
-      "src_services_aisummaryservice_hashtext",
-      "src_services_aisummaryservice_logger",
-      "src_services_aisummaryservice_parsesummary",
-      "src_services_aisummaryservice_readcache",
-      "src_services_aisummaryservice_writecache",
-      "src_services_summarizer",
-      "src_services_summarizer_getsummarizer",
-      "src_services_summarizer_level_ratios",
-      "src_services_summarizer_logger",
-      "src_services_summarizer_persian_stopwords",
-      "src_services_summarizer_resetsummarizer",
-      "src_services_summarizer_scoredsentence",
-      "src_services_summarizer_signal_scores",
-      "src_services_summarizer_signal_words",
-      "src_services_summarizer_signalcategory",
-      "src_services_summarizer_structureanalysis",
-      "src_services_summarizer_summarizeoptions",
-      "src_services_summarizer_summarizer",
-      "src_services_summarizer_summarizer_analyzestructure",
-      "src_services_summarizer_summarizer_constructor",
-      "src_services_summarizer_summarizer_extractkeypoints",
-      "src_services_summarizer_summarizer_extractkeypoints_e1e0fa",
-      "src_services_summarizer_summarizer_extractkeywords",
-      "src_services_summarizer_summarizer_extractkeywords_55fc12",
-      "src_services_summarizer_summarizer_getdesiredcount",
-      "src_services_summarizer_summarizer_scoresentences",
-      "src_services_summarizer_summarizer_selecttopsentences",
-      "src_services_summarizer_summarizer_splitintosentences",
-      "src_services_summarizer_summarizer_summarize",
-      "src_services_summarizer_summarizer_tokenize",
-      "src_services_summarizer_summarizeresult",
-      "src_services_summarizer_summarylevel",
-      "src_services_summarizer_test"
-    ],
-    "4": [
+    "5": [
       "src_services_legalservice",
       "src_services_legalservice_docs",
       "src_services_legalservice_getlegaldoc",
@@ -253,7 +340,7 @@
       "src_ui_views_legalview_createlegalview",
       "src_ui_views_legalview_logger"
     ],
-    "5": [
+    "6": [
       "src_services_soundmanager_soundmanager",
       "src_services_soundmanager_soundmanager_addcustomsoundfromfile",
       "src_services_soundmanager_soundmanager_addcustomsoundfromurl",
@@ -297,130 +384,7 @@
       "src_services_soundmanager_soundmanager_stopambient",
       "src_services_soundmanager_soundmanager_testsound"
     ],
-    "6": [
-      "src_services_srs",
-      "src_services_srs_concepttype",
-      "src_services_srs_content_multipliers",
-      "src_services_srs_createcarddata",
-      "src_services_srs_efficiencyanalysis",
-      "src_services_srs_flashcard",
-      "src_services_srs_forecastentry",
-      "src_services_srs_getsrs",
-      "src_services_srs_logger",
-      "src_services_srs_optimaltimeprediction",
-      "src_services_srs_quality_levels",
-      "src_services_srs_qualitylevel",
-      "src_services_srs_relearn_steps_min",
-      "src_services_srs_resetsrs",
-      "src_services_srs_spacedrepetitionsystem",
-      "src_services_srs_spacedrepetitionsystem_analyzeefficiency",
-      "src_services_srs_spacedrepetitionsystem_avgease",
-      "src_services_srs_spacedrepetitionsystem_avginterval",
-      "src_services_srs_spacedrepetitionsystem_buildsmartqueue",
-      "src_services_srs_spacedrepetitionsystem_constructor",
-      "src_services_srs_spacedrepetitionsystem_createcard",
-      "src_services_srs_spacedrepetitionsystem_daysfrom",
-      "src_services_srs_spacedrepetitionsystem_efficiencyscore",
-      "src_services_srs_spacedrepetitionsystem_getduecards",
-      "src_services_srs_spacedrepetitionsystem_getlearningcards",
-      "src_services_srs_spacedrepetitionsystem_getnewcards",
-      "src_services_srs_spacedrepetitionsystem_getretention",
-      "src_services_srs_spacedrepetitionsystem_getstats",
-      "src_services_srs_spacedrepetitionsystem_interleavetopics",
-      "src_services_srs_spacedrepetitionsystem_isweak",
-      "src_services_srs_spacedrepetitionsystem_maturity",
-      "src_services_srs_spacedrepetitionsystem_predictoptimaltime",
-      "src_services_srs_spacedrepetitionsystem_recommendations",
-      "src_services_srs_spacedrepetitionsystem_resetcard",
-      "src_services_srs_spacedrepetitionsystem_schedule",
-      "src_services_srs_srsconfig",
-      "src_services_srs_srsrecommendation",
-      "src_services_srs_srsstats",
-      "src_services_srs_test",
-      "src_services_srs_test_basecard"
-    ],
     "7": [
-      "src_core_database_getdatabase",
-      "src_services_iconservice_createicon",
-      "src_services_iconservice_iconhtml",
-      "src_services_referralservice_getreferrallink",
-      "src_ui_components_button_createbutton",
-      "src_ui_components_toast_gettoast",
-      "src_ui_views_authview_buildloggedin",
-      "src_ui_views_challengesview_createchallengecard",
-      "src_ui_views_challengesview_createchallengesview",
-      "src_ui_views_flashcardsview_createflashcardsview_opencardmodal",
-      "src_ui_views_flashcardsview_createflashcardsview_opencardmodal_syncdraft",
-      "src_ui_views_flashcardsview_createflashcardsview_rendermanage",
-      "src_ui_views_flashcardsview_createflashcardsview_rendermanage_renderlist",
-      "src_ui_views_flashcardsview_createmicbutton",
-      "src_ui_views_inviteview",
-      "src_ui_views_inviteview_createinviteview",
-      "src_ui_views_inviteview_logger",
-      "src_ui_views_landingview_createcurvedemo",
-      "src_ui_views_notesview_buildempty",
-      "src_ui_views_notesview_createnotessearch",
-      "src_ui_views_notesview_createnotesview",
-      "src_ui_views_notesview_createnotesview_deletenote",
-      "src_ui_views_notesview_createnotesview_openzen",
-      "src_ui_views_notesview_createnotesview_openzen_close",
-      "src_ui_views_notesview_createnotesview_openzenbyid",
-      "src_ui_views_notesview_createnotesview_togglepin",
-      "src_ui_views_notesview_renderpinned",
-      "src_ui_views_notesview_rendertags",
-      "src_ui_views_premiumview_createpremiumview",
-      "src_ui_views_premiumview_createpremiumview_buildbenefits",
-      "src_ui_views_premiumview_createpremiumview_buildcomparison",
-      "src_ui_views_premiumview_createpremiumview_buildfaq",
-      "src_ui_views_premiumview_createpremiumview_buildfinalcta",
-      "src_ui_views_premiumview_createpremiumview_buildhero",
-      "src_ui_views_premiumview_createpremiumview_buildpromo",
-      "src_ui_views_premiumview_createpremiumview_buildstatus",
-      "src_ui_views_premiumview_createpremiumview_buildtrust",
-      "src_ui_views_settingsview_createsettingsview_buildadvancedsubpage",
-      "src_ui_views_settingsview_createsettingsview_builddatasubpage"
-    ],
-    "8": [
-      "src_services_aiquizservice_getremainingquota",
-      "src_services_aiquizservice_gettier",
-      "src_services_quotagate",
-      "src_services_quotagate_checkaiquota",
-      "src_services_quotagate_getquotainfo",
-      "src_services_quotagate_quotacheckresult",
-      "src_ui_components_button_button_variants",
-      "src_ui_components_card_createemptystate",
-      "src_ui_components_input_createformgroup",
-      "src_ui_components_input_createtextarea",
-      "src_ui_components_paywallmodal",
-      "src_ui_components_paywallmodal_hidepaywall",
-      "src_ui_components_paywallmodal_logger",
-      "src_ui_components_paywallmodal_showpaywall",
-      "src_ui_views_settingsview_createsettingsview_buildaigroup",
-      "src_ui_views_settingsview_createsettingsview_buildaisubpage",
-      "src_ui_views_settingsview_readstoredkeys",
-      "src_ui_views_summarizerview",
-      "src_ui_views_summarizerview_aiwordcount",
-      "src_ui_views_summarizerview_countwords",
-      "src_ui_views_summarizerview_createsummarizerview",
-      "src_ui_views_summarizerview_createsummarizerview_buildnotecontent",
-      "src_ui_views_summarizerview_createsummarizerview_enginebadge",
-      "src_ui_views_summarizerview_createsummarizerview_generate",
-      "src_ui_views_summarizerview_createsummarizerview_renderactions",
-      "src_ui_views_summarizerview_createsummarizerview_renderheader",
-      "src_ui_views_summarizerview_createsummarizerview_renderinputcard",
-      "src_ui_views_summarizerview_createsummarizerview_renderoptionscard",
-      "src_ui_views_summarizerview_createsummarizerview_renderresults",
-      "src_ui_views_summarizerview_createsummarizerview_renderstats",
-      "src_ui_views_summarizerview_genid",
-      "src_ui_views_summarizerview_levels",
-      "src_ui_views_summarizerview_logger",
-      "src_ui_views_summarizerview_pickkeyword",
-      "src_ui_views_summarizerview_sectionhead",
-      "src_ui_views_summarizerview_srs",
-      "src_ui_views_summarizerview_summarizer",
-      "src_ui_views_summarizerview_viewresult"
-    ],
-    "9": [
       "src_core_state_statemanager",
       "src_core_state_statemanager_addflashcard",
       "src_core_state_statemanager_addflashcards",
@@ -458,43 +422,81 @@
       "src_core_state_statemanager_updatenote",
       "src_core_state_statemanager_updatesettings"
     ],
-    "10": [
-      "src_services_aiquizservice",
-      "src_services_aiquizservice_ai_timeout_ms",
-      "src_services_aiquizservice_aiquizservice",
-      "src_services_aiquizservice_aiquizservice_generate",
-      "src_services_aiquizservice_airesult",
-      "src_services_aiquizservice_aitier",
-      "src_services_aiquizservice_cachekey",
-      "src_services_aiquizservice_generatehooks",
-      "src_services_aiquizservice_getaiquizservice",
-      "src_services_aiquizservice_getorcreatedeviceid",
-      "src_services_aiquizservice_hashtext",
-      "src_services_aiquizservice_logger",
-      "src_services_aiquizservice_parsequestions",
-      "src_services_aiquizservice_readcache",
-      "src_services_aiquizservice_syncremaining",
-      "src_services_aiquizservice_tier_limits",
-      "src_services_aiquizservice_writecache",
-      "src_services_quizgenerator",
-      "src_services_quizgenerator_analysisresult",
-      "src_services_quizgenerator_difficulty_levels",
-      "src_services_quizgenerator_difficultylevel",
-      "src_services_quizgenerator_generateoptions",
-      "src_services_quizgenerator_getquizgenerator",
-      "src_services_quizgenerator_logger",
-      "src_services_quizgenerator_question",
-      "src_services_quizgenerator_question_types",
-      "src_services_quizgenerator_questiontype",
-      "src_services_quizgenerator_quizhistoryentry",
-      "src_services_quizgenerator_quizresult",
-      "src_services_quizgenerator_recommendation",
-      "src_services_quizgenerator_resetquizgenerator",
-      "src_services_quizgenerator_test",
-      "src_services_quizgenerator_weaknessentry",
-      "src_services_quizgenerator_weaknessmatrix"
+    "8": [
+      "src_services_aiquizservice_getremainingquota",
+      "src_services_aiquizservice_gettier",
+      "src_services_quotagate",
+      "src_services_quotagate_checkaiquota",
+      "src_services_quotagate_getquotainfo",
+      "src_services_quotagate_quotacheckresult",
+      "src_ui_components_button_button_variants",
+      "src_ui_components_input_createformgroup",
+      "src_ui_components_input_createtextarea",
+      "src_ui_components_paywallmodal",
+      "src_ui_components_paywallmodal_hidepaywall",
+      "src_ui_components_paywallmodal_logger",
+      "src_ui_components_paywallmodal_showpaywall",
+      "src_ui_views_quizview_createquizview_rendersetup",
+      "src_ui_views_quizview_createquizview_startquiz",
+      "src_ui_views_summarizerview",
+      "src_ui_views_summarizerview_aiwordcount",
+      "src_ui_views_summarizerview_countwords",
+      "src_ui_views_summarizerview_createsummarizerview",
+      "src_ui_views_summarizerview_createsummarizerview_buildnotecontent",
+      "src_ui_views_summarizerview_createsummarizerview_enginebadge",
+      "src_ui_views_summarizerview_createsummarizerview_generate",
+      "src_ui_views_summarizerview_createsummarizerview_renderactions",
+      "src_ui_views_summarizerview_createsummarizerview_renderheader",
+      "src_ui_views_summarizerview_createsummarizerview_renderinputcard",
+      "src_ui_views_summarizerview_createsummarizerview_renderoptionscard",
+      "src_ui_views_summarizerview_createsummarizerview_renderresults",
+      "src_ui_views_summarizerview_createsummarizerview_renderstats",
+      "src_ui_views_summarizerview_genid",
+      "src_ui_views_summarizerview_levels",
+      "src_ui_views_summarizerview_logger",
+      "src_ui_views_summarizerview_pickkeyword",
+      "src_ui_views_summarizerview_sectionhead",
+      "src_ui_views_summarizerview_srs",
+      "src_ui_views_summarizerview_summarizer",
+      "src_ui_views_summarizerview_viewresult"
     ],
-    "11": [
+    "9": [
+      "src_core_router_getrouter",
+      "src_core_state_getstate",
+      "src_services_aiquizservice_saveuserkeys",
+      "src_services_syncservice_getlastsync",
+      "src_services_syncservice_issyncavailable",
+      "src_services_syncservice_onsyncstatus",
+      "src_ui_views_settingsview",
+      "src_ui_views_settingsview_createchevron",
+      "src_ui_views_settingsview_createsection",
+      "src_ui_views_settingsview_createsegmented",
+      "src_ui_views_settingsview_createsettingsrow",
+      "src_ui_views_settingsview_createsettingsview",
+      "src_ui_views_settingsview_createsettingsview_buildaboutgroup",
+      "src_ui_views_settingsview_createsettingsview_buildaccountgroup",
+      "src_ui_views_settingsview_createsettingsview_buildadvancedgroup",
+      "src_ui_views_settingsview_createsettingsview_buildadvancedsubpage",
+      "src_ui_views_settingsview_createsettingsview_buildaigroup",
+      "src_ui_views_settingsview_createsettingsview_buildaisubpage",
+      "src_ui_views_settingsview_createsettingsview_buildappearancegroup",
+      "src_ui_views_settingsview_createsettingsview_builddatagroup",
+      "src_ui_views_settingsview_createsettingsview_buildlearninggroup",
+      "src_ui_views_settingsview_createsettingsview_buildmain",
+      "src_ui_views_settingsview_createsettingsview_buildpremiumhero",
+      "src_ui_views_settingsview_createsettingsview_buildprogresscard",
+      "src_ui_views_settingsview_createswitch",
+      "src_ui_views_settingsview_getxp",
+      "src_ui_views_settingsview_levelof",
+      "src_ui_views_settingsview_logger",
+      "src_ui_views_settingsview_openxpsheet",
+      "src_ui_views_settingsview_phase",
+      "src_ui_views_settingsview_readappsettings",
+      "src_ui_views_settingsview_readstoredkeys",
+      "src_ui_views_settingsview_themeid",
+      "src_ui_views_settingsview_writeappsettings"
+    ],
+    "10": [
       "src_core_eventbus",
       "src_core_eventbus_eventbusoptions",
       "src_core_eventbus_eventbusstats",
@@ -529,7 +531,7 @@
       "src_ui_layout_navitem",
       "src_ui_layout_resetlayout"
     ],
-    "12": [
+    "11": [
       "src_core_database_databaseservice",
       "src_core_database_databaseservice_deleteflashcard",
       "src_core_database_databaseservice_deletenote",
@@ -563,103 +565,7 @@
       "src_core_database_databaseservice_upsertquizresultfromsync",
       "src_core_database_databaseservice_upsertstudysessionfromsync"
     ],
-    "13": [
-      "src_core_state_getstate",
-      "src_services_aiquizservice_friendlyaierror",
-      "src_ui_components_modal_getmodal",
-      "src_ui_views_quizview",
-      "src_ui_views_quizview_addxp",
-      "src_ui_views_quizview_ai",
-      "src_ui_views_quizview_burstconfetti",
-      "src_ui_views_quizview_correctanswertext",
-      "src_ui_views_quizview_createquizview",
-      "src_ui_views_quizview_createquizview_confirmfinish",
-      "src_ui_views_quizview_createquizview_enginebadge",
-      "src_ui_views_quizview_createquizview_finish",
-      "src_ui_views_quizview_createquizview_renderplay",
-      "src_ui_views_quizview_createquizview_renderresults",
-      "src_ui_views_quizview_createquizview_rendersetup",
-      "src_ui_views_quizview_createquizview_startquiz",
-      "src_ui_views_quizview_createquizview_starttimer",
-      "src_ui_views_quizview_default_type_info",
-      "src_ui_views_quizview_formattime",
-      "src_ui_views_quizview_generator",
-      "src_ui_views_quizview_getxp",
-      "src_ui_views_quizview_iscorrect",
-      "src_ui_views_quizview_logger",
-      "src_ui_views_quizview_normalizefa",
-      "src_ui_views_quizview_persian_letters",
-      "src_ui_views_quizview_sectionhead",
-      "src_ui_views_quizview_srs",
-      "src_ui_views_quizview_type_info",
-      "src_ui_views_quizview_typeinfo",
-      "src_ui_views_quizview_typeinfo_98584452752a",
-      "src_utils_dateformatter_topersiandigits"
-    ],
-    "14": [
-      "src_core_router_getrouter",
-      "src_services_aiquizservice_saveuserkeys",
-      "src_services_syncservice_getlastsync",
-      "src_services_syncservice_issyncavailable",
-      "src_services_syncservice_onsyncstatus",
-      "src_ui_views_premiumview_createpremiumview_buildfooter",
-      "src_ui_views_settingsview",
-      "src_ui_views_settingsview_createchevron",
-      "src_ui_views_settingsview_createsection",
-      "src_ui_views_settingsview_createsegmented",
-      "src_ui_views_settingsview_createsettingsrow",
-      "src_ui_views_settingsview_createsettingsview",
-      "src_ui_views_settingsview_createsettingsview_buildaboutgroup",
-      "src_ui_views_settingsview_createsettingsview_buildaccountgroup",
-      "src_ui_views_settingsview_createsettingsview_buildadvancedgroup",
-      "src_ui_views_settingsview_createsettingsview_buildappearancegroup",
-      "src_ui_views_settingsview_createsettingsview_builddatagroup",
-      "src_ui_views_settingsview_createsettingsview_buildlearninggroup",
-      "src_ui_views_settingsview_createsettingsview_buildmain",
-      "src_ui_views_settingsview_createsettingsview_buildpremiumhero",
-      "src_ui_views_settingsview_createsettingsview_buildprogresscard",
-      "src_ui_views_settingsview_createswitch",
-      "src_ui_views_settingsview_getxp",
-      "src_ui_views_settingsview_levelof",
-      "src_ui_views_settingsview_logger",
-      "src_ui_views_settingsview_openxpsheet",
-      "src_ui_views_settingsview_phase",
-      "src_ui_views_settingsview_readappsettings",
-      "src_ui_views_settingsview_themeid",
-      "src_ui_views_settingsview_writeappsettings"
-    ],
-    "15": [
-      "src_ui_views_flashcardsview",
-      "src_ui_views_flashcardsview_addxp",
-      "src_ui_views_flashcardsview_burstconfetti",
-      "src_ui_views_flashcardsview_concept_styles",
-      "src_ui_views_flashcardsview_concept_types",
-      "src_ui_views_flashcardsview_createflashcardsview",
-      "src_ui_views_flashcardsview_createflashcardsview_buildqueue",
-      "src_ui_views_flashcardsview_createflashcardsview_closereviewoverlay",
-      "src_ui_views_flashcardsview_createflashcardsview_confirmexit",
-      "src_ui_views_flashcardsview_createflashcardsview_openreviewoverlay",
-      "src_ui_views_flashcardsview_createflashcardsview_ratecard",
-      "src_ui_views_flashcardsview_createflashcardsview_rendercap",
-      "src_ui_views_flashcardsview_createflashcardsview_renderdashboard",
-      "src_ui_views_flashcardsview_createflashcardsview_renderreviewcomplete",
-      "src_ui_views_flashcardsview_createflashcardsview_renderreviewframe",
-      "src_ui_views_flashcardsview_createflashcardsview_sharereport",
-      "src_ui_views_flashcardsview_createflashcardsview_smartmode",
-      "src_ui_views_flashcardsview_createflashcardsview_startreview",
-      "src_ui_views_flashcardsview_createmanagesearch",
-      "src_ui_views_flashcardsview_currentstreak",
-      "src_ui_views_flashcardsview_getcardstatus",
-      "src_ui_views_flashcardsview_getxp",
-      "src_ui_views_flashcardsview_levelof",
-      "src_ui_views_flashcardsview_logger",
-      "src_ui_views_flashcardsview_phase",
-      "src_ui_views_flashcardsview_ratings",
-      "src_ui_views_flashcardsview_reviewmode",
-      "src_ui_views_flashcardsview_sectionhead",
-      "src_ui_views_flashcardsview_srs"
-    ],
-    "16": [
+    "12": [
       "src_core_logger",
       "src_core_logger_getinstance",
       "src_core_logger_log_colors",
@@ -689,37 +595,7 @@
       "src_ui_views_challengesview_logger",
       "src_ui_views_challengesview_tabs"
     ],
-    "17": [
-      "src_ui_components_modal",
-      "src_ui_components_modal_activemodal",
-      "src_ui_components_modal_confirmoptions",
-      "src_ui_components_modal_escapehtml",
-      "src_ui_components_modal_eventbus",
-      "src_ui_components_modal_logger",
-      "src_ui_components_modal_modalbutton",
-      "src_ui_components_modal_modalbuttontype",
-      "src_ui_components_modal_modalmanager",
-      "src_ui_components_modal_modalmanager_alert",
-      "src_ui_components_modal_modalmanager_close",
-      "src_ui_components_modal_modalmanager_confirm",
-      "src_ui_components_modal_modalmanager_constructor",
-      "src_ui_components_modal_modalmanager_createbutton",
-      "src_ui_components_modal_modalmanager_ensurecontainer",
-      "src_ui_components_modal_modalmanager_isopen",
-      "src_ui_components_modal_modalmanager_keyhandler",
-      "src_ui_components_modal_modalmanager_loading",
-      "src_ui_components_modal_modalmanager_open",
-      "src_ui_components_modal_modalmanager_prompt",
-      "src_ui_components_modal_modalmanager_trapfocus",
-      "src_ui_components_modal_modalmanager_updatecontent",
-      "src_ui_components_modal_modalmanager_updatetitle",
-      "src_ui_components_modal_modaloptions",
-      "src_ui_components_modal_modalsize",
-      "src_ui_components_modal_promptoptions",
-      "src_ui_components_modal_resetmodal",
-      "src_ui_components_modal_size_classes"
-    ],
-    "18": [
+    "13": [
       "tsconfig",
       "tsconfig_compileroptions",
       "tsconfig_compileroptions_allowimportingtsextensions",
@@ -749,7 +625,36 @@
       "tsconfig_paths_ui",
       "tsconfig_paths_utils"
     ],
-    "19": [
+    "14": [
+      "src_services_aiquizservice_friendlyaierror",
+      "src_ui_components_modal_getmodal",
+      "src_ui_views_quizview",
+      "src_ui_views_quizview_addxp",
+      "src_ui_views_quizview_ai",
+      "src_ui_views_quizview_burstconfetti",
+      "src_ui_views_quizview_correctanswertext",
+      "src_ui_views_quizview_createquizview",
+      "src_ui_views_quizview_createquizview_confirmfinish",
+      "src_ui_views_quizview_createquizview_enginebadge",
+      "src_ui_views_quizview_createquizview_finish",
+      "src_ui_views_quizview_createquizview_renderplay",
+      "src_ui_views_quizview_createquizview_renderresults",
+      "src_ui_views_quizview_createquizview_starttimer",
+      "src_ui_views_quizview_default_type_info",
+      "src_ui_views_quizview_formattime",
+      "src_ui_views_quizview_generator",
+      "src_ui_views_quizview_getxp",
+      "src_ui_views_quizview_iscorrect",
+      "src_ui_views_quizview_logger",
+      "src_ui_views_quizview_normalizefa",
+      "src_ui_views_quizview_persian_letters",
+      "src_ui_views_quizview_sectionhead",
+      "src_ui_views_quizview_srs",
+      "src_ui_views_quizview_type_info",
+      "src_ui_views_quizview_typeinfo",
+      "src_ui_views_quizview_typeinfo_98584452752a"
+    ],
+    "15": [
       "src_services_quizgenerator_quizgenerator",
       "src_services_quizgenerator_quizgenerator_analyzeresults",
       "src_services_quizgenerator_quizgenerator_calculatedifficulty",
@@ -778,7 +683,7 @@
       "src_services_quizgenerator_quizgenerator_selectsentences",
       "src_services_quizgenerator_quizgenerator_shuffle"
     ],
-    "20": [
+    "16": [
       "src_ui_views_notesview",
       "src_ui_views_notesview_appendhighlighted",
       "src_ui_views_notesview_appendinline",
@@ -807,7 +712,7 @@
       "src_ui_views_notesview_savedraft",
       "src_ui_views_notesview_stripmarkdown"
     ],
-    "21": [
+    "17": [
       "src_utils_dateformatter",
       "src_utils_dateformatter_ar_digits",
       "src_utils_dateformatter_dateinput",
@@ -835,7 +740,7 @@
       "src_utils_dateformatter_todate",
       "src_utils_dateformatter_toenglishdigits"
     ],
-    "22": [
+    "18": [
       "src_core_logger_logger",
       "src_core_logger_logger_clearstoredlogs",
       "src_core_logger_logger_constructor",
@@ -862,34 +767,7 @@
       "src_core_logger_logger_timeend",
       "src_core_logger_logger_warn"
     ],
-    "23": [
-      "src_core_router_router",
-      "src_core_router_router_aftereach",
-      "src_core_router_router_back",
-      "src_core_router_router_beforeeach",
-      "src_core_router_router_buildhashurl",
-      "src_core_router_router_constructor",
-      "src_core_router_router_destroy",
-      "src_core_router_router_getcurrentroute",
-      "src_core_router_router_getparams",
-      "src_core_router_router_getroutes",
-      "src_core_router_router_handlehashchange",
-      "src_core_router_router_hasroute",
-      "src_core_router_router_hideloading",
-      "src_core_router_router_navigate",
-      "src_core_router_router_parsehashurl",
-      "src_core_router_router_parseroutename",
-      "src_core_router_router_registerview",
-      "src_core_router_router_rendererror",
-      "src_core_router_router_rendernotfound",
-      "src_core_router_router_renderview",
-      "src_core_router_router_setcontainer",
-      "src_core_router_router_setdefaultroute",
-      "src_core_router_router_setnotfound",
-      "src_core_router_router_showloading",
-      "src_core_router_router_start"
-    ],
-    "24": [
+    "19": [
       "src_services_streakservice",
       "src_services_streakservice_eventbus",
       "src_services_streakservice_getstreakservice",
@@ -915,7 +793,7 @@
       "src_ui_views_dashboardview_srs",
       "src_ui_views_dashboardview_statuschip"
     ],
-    "25": [
+    "20": [
       "github_workflows_ci",
       "github_workflows_ci_ci_runs_on",
       "github_workflows_ci_ci_steps",
@@ -940,7 +818,7 @@
       "github_workflows_ci_with_cache",
       "github_workflows_ci_with_node_version"
     ],
-    "26": [
+    "21": [
       "src_core_errors",
       "src_core_errors_aiserviceerroroptions",
       "src_core_errors_apperroroptions",
@@ -965,7 +843,32 @@
       "src_core_errors_validationerroroptions",
       "src_core_errors_witherrorhandling"
     ],
-    "27": [
+    "22": [
+      "src_services_referralservice_getreferrallink",
+      "src_ui_components_card_createemptystate",
+      "src_ui_views_flashcardsview_burstconfetti",
+      "src_ui_views_flashcardsview_createflashcardsview",
+      "src_ui_views_flashcardsview_createflashcardsview_buildqueue",
+      "src_ui_views_flashcardsview_createflashcardsview_closereviewoverlay",
+      "src_ui_views_flashcardsview_createflashcardsview_confirmexit",
+      "src_ui_views_flashcardsview_createflashcardsview_openreviewoverlay",
+      "src_ui_views_flashcardsview_createflashcardsview_ratecard",
+      "src_ui_views_flashcardsview_createflashcardsview_rendercap",
+      "src_ui_views_flashcardsview_createflashcardsview_renderdashboard",
+      "src_ui_views_flashcardsview_createflashcardsview_renderreviewcomplete",
+      "src_ui_views_flashcardsview_createflashcardsview_renderreviewframe",
+      "src_ui_views_flashcardsview_createflashcardsview_sharereport",
+      "src_ui_views_flashcardsview_createflashcardsview_smartmode",
+      "src_ui_views_flashcardsview_createflashcardsview_startreview",
+      "src_ui_views_flashcardsview_currentstreak",
+      "src_ui_views_flashcardsview_getxp",
+      "src_ui_views_flashcardsview_levelof",
+      "src_ui_views_inviteview",
+      "src_ui_views_inviteview_createinviteview",
+      "src_ui_views_inviteview_logger",
+      "src_utils_dateformatter_topersiandigits"
+    ],
+    "23": [
       "src_ui_layout_layout",
       "src_ui_layout_layout_applytheme",
       "src_ui_layout_layout_bindevents",
@@ -990,7 +893,7 @@
       "src_ui_layout_layout_togglesidebar",
       "src_ui_layout_layout_updateactivenav"
     ],
-    "28": [
+    "24": [
       "github_workflows_graphify_update",
       "github_workflows_graphify_update_jobs",
       "github_workflows_graphify_update_jobs_update_graph",
@@ -1013,7 +916,7 @@
       "github_workflows_graphify_update_update_graph_timeout_minutes",
       "github_workflows_graphify_update_with_python_version"
     ],
-    "29": [
+    "25": [
       "src_services_premium_activatepremium",
       "src_services_premium_deactivatepremium",
       "src_services_premium_getpremiumplan",
@@ -1036,7 +939,7 @@
       "tests_premium_test",
       "tests_premium_test_localstoragemock"
     ],
-    "30": [
+    "26": [
       "src_core_eventbus_eventbus",
       "src_core_eventbus_eventbus_addtohistory",
       "src_core_eventbus_eventbus_clear",
@@ -1057,7 +960,49 @@
       "src_core_eventbus_eventbus_once",
       "src_core_eventbus_eventbus_removealllisteners"
     ],
-    "31": [
+    "27": [
+      "src_services_aiquizservice",
+      "src_services_aiquizservice_ai_timeout_ms",
+      "src_services_aiquizservice_aiquizservice",
+      "src_services_aiquizservice_aiquizservice_generate",
+      "src_services_aiquizservice_airesult",
+      "src_services_aiquizservice_aitier",
+      "src_services_aiquizservice_cachekey",
+      "src_services_aiquizservice_generatehooks",
+      "src_services_aiquizservice_getaiquizservice",
+      "src_services_aiquizservice_getorcreatedeviceid",
+      "src_services_aiquizservice_hashtext",
+      "src_services_aiquizservice_logger",
+      "src_services_aiquizservice_parsequestions",
+      "src_services_aiquizservice_readcache",
+      "src_services_aiquizservice_syncremaining",
+      "src_services_aiquizservice_tier_limits",
+      "src_services_aiquizservice_writecache",
+      "src_services_quizgenerator_question",
+      "src_services_quizgenerator_questiontype"
+    ],
+    "28": [
+      "src_services_iconservice_createicon",
+      "src_ui_components_button_createbutton",
+      "src_ui_views_authview_buildloggedin",
+      "src_ui_views_challengesview_createchallengecard",
+      "src_ui_views_challengesview_createchallengesview",
+      "src_ui_views_flashcardsview_sectionhead",
+      "src_ui_views_landingview_createcurvedemo",
+      "src_ui_views_notesview_buildempty",
+      "src_ui_views_notesview_renderpinned",
+      "src_ui_views_notesview_rendertags",
+      "src_ui_views_premiumview_createpremiumview",
+      "src_ui_views_premiumview_createpremiumview_buildbenefits",
+      "src_ui_views_premiumview_createpremiumview_buildcomparison",
+      "src_ui_views_premiumview_createpremiumview_buildfinalcta",
+      "src_ui_views_premiumview_createpremiumview_buildfooter",
+      "src_ui_views_premiumview_createpremiumview_buildhero",
+      "src_ui_views_premiumview_createpremiumview_buildpromo",
+      "src_ui_views_premiumview_createpremiumview_buildstatus",
+      "src_ui_views_premiumview_createpremiumview_buildtrust"
+    ],
+    "29": [
       "src_assets_flame",
       "src_ui_views_landingview",
       "src_ui_views_landingview_builddashscreen",
@@ -1077,7 +1022,27 @@
       "src_ui_views_landingview_screenbuild",
       "src_ui_views_landingview_tile"
     ],
-    "32": [
+    "30": [
+      "src_core_database_getdatabase",
+      "src_services_iconservice_iconhtml",
+      "src_ui_components_toast_gettoast",
+      "src_ui_views_flashcardsview_createflashcardsview_opencardmodal",
+      "src_ui_views_flashcardsview_createflashcardsview_opencardmodal_syncdraft",
+      "src_ui_views_flashcardsview_createflashcardsview_rendermanage",
+      "src_ui_views_flashcardsview_createflashcardsview_rendermanage_renderlist",
+      "src_ui_views_flashcardsview_createmanagesearch",
+      "src_ui_views_flashcardsview_createmicbutton",
+      "src_ui_views_notesview_createnotessearch",
+      "src_ui_views_notesview_createnotesview",
+      "src_ui_views_notesview_createnotesview_deletenote",
+      "src_ui_views_notesview_createnotesview_openzen",
+      "src_ui_views_notesview_createnotesview_openzen_close",
+      "src_ui_views_notesview_createnotesview_openzenbyid",
+      "src_ui_views_notesview_createnotesview_togglepin",
+      "src_ui_views_premiumview_createpremiumview_buildfaq",
+      "src_ui_views_settingsview_createsettingsview_builddatasubpage"
+    ],
+    "31": [
       "src_core_errors_aiserviceerror",
       "src_core_errors_aiserviceerror_constructor",
       "src_core_errors_apperror",
@@ -1097,7 +1062,7 @@
       "src_core_errors_timeouterror",
       "src_core_errors_timeouterror_constructor"
     ],
-    "33": [
+    "32": [
       "src_core_database",
       "src_core_database_achievement",
       "src_core_database_databaseservice_addquizresult",
@@ -1116,7 +1081,7 @@
       "src_ui_components_globalsearch_data",
       "src_ui_components_globalsearch_logger"
     ],
-    "34": [
+    "33": [
       "src_core_errors_apperror_getusermessage",
       "src_core_errors_errorhandler",
       "src_core_errors_errorhandler_constructor",
@@ -1135,7 +1100,7 @@
       "src_core_errors_errorhandler_updatestats",
       "src_core_errors_geterrorhandler"
     ],
-    "35": [
+    "34": [
       "src_services_premium",
       "src_services_premium_formattoman",
       "src_services_premium_getpremiumdaysleft",
@@ -1154,7 +1119,7 @@
       "src_ui_views_premiumview_plan",
       "src_ui_views_premiumview_trust_rows"
     ],
-    "36": [
+    "35": [
       "src_core_state",
       "src_core_state_appinfo",
       "src_core_state_appstate",
@@ -1172,7 +1137,7 @@
       "src_core_state_stats",
       "src_core_state_storage"
     ],
-    "37": [
+    "36": [
       "src_ui_components_input",
       "src_ui_components_input_checkboxoptions",
       "src_ui_components_input_createcheckbox",
@@ -1190,7 +1155,7 @@
       "src_ui_components_input_selectoptions",
       "src_ui_components_input_textareaoptions"
     ],
-    "38": [
+    "37": [
       "src_main",
       "src_main_bootstrap",
       "src_main_createcomingsoonview",
@@ -1206,6 +1171,23 @@
       "src_services_referralservice_savependingref",
       "src_style",
       "src_ui_layout_getlayout"
+    ],
+    "38": [
+      "src_services_quizgenerator",
+      "src_services_quizgenerator_analysisresult",
+      "src_services_quizgenerator_difficulty_levels",
+      "src_services_quizgenerator_difficultylevel",
+      "src_services_quizgenerator_generateoptions",
+      "src_services_quizgenerator_getquizgenerator",
+      "src_services_quizgenerator_logger",
+      "src_services_quizgenerator_question_types",
+      "src_services_quizgenerator_quizhistoryentry",
+      "src_services_quizgenerator_quizresult",
+      "src_services_quizgenerator_recommendation",
+      "src_services_quizgenerator_resetquizgenerator",
+      "src_services_quizgenerator_test",
+      "src_services_quizgenerator_weaknessentry",
+      "src_services_quizgenerator_weaknessmatrix"
     ],
     "39": [
       "src_core_database_databaseservice_getsessionsbydaterange",
@@ -1256,6 +1238,22 @@
       "src_services_soundmanager_storage"
     ],
     "42": [
+      "src_services_summarizer",
+      "src_services_summarizer_getsummarizer",
+      "src_services_summarizer_level_ratios",
+      "src_services_summarizer_logger",
+      "src_services_summarizer_persian_stopwords",
+      "src_services_summarizer_resetsummarizer",
+      "src_services_summarizer_scoredsentence",
+      "src_services_summarizer_signal_scores",
+      "src_services_summarizer_signal_words",
+      "src_services_summarizer_signalcategory",
+      "src_services_summarizer_structureanalysis",
+      "src_services_summarizer_summarizeoptions",
+      "src_services_summarizer_summarizeresult",
+      "src_services_summarizer_test"
+    ],
+    "43": [
       "src_ui_components_toast_toastmanager",
       "src_ui_components_toast_toastmanager_coerceoptions",
       "src_ui_components_toast_toastmanager_constructor",
@@ -1271,22 +1269,22 @@
       "src_ui_components_toast_toastmanager_success",
       "src_ui_components_toast_toastmanager_warning"
     ],
-    "43": [
-      "src_services_focusaudioservice_focusaudioservice",
-      "src_services_focusaudioservice_focusaudioservice_buildpad",
-      "src_services_focusaudioservice_focusaudioservice_buildrain",
-      "src_services_focusaudioservice_focusaudioservice_buildwaves",
-      "src_services_focusaudioservice_focusaudioservice_constructor",
-      "src_services_focusaudioservice_focusaudioservice_ensurectx",
-      "src_services_focusaudioservice_focusaudioservice_ensurepill",
-      "src_services_focusaudioservice_focusaudioservice_noisebuffer",
-      "src_services_focusaudioservice_focusaudioservice_notify",
-      "src_services_focusaudioservice_focusaudioservice_play",
-      "src_services_focusaudioservice_focusaudioservice_setvolume",
-      "src_services_focusaudioservice_focusaudioservice_subscribe",
-      "src_services_focusaudioservice_focusaudioservice_teardown"
-    ],
     "44": [
+      "src_services_summarizer_summarizer",
+      "src_services_summarizer_summarizer_analyzestructure",
+      "src_services_summarizer_summarizer_constructor",
+      "src_services_summarizer_summarizer_extractkeypoints",
+      "src_services_summarizer_summarizer_extractkeypoints_e1e0fa",
+      "src_services_summarizer_summarizer_extractkeywords",
+      "src_services_summarizer_summarizer_extractkeywords_55fc12",
+      "src_services_summarizer_summarizer_getdesiredcount",
+      "src_services_summarizer_summarizer_scoresentences",
+      "src_services_summarizer_summarizer_selecttopsentences",
+      "src_services_summarizer_summarizer_splitintosentences",
+      "src_services_summarizer_summarizer_summarize",
+      "src_services_summarizer_summarizer_tokenize"
+    ],
+    "45": [
       "android_app_src_androidtest_java_com_getcapacitor_myapp_exampleinstrumentedtest",
       "android_app_src_androidtest_java_com_getcapacitor_myapp_exampleinstrumentedtest_exampleinstrumentedtest",
       "android_app_src_androidtest_java_com_getcapacitor_myapp_exampleinstrumentedtest_exampleinstrumentedtest_useappcontext",
@@ -1300,7 +1298,7 @@
       "org_junit_runner_runwith",
       "org_junit_test"
     ],
-    "45": [
+    "46": [
       "src_core_eventbus_events",
       "src_core_storage",
       "src_core_storage_eventbus",
@@ -1313,7 +1311,7 @@
       "src_core_storage_storageoptions",
       "src_core_storage_storagestats"
     ],
-    "46": [
+    "47": [
       "ref_https",
       "ref_jsr_supabase",
       "supabase_functions_ai_proxy_index",
@@ -1324,7 +1322,7 @@
       "supabase_functions_ai_proxy_index_json",
       "supabase_functions_ai_proxy_index_validatequestion"
     ],
-    "47": [
+    "48": [
       "src_config_ai",
       "src_config_ai_ai_config",
       "src_config_ai_ai_keys_ls",
@@ -1333,7 +1331,7 @@
       "src_config_ai_aitier",
       "src_config_ai_premium_ls"
     ],
-    "48": [
+    "49": [
       "src_ui_components_globalsearch_appendhighlighted",
       "src_ui_components_globalsearch_opensearchpalette",
       "src_ui_components_globalsearch_opensearchpalette_additem",
@@ -1342,7 +1340,7 @@
       "src_ui_components_globalsearch_opensearchpalette_paint",
       "src_ui_components_globalsearch_opensearchpalette_run"
     ],
-    "49": [
+    "50": [
       "scripts_ai_smart_commit",
       "scripts_ai_smart_commit_cleanup",
       "scripts_ai_smart_commit_sanitize_message",
@@ -1350,7 +1348,7 @@
       "scripts_ai_smart_commit_show_message",
       "scripts_ai_smart_commit_strip_ansi"
     ],
-    "50": [
+    "51": [
       "src_core_database_daneshyardb",
       "src_core_database_daneshyardb_constructor",
       "src_core_database_databaseservice_addflashcard",
@@ -1358,137 +1356,145 @@
       "src_core_database_databaseservice_updateflashcard",
       "src_core_state_flashcard"
     ],
-    "51": [
+    "52": [
       "scripts_deploy_ai_proxy",
       "scripts_deploy_ai_proxy_write_error",
       "scripts_deploy_ai_proxy_write_info",
       "scripts_deploy_ai_proxy_write_success",
       "scripts_deploy_ai_proxy_write_warning"
     ],
-    "52": [
+    "53": [
       "supabase_functions_ai_proxy_deno",
       "supabase_functions_ai_proxy_deno_compileroptions",
       "supabase_functions_ai_proxy_deno_compileroptions_strict",
       "supabase_functions_ai_proxy_deno_imports",
       "supabase_functions_ai_proxy_deno_imports_supabase_supabase_js"
     ],
-    "53": [
+    "54": [
       "android_gradlew",
       "android_gradlew__entry",
       "android_gradlew_die",
       "android_gradlew_warn"
     ],
-    "54": [
+    "55": [
+      "ref_path",
+      "ref_vitest",
+      "src_utils_dateformatter_test",
+      "vitest_config"
+    ],
+    "56": [
       "android_app_src_main_java_com_daneshyar_pro_mainactivity",
       "android_app_src_main_java_com_daneshyar_pro_mainactivity_mainactivity",
       "com_getcapacitor_bridgeactivity"
     ],
-    "55": [
+    "57": [
       "src_core_database_databaseservice_addnote",
       "src_core_database_databaseservice_updatenote",
       "src_core_state_note"
     ],
-    "56": [
+    "58": [
       "src_core_errors_createvalidationerror",
       "src_core_errors_validationerror",
       "src_core_errors_validationerror_constructor"
     ],
-    "57": [
+    "59": [
       "src_config_api",
       "src_config_api_api_base"
     ],
-    "58": [
+    "60": [
       "android_app_build"
     ],
-    "59": [
+    "61": [
       "android_app_capacitor_build"
     ],
-    "60": [
+    "62": [
       "android_build"
     ],
-    "61": [
+    "63": [
       "android_capacitor_settings"
     ],
-    "62": [
+    "64": [
       "android_settings"
     ],
-    "63": [
+    "65": [
       "android_variables"
     ],
-    "64": [
+    "66": [
       "public_sw"
     ],
-    "65": [
+    "67": [
       "src_vite_env_d"
     ]
   },
   "cohesion": {
-    "0": 0.06397306397306397,
-    "1": 0.07826694619147449,
-    "2": 0.05442176870748299,
-    "3": 0.0753045404208195,
-    "4": 0.056910569105691054,
-    "5": 0.10336817653890824,
-    "6": 0.07051282051282051,
-    "7": 0.13630229419703105,
-    "8": 0.11806543385490754,
-    "9": 0.10952380952380952,
-    "10": 0.08199643493761141,
-    "11": 0.07575757575757576,
-    "12": 0.07258064516129033,
-    "13": 0.14838709677419354,
-    "14": 0.16091954022988506,
-    "15": 0.14039408866995073,
-    "16": 0.09523809523809523,
-    "17": 0.10317460317460317,
-    "18": 0.07142857142857142,
-    "19": 0.14814814814814814,
-    "20": 0.1168091168091168,
-    "21": 0.1476923076923077,
-    "22": 0.14333333333333334,
-    "23": 0.13333333333333333,
-    "24": 0.13043478260869565,
-    "25": 0.08695652173913043,
-    "26": 0.11462450592885376,
-    "27": 0.18972332015810275,
-    "28": 0.09523809523809523,
-    "29": 0.22857142857142856,
-    "30": 0.15204678362573099,
-    "31": 0.20261437908496732,
-    "32": 0.1111111111111111,
-    "33": 0.16176470588235295,
-    "34": 0.19117647058823528,
-    "35": 0.16911764705882354,
-    "36": 0.125,
-    "37": 0.14166666666666666,
-    "38": 0.18095238095238095,
+    "0": 0.05267778753292362,
+    "1": 0.06557377049180328,
+    "2": 0.05202661826981246,
+    "3": 0.05878084179970972,
+    "4": 0.0595959595959596,
+    "5": 0.056910569105691054,
+    "6": 0.10336817653890824,
+    "7": 0.10952380952380952,
+    "8": 0.12857142857142856,
+    "9": 0.1443850267379679,
+    "10": 0.07575757575757576,
+    "11": 0.07258064516129033,
+    "12": 0.09523809523809523,
+    "13": 0.07142857142857142,
+    "14": 0.1396011396011396,
+    "15": 0.14814814814814814,
+    "16": 0.1168091168091168,
+    "17": 0.1476923076923077,
+    "18": 0.14333333333333334,
+    "19": 0.13043478260869565,
+    "20": 0.08695652173913043,
+    "21": 0.11462450592885376,
+    "22": 0.2134387351778656,
+    "23": 0.18972332015810275,
+    "24": 0.09523809523809523,
+    "25": 0.22857142857142856,
+    "26": 0.15204678362573099,
+    "27": 0.16374269005847952,
+    "28": 0.1871345029239766,
+    "29": 0.20261437908496732,
+    "30": 0.24183006535947713,
+    "31": 0.1111111111111111,
+    "32": 0.16176470588235295,
+    "33": 0.19117647058823528,
+    "34": 0.16911764705882354,
+    "35": 0.125,
+    "36": 0.14166666666666666,
+    "37": 0.18095238095238095,
+    "38": 0.14285714285714285,
     "39": 0.26373626373626374,
     "40": 0.26373626373626374,
     "41": 0.14285714285714285,
-    "42": 0.2967032967032967,
-    "43": 0.2948717948717949,
-    "44": 0.24242424242424243,
-    "45": 0.18181818181818182,
-    "46": 0.2222222222222222,
-    "47": 0.2857142857142857,
-    "48": 0.47619047619047616,
-    "49": 0.5333333333333333,
-    "50": 0.26666666666666666,
-    "51": 0.4,
+    "42": 0.15384615384615385,
+    "43": 0.2967032967032967,
+    "44": 0.3333333333333333,
+    "45": 0.24242424242424243,
+    "46": 0.18181818181818182,
+    "47": 0.2222222222222222,
+    "48": 0.2857142857142857,
+    "49": 0.47619047619047616,
+    "50": 0.5333333333333333,
+    "51": 0.26666666666666666,
     "52": 0.4,
-    "53": 0.8333333333333334,
-    "54": 1.0,
-    "55": 0.6666666666666666,
-    "56": 0.6666666666666666,
-    "57": 1.0,
-    "58": 1.0,
+    "53": 0.4,
+    "54": 0.8333333333333334,
+    "55": 0.5,
+    "56": 1.0,
+    "57": 0.6666666666666666,
+    "58": 0.6666666666666666,
     "59": 1.0,
     "60": 1.0,
     "61": 1.0,
     "62": 1.0,
     "63": 1.0,
     "64": 1.0,
-    "65": 1.0
+    "65": 1.0,
+    "66": 1.0,
+    "67": 1.0
   },
   "gods": [
     {
@@ -1577,6 +1583,17 @@
       "why": "inferred connection - not explicitly stated in source; bridges separate communities"
     },
     {
+      "source": "buildFooter()",
+      "target": "getRouter()",
+      "source_files": [
+        "src/ui/views/PremiumView.ts",
+        "src/core/Router.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities; peripheral node `buildFooter()` unexpectedly reaches hub `getRouter()`"
+    },
+    {
       "source": "registerViews()",
       "target": "createLandingView()",
       "source_files": [
@@ -1586,54 +1603,43 @@
       "confidence": "INFERRED",
       "relation": "indirect_call",
       "why": "inferred connection - not explicitly stated in source; bridges separate communities"
-    },
-    {
-      "source": "purgeDemoData()",
-      "target": "getDatabase()",
-      "source_files": [
-        "src/main.ts",
-        "src/core/Database.ts"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "why": "bridges separate communities; peripheral node `purgeDemoData()` unexpectedly reaches hub `getDatabase()`"
     }
   ],
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `getInstance()` connect `Community 16` to `Community 0`, `Community 1`, `Community 3`, `Community 4`, `Community 6`, `Community 7`, `Community 8`, `Community 10`, `Community 11`, `Community 13`, `Community 14`, `Community 15`, `Community 17`, `Community 20`, `Community 22`, `Community 24`, `Community 26`, `Community 29`, `Community 31`, `Community 33`, `Community 35`, `Community 36`, `Community 38`, `Community 41`, `Community 45`?",
+      "question": "Why does `getInstance()` connect `Community 12` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 5`, `Community 8`, `Community 9`, `Community 10`, `Community 14`, `Community 16`, `Community 18`, `Community 19`, `Community 21`, `Community 22`, `Community 25`, `Community 27`, `Community 29`, `Community 32`, `Community 34`, `Community 35`, `Community 37`, `Community 38`, `Community 41`, `Community 42`, `Community 46`?",
       "why": "High betweenness centrality (0.147) - this node is a cross-community bridge."
     },
     {
       "type": "low_cohesion",
       "question": "Should `Community 0` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.06397306397306397 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.05267778753292362 - nodes in this community are weakly interconnected."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `SoundManager` connect `Community 5` to `Community 41`?",
-      "why": "High betweenness centrality (0.089) - this node is a cross-community bridge."
+      "question": "Why does `DatabaseService` connect `Community 11` to `Community 32`, `Community 39`, `Community 51`, `Community 19`, `Community 57`, `Community 30`?",
+      "why": "High betweenness centrality (0.059) - this node is a cross-community bridge."
     },
     {
       "type": "low_cohesion",
       "question": "Should `Community 1` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.07826694619147449 - nodes in this community are weakly interconnected."
-    },
-    {
-      "type": "bridge_node",
-      "question": "Why does `iconHTML()` connect `Community 7` to `Community 0`, `Community 33`, `Community 1`, `Community 35`, `Community 37`, `Community 8`, `Community 43`, `Community 11`, `Community 13`, `Community 14`, `Community 15`, `Community 16`, `Community 48`, `Community 20`, `Community 24`, `Community 27`, `Community 31`?",
-      "why": "High betweenness centrality (0.056) - this node is a cross-community bridge."
+      "why": "Cohesion score 0.06557377049180328 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
       "question": "Should `Community 2` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.05442176870748299 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.05202661826981246 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
       "question": "Should `Community 3` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.0753045404208195 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.05878084179970972 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 4` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.0595959595959596 - nodes in this community are weakly interconnected."
     }
   ]
 }
