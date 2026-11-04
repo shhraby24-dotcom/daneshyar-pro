@@ -25,6 +25,6 @@ Thumbs.db
 *.tsbuildinfo
 
 # AI automation artifacts
-reports/
+/reports/
 opencode.json
 test_out.txt
