@@ -29,12 +29,18 @@
 
 ## Community های ضعیف گراف
 
-اندازه‌گیری ۲۰۲۶-۱۱-۰۴ (۱۴۷۱ نود / ۳۱۹۷ یال / ۱۰۱ community، معیار: سهم یال درونی از کل یال‌های عضو):
+اندازه‌گیری ۲۰۲۶-۱۱-۰۴ بعد از refactor پومودورو (**۱۵۲۸ نود / ۳۲۹۱ یال / ۱۱۴ community**، معیار: سهم یال درونی از کل یال‌های عضو، مستقیم از `graph.json`):
 
-- **C37 — cohesion 0.22؛ ۱۶ نود:** `bootstrap()` + `DemoDataService` + `TrialService` + `Layout`. بعد از استخراج DemoDataService هنوز composition root است. قدم بعدی: متمرکزکردن سیم‌کشی سرویس‌ها در `bootstrapServices()` تا `main.ts` فقط orchestrator بماند.
-- **C28 — 0.12؛ ۱۳ نود:** حول `getRouter()`. جداکردن قراردادهای تایپ روتر از رانتایم، یا قطع import مستقیم سرویس‌ها به روتر (ایونت از `EventBus`) این را می‌شکند.
-- **C69 — 0.11؛ ۱۱ نود:** ضعیف‌ترین فعلی؛ نودهای پراکنده‌ی بدون همسایگی. با `graphify explain "<node>"` ببین کدام‌اند؛ معمولاً متادیتا/type هستند، نه ماژول.
-- **الگوی تکرارشونده:** هر communityای که حول یک **singleton پرمصرف** (Logger, iconHTML, getDatabase) ساخته شود کم‌انسجام است — این artifact الگوی singleton است، نه بوی معماری. برای همین Cهای UI-kit را نشکن.
+- **C0 قبلی شکست** ⇒ `C2` (PomodoroService، ۲۰ نود، ۰.۷۳)، `C22` (Router، ۲۵ نود، ۰.۸۰)، `C101` (FocusAudioService، ۱۴ نود، ۰.۸۱). گزارش کامل: `.ai/reports/eventbus-refactor-success.md`
+- **C14 — ۰.۱۹؛ ۱۰ نود:** `SettingsView` (۹ نود) + یک نود `Premium`.
+- **C9 — ۰.۲۰؛ ۱۴ نود:** `FlashcardsView` (۱۳) + یک نود `SRS`.
+- **C12 — ۰.۲۲؛ ۲۴ نود:** `PremiumView` (۱۷) + `Premium` (۳) + `ChallengesView` (۲).
+- **C32 — ۰.۲۹؛ ۲۹ نود:** `main.ts` (۱۰) + `AutoRewardWatcher` (۵) + `DemoDataService` (۳) — همان composition root؛ قدم بعدی `bootstrapServices()`.
+- **C45 — ۰.۲۶؛ ۱۲ نود:** `LegalService` (۷) + `LegalView` (۳) + hub artifact `getRouter()`.
+- **C38 — ۰.۲۹؛ ۳۷ نود:** `Button` (۱۴) + `RewardEngine` (۹) + `Logger` (۸) — artifact سینگلتون/UI-kit.
+
+**الگوی تکرارشونده:** سه ضعیف‌ترین (C14, C9, C12) هر کدام **یک view تنها** هستند که فقط از طریق singletonهای سراسری به بقیه وصل‌اند. این «spoke» بودن است نه کوپلینگ بد ⇒ refactor لازم نیست.
+**مهم:** شماره‌گذاری `GRAPH_REPORT.md` با `graph.json` یکسان نیست (report خوشه‌های نازک را حذف و دوباره شماره‌گذاری می‌کند) — برای تصمیم‌گیری از `graph.json` استفاده کن.
 
 ## کارهای در حال انجام
 
@@ -49,4 +55,4 @@
 4. **پریمیوم آفلاین** با `daneshyar_premium=1` قابل دست‌کاری است — پذیرفته‌شده؛ گیت واقعی `subscriptions` سمت سرور است.
 5. **merge تعارض‌دار `graphify-out/`** بعد از هر push: فایل‌ها تولیدشده‌اند؛ به‌جای merge دستی، `graphify update .` بزن (به `.ai/checklist.md` نگاه کن).
 
-آخرین به‌روزرسانی: ۲۰۲۶-۱۱-۰۴
+آخرین به‌روزرسانی: ۲۰۲۶-۱۱-۰۴ (بعد از EventBus refactor)
