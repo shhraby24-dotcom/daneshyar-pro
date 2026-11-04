@@ -12,7 +12,7 @@
  */
 import { getInstance as getLogger } from '@/core/Logger';
 import { getDatabase } from '@/core/Database';
-import { getRouter } from '@/core/Router';
+import { getInstance as getEventBus, EVENTS } from '@/core/EventBus';
 import { getToast } from '@/ui/components/Toast';
 import { toPersianDigits } from '@/utils/dateFormatter';
 import { iconHTML } from '@/services/IconService';
@@ -80,9 +80,19 @@ export class PomodoroService {
   private st: Persisted;
   private listeners = new Set<Listener>();
   private pill: HTMLElement | null = null;
+  /** آیا کاربر داخل اتاق تمرکز است؟ از router:navigated به‌روز می‌شود (بدون خواندن مستقیم hash در هر tick) */
+  private inPomodoroRoute = false;
 
   constructor() {
     this.st = this.load();
+    // وضعیت اولیه از URL فعلی — فقط یک بار در cold start
+    this.inPomodoroRoute = window.location.hash.includes('pomodoro');
+    getEventBus().on('router:navigated', (data: unknown) => {
+      const to = (data as { to?: { name?: string } } | null)?.to;
+      if (!to || typeof to.name !== 'string') return;
+      this.inPomodoroRoute = to.name === 'pomodoro';
+      this.ensurePill();
+    });
     // روز جدید → شمارنده‌ها صفر
     if (this.st.completedDate !== new Date().toDateString()) {
       this.st.completedDate = new Date().toDateString();
@@ -182,15 +192,25 @@ export class PomodoroService {
   }
 
   // ── مینی‌پیل شناور ──
+  /** ناوبری به اتاق تمرکز از راه EventBus — بدون وابستگی مستقیم به Router.
+   *  اگر Router هنوز listener خود را ثبت نکرده باشد، emitSync صفر برمی‌گرداند
+   *  و یک تیک بعد دوباره تلاش می‌کنیم تا ناوبری بی‌صدا گم نشود. */
+  private navigateToRoom(): void {
+    const bus = getEventBus();
+    if (bus.emitSync(EVENTS.UI_NAVIGATE, { route: 'pomodoro' }) === 0) {
+      setTimeout(() => { bus.emitSync(EVENTS.UI_NAVIGATE, { route: 'pomodoro' }); }, 0);
+    }
+  }
+
   private ensurePill(): void {
-    const inRoom = window.location.hash.includes('pomodoro');
+    const inRoom = this.inPomodoroRoute;
     const active = this.st.running || this.live() < this.st.durations[this.st.mode];
     if (inRoom || !active) { this.pill?.remove(); this.pill = null; return; }
     if (!this.pill) {
       const p = document.createElement('button');
       p.type = 'button';
       p.className = 'fixed bottom-20 end-3 z-40 flex items-center gap-2 rounded-full bg-slate-800/95 backdrop-blur border border-slate-700 px-3 py-2 shadow-xl';
-      p.addEventListener('click', () => { void getRouter().navigate('pomodoro'); });
+      p.addEventListener('click', () => { this.navigateToRoom(); });
       document.body.appendChild(p);
       this.pill = p;
     }

@@ -247,6 +247,8 @@ export async function createPomodoroView(_params: Record<string, unknown> = {}):
       if (st.running) { svc.pause(); return; }
       svc.start();
       const tg = st.target.kind;
+      // عمداً ناوبری مستقیم Router: سرویس‌ها با EventBus جدا شدند، اما پرش از
+      // اتاق تمرکز به نمای هدف رفتار UI است و مسئولیت همین view می‌ماند.
       if (tg === 'flashcards' || tg === 'quiz' || tg === 'summarizer' || tg === 'note') {
         void import('@/core/Router').then((m) => m.getRouter().navigate(tg === 'note' ? 'notes' : tg));
       }

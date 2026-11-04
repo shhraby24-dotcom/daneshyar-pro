@@ -656,11 +656,6 @@ export const EVENTS = {
   UI_MODAL_OPEN: 'ui:modal:open',
   UI_MODAL_CLOSE: 'ui:modal:close',
   UI_NAVIGATE: 'ui:navigate',
-
-  // رویدادهای پومودورو
-  POMODORO_STARTED: 'pomodoro:started',
-  POMODORO_COMPLETED: 'pomodoro:completed',
-  POMODORO_TICK: 'pomodoro:tick',
 } as const;
 
 // ============================================================
