@@ -1,4 +1,4 @@
-# Graph Report - daneshyar-pro  (2026-11-03)
+# Graph Report - daneshyar-pro  (2026-11-04)
 
 ## Corpus Check
 - cluster-only mode — file stats not available
@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e04cc652`
+- Built from commit: `4590b5e1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -395,7 +395,7 @@ Nodes (3): 🔄 تاریخچه به‌روزرسانی‌ها, ۱۰ آبان ۱�
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `getInstance()` connect `getInstance` to `AIQuizService.ts`, `SoundManager`, `PomodoroView.ts`, `SyncService.ts`, `DashboardView.ts`, `AISummaryService.ts`, `NotesView.ts`, `FlashcardsView.ts`, `PremiumView.ts`, `iconHTML`, `SummarizerView.ts`, `toPersianDigits`, `Button.ts`, `QuizView.ts`, `Logger`, `Errors.ts`, `EventBus.ts`, `LandingView.ts`, `State.ts`, `main.ts`, `Toast.ts`, `Database.ts`, `Router.ts`, `ChallengesView.ts`, `Modal.ts`, `LegalView.ts`, `Logger.ts`?**
-  _High betweenness centrality (0.110) - this node is a cross-community bridge._
+  _High betweenness centrality (0.104) - this node is a cross-community bridge._
 - **Should `AIQuizService.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.0546448087431694 - nodes in this community are weakly interconnected._
 - **Why does `اقدامات refactor (به ترتیب اولویت)` connect `getInstance` to `🔍 تحلیل گراف (Graphify)`?**
