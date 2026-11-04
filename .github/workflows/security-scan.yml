@@ -1,0 +1,140 @@
+name: Weekly Security Scan
+
+# برای کامیت گزارش لازم است
+permissions:
+  contents: write
+
+on:
+  # شنبه ۰۳:۰۰ به وقت ایران (تهران = UTC+3:30، بدون DST) → جمعه ۲۳:۳۰ UTC
+  schedule:
+    - cron: '30 23 * * 5'
+
+  # اجرای دستی
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Scan for dangerous patterns and secrets
+        id: scan
+        run: |
+          set -uo pipefail
+          REPORT=.ai/security-scan-report.md
+          mkdir -p .ai
+
+          HIGH_FILE=$(mktemp); MED_FILE=$(mktemp); LOW_FILE=$(mktemp)
+          # دامنه‌ی اسکن: فقط کد و کانفیگ. مستندات (.ai/, reports/, graphify-out/) عمداً خارج‌اند
+          # چون خودشان نمونه‌ی الگوها را دارند و باعث مثبت کاذب می‌شوند.
+          TARGETS="src supabase scripts index.html vite.config.ts capacitor.config.ts"
+
+          # ── HIGH: الگوهای قطعی ──
+          # eval / new Function / document.write
+          grep -rnE "\beval\(|new Function\(|document\.write" $TARGETS 2>/dev/null \
+            | grep -v "\.test\.ts" >> "$HIGH_FILE" || true
+
+          # کلیدهای واقعی (طول‌دار، نه توضیح). service_role همیشه باید فقط سمت سرور باشد.
+          grep -rnE "(sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{30,}|sb_secret_[A-Za-z0-9_-]{10,})" $TARGETS 2>/dev/null >> "$HIGH_FILE" || true
+          grep -rn "service_role" src 2>/dev/null | grep -v "\.test\.ts" >> "$HIGH_FILE" || true
+
+          # ── MEDIUM: نیازمند بررسی دستی ──
+          # localStorage با کلید حساس
+          grep -rnE "localStorage\.(set|get|remove)Item\(\s*['\"][^'\"]*(token|password|passwd|secret)" src 2>/dev/null >> "$MED_FILE" || true
+          # لاگ کردن مقادیر حساس
+          grep -rnE "console\.(log|info|warn|error)\([^)]*(token|password|apiKey|api_key)" src 2>/dev/null >> "$MED_FILE" || true
+          # innerHTML: تشخیص خودکار «بدون escapeHtml» قابل اعتماد نیست (۱۴۵ مورد مشروع داریم)
+          # فقط شمارش می‌کنیم تا بازبین دستی مرور کند.
+          INNER_TOTAL=$(grep -rn "innerHTML" src 2>/dev/null | wc -l || echo 0)
+          INNER_UNGUARDED=$(grep -rn "innerHTML" src 2>/dev/null | grep -vE "escapeHtml|textContent" | wc -l || echo 0)
+          echo "innerHTML: $INNER_TOTAL مورد کل، $INNER_UNGUARDED مورد در خطی بدون escapeHtml/textContent (نیازمند بررسی دستی — همه لزوماً آسیب‌پذیر نیستند چون iconHTML با whitelist مجاز است)" >> "$LOW_FILE"
+
+          # ── وابستگی‌ها ──
+          AUDIT_SUMMARY=$(npm audit --omit=dev --json 2>/dev/null \
+            | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const a=JSON.parse(s).metadata.vulnerabilities;console.log(JSON.stringify(a))}catch(e){console.log('unavailable')}})" || echo "unavailable")
+          AUDIT_CRIT=$(echo "$AUDIT_SUMMARY" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).critical||0)}catch(e){console.log(0)}})" || echo 0)
+          AUDIT_HIGH=$(echo "$AUDIT_SUMMARY" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).high||0)}catch(e){console.log(0)}})" || echo 0)
+          OUTDATED_COUNT=$(npm outdated --json 2>/dev/null | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(Object.keys(JSON.parse(s)||{}).length)}catch(e){console.log(0)}})" || echo 0)
+
+          HIGH_COUNT=$(wc -l < "$HIGH_FILE")
+          MED_COUNT=$(wc -l < "$MED_FILE")
+
+          # آسیب‌پذیری critical/high هم در سطح «جدی» حساب می‌شود
+          if [ "${AUDIT_CRIT:-0}" -gt 0 ] || [ "${AUDIT_HIGH:-0}" -gt 0 ]; then
+            echo "npm audit: $AUDIT_CRIT critical / $AUDIT_HIGH high" >> "$HIGH_FILE"
+            HIGH_COUNT=$((HIGH_COUNT + 1))
+          fi
+
+          if [ "$HIGH_COUNT" -gt 0 ]; then STATUS="دارای مشکل جدی"
+          elif [ "$MED_COUNT" -gt 0 ]; then STATUS="دارای هشدار"
+          else STATUS="پاک"; fi
+
+          {
+            echo "# گزارش اسکن امنیتی"
+            echo
+            echo "تاریخ: $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo "وضعیت: $STATUS"
+            echo "کامیت: \`${GITHUB_SHA:0:7}\` | اجرا: #${{ github.run_number }}"
+            echo
+            echo "## یافته‌ها"
+            echo
+            echo "### 🔴 مشکلات جدی (High)"
+            if [ -s "$HIGH_FILE" ]; then sed 's/^/    /' "$HIGH_FILE"; else echo "(موردی یافت نشد)"; fi
+            echo
+            echo "### 🟡 هشدارها (Medium)"
+            if [ -s "$MED_FILE" ]; then sed 's/^/    /' "$MED_FILE"; else echo "(موردی یافت نشد)"; fi
+            echo
+            echo "### 🟢 نکات (Low)"
+            cat "$LOW_FILE"
+            echo
+            echo "## وابستگی‌ها"
+            echo "- آسیب‌پذیری‌های \`npm audit\` (production): $AUDIT_SUMMARY"
+            echo "- وابستگی‌های قدیمی (\`npm outdated\`): $OUTDATED_COUNT"
+            echo
+            echo "## توصیه‌ها"
+            if [ "$HIGH_COUNT" -gt 0 ]; then
+              echo "- **اقدام فوری:** موارد High را قبل از release رفع کن. این گزارش کامیت نشد."
+            elif [ "$MED_COUNT" -gt 0 ]; then
+              echo "- موارد Medium را دستی بررسی کن؛ برخی ممکن است مثبت کاذب باشند."
+              echo "- \`innerHTML\` را فقط با \`escapeHtml\`/آیکون whitelist استفاده کن (به \`.ai/security.md\` نگاه کن)."
+            else
+              echo "- وضعیت تمیز است؛ الگوهای جدید را در همین workflow به‌روز نگه دار."
+            fi
+            echo
+            echo "---"
+            echo "_تولیدشده توسط \`.github/workflows/security-scan.yml\` — الگوهای خاص نیاز به بررسی دستی دارند._"
+          } > "$REPORT"
+
+          cat "$REPORT" >> "$GITHUB_STEP_SUMMARY"
+          HIGH_FLAG=false
+          if [ "$HIGH_COUNT" -gt 0 ]; then HIGH_FLAG=true; fi
+          echo "high=$HIGH_FLAG" >> "$GITHUB_OUTPUT"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+
+      - name: Fail on serious findings
+        if: steps.scan.outputs.high == 'true'
+        run: |
+          echo "::error::حداقل یک یافته‌ی High پیدا شد. گزارش در job summary موجود است و کامیت نشد."
+          exit 1
+
+      - name: Commit report
+        if: steps.scan.outputs.high == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .ai/security-scan-report.md
+          git diff --staged --quiet || git commit -m "docs: weekly security scan report [skip ci]"
+          git push
