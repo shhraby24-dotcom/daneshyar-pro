@@ -651,6 +651,11 @@ export const EVENTS = {
   // رویدادهای State
   STATE_CHANGED: 'state:changed',
 
+  // رویدادهای احراز هویت
+  AUTH_LOGIN: 'auth:login',
+  AUTH_LOGOUT: 'auth:logout',
+  AUTH_SESSION_CHANGED: 'auth:session_changed',
+
   // رویدادهای UI
   UI_TOAST: 'ui:toast',
   UI_MODAL_OPEN: 'ui:modal:open',
