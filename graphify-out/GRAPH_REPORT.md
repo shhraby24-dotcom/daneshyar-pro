@@ -1,4 +1,4 @@
-# Graph Report - daneshyar-pro  (2026-11-05)
+# Graph Report - daneshyar-pro  (2026-11-06)
 
 ## Corpus Check
 - cluster-only mode — file stats not available
@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5d55f221`
+- Built from commit: `ece0bd57`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -434,7 +434,7 @@ Nodes (3): 🔄 تاریخچه به‌روزرسانی‌ها, ۱۰ آبان ۱�
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `getInstance()` connect `main.ts` to `AIQuizService.ts`, `SoundManager`, `SoundManager`, `package.json`, `iconHTML`, `PremiumView.ts`, `AISummaryService.ts`, `toPersianDigits`, `createIcon`, `PremiumView.ts`, `StateManager`, `DatabaseService`, `dateFormatter.ts`, `Router`, `LandingView.ts`, `AppError`, `ErrorHandler`, `Toast.ts`, `Database.ts`, `SummarizerView.ts`, `ModalManager`, `ToastManager`, `LegalView.ts`, `index.ts`, `پرامپت: اسکن TODO/FIXME (Todo Scan)`, `Storage.ts`, `CONTEXT.md`?**
-  _High betweenness centrality (0.110) - this node is a cross-community bridge._
+  _High betweenness centrality (0.111) - this node is a cross-community bridge._
 - **Should `AIQuizService.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.0546448087431694 - nodes in this community are weakly interconnected._
 - **Why does `اقدامات refactor (به ترتیب اولویت)` connect `main.ts` to `.claude/CLAUDE.md`?**

@@ -1969,7 +1969,7 @@
     {
       "type": "bridge_node",
       "question": "Why does `getInstance()` connect `main.ts` to `AIQuizService.ts`, `SoundManager`, `SoundManager`, `package.json`, `iconHTML`, `PremiumView.ts`, `AISummaryService.ts`, `toPersianDigits`, `createIcon`, `PremiumView.ts`, `StateManager`, `DatabaseService`, `dateFormatter.ts`, `Router`, `LandingView.ts`, `AppError`, `ErrorHandler`, `Toast.ts`, `Database.ts`, `SummarizerView.ts`, `ModalManager`, `ToastManager`, `LegalView.ts`, `index.ts`, `پرامپت: اسکن TODO/FIXME (Todo Scan)`, `Storage.ts`, `CONTEXT.md`?",
-      "why": "High betweenness centrality (0.110) - this node is a cross-community bridge."
+      "why": "High betweenness centrality (0.111) - this node is a cross-community bridge."
     },
     {
       "type": "low_cohesion",
