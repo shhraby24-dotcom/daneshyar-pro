@@ -2059,7 +2059,7 @@
     {
       "type": "bridge_node",
       "question": "Why does `getInstance()` connect `Errors.ts` to `AIQuizService.ts`, `NotesView.ts`, `SoundManager`, `DashboardView.ts`, `iconHTML`, `PremiumView.ts`, `toPersianDigits`, `Layout`, `StateManager`, `DatabaseService`, `compilerOptions`, `Logger`, `steps`, `steps`, `AppError`, `ErrorHandler`, `Toast.ts`, `Database.ts`, `StreakService`, `Router.ts`, `ModalManager`, `ExampleInstrumentedTest.java`, `پرامپت: ممیزی امنیتی (Security Audit)`, `LegalView.ts`, `پرامپت: بازبینی کد (Code Review)`, `getDatabase`?",
-      "why": "High betweenness centrality (0.114) - this node is a cross-community bridge."
+      "why": "High betweenness centrality (0.116) - this node is a cross-community bridge."
     },
     {
       "type": "low_cohesion",

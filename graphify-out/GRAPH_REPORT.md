@@ -1,4 +1,4 @@
-# Graph Report - daneshyar-pro  (2026-11-06)
+# Graph Report - daneshyar-pro  (2026-11-07)
 
 ## Corpus Check
 - cluster-only mode — file stats not available
@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a7c0d8dc`
+- Built from commit: `354d70a5`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -445,7 +445,7 @@ Nodes (4): ۱۰ آبان ۱۴۰۵ (۱ نوامبر ۲۰۲۶), ۱۰. تاریخچ
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `getInstance()` connect `Errors.ts` to `AIQuizService.ts`, `NotesView.ts`, `SoundManager`, `DashboardView.ts`, `iconHTML`, `PremiumView.ts`, `toPersianDigits`, `Layout`, `StateManager`, `DatabaseService`, `compilerOptions`, `Logger`, `steps`, `steps`, `AppError`, `ErrorHandler`, `Toast.ts`, `Database.ts`, `StreakService`, `Router.ts`, `ModalManager`, `ExampleInstrumentedTest.java`, `پرامپت: ممیزی امنیتی (Security Audit)`, `LegalView.ts`, `پرامپت: بازبینی کد (Code Review)`, `getDatabase`?**
-  _High betweenness centrality (0.114) - this node is a cross-community bridge._
+  _High betweenness centrality (0.116) - this node is a cross-community bridge._
 - **Should `AIQuizService.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.05146242132543503 - nodes in this community are weakly interconnected._
 - **Why does `Logger` connect `SoundManager` to `Errors.ts`, `پرامپت: اسکن TODO/FIXME (Todo Scan)`, `AppError`?**
